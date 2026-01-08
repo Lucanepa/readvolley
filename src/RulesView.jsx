@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronDown, ChevronRight, BookOpen, AlertCircle } from 'lucide-react'
+import { ChevronDown, ChevronRight, BookOpen, AlertCircle, Hash } from 'lucide-react'
 import { api } from './services/api'
 import CasebookModal from './components/CasebookModal'
 
@@ -9,10 +9,15 @@ function RulesView({ environment }) {
     const [loading, setLoading] = useState(true)
     const [expandedChapter, setExpandedChapter] = useState(null)
     const [expandedArticle, setExpandedArticle] = useState(null)
-    const [articles, setArticles] = useState({}) // chapterId -> [articles]
-    const [rules, setRules] = useState({}) // articleId -> [rules]
+    const [articles, setArticles] = useState({})
+    const [rules, setRules] = useState({})
 
     const [selectedRuleForCase, setSelectedRuleForCase] = useState(null)
+
+    const isBeach = environment === 'beach'
+    const accentColor = isBeach ? 'text-beach-primary' : 'text-indoor-primary'
+    const accentBg = isBeach ? 'bg-beach-primary' : 'bg-indoor-primary'
+    const accentBorder = isBeach ? 'border-beach-primary/30' : 'border-indoor-primary/30'
 
     useEffect(() => {
         loadChapters()
@@ -54,49 +59,73 @@ function RulesView({ environment }) {
         }
     }
 
-    if (loading) return <div className="flex items-center justify-center p-20 text-text-muted">Loading rules...</div>
+    if (loading) return (
+        <div className="flex flex-col items-center justify-center p-32 text-text-muted gap-4">
+            <div className={`w-12 h-12 border-4 ${accentBorder} border-t-transparent rounded-full animate-spin`} />
+            <p className="font-bold tracking-widest uppercase text-sm">Synchronizing Rulebook...</p>
+        </div>
+    )
 
     return (
-        <div className="space-y-4 animate-fade-in">
-            <div className="mb-8">
-                <h1 className="text-3xl font-bold mb-2">Official Rules</h1>
-                <p className="text-text-secondary">Explore the {environment} volleyball rulebook.</p>
+        <div className="space-y-12 animate-fade-in pb-20">
+            <div className="text-center max-w-2xl mx-auto mb-16">
+                <motion.div
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 mb-6 text-xs font-black tracking-[0.2em] uppercase ${accentColor}`}
+                >
+                    <BookOpen size={14} /> Official Rulebook
+                </motion.div>
+                <h1 className="text-5xl md:text-6xl font-black mb-6 tracking-tight">Structured <span className={accentColor}>Rules</span></h1>
+                <p className="text-xl text-text-secondary font-medium">
+                    Navigate through the official {environment} volleyball hierarchy.
+                    Data is synced directly from international standards.
+                </p>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-4 max-w-4xl mx-auto w-full">
                 {chapters.map((chapter) => (
-                    <div key={chapter.id} className="glass rounded-2xl overflow-hidden border border-border-subtle">
+                    <div key={chapter.id} className="glass rounded-[32px] overflow-hidden border border-white/5 shadow-2xl transition-all duration-500 hover:border-white/10">
                         <button
                             onClick={() => toggleChapter(chapter.id)}
-                            className="w-full flex items-center justify-between p-5 hover:bg-white/5 transition-colors text-left"
+                            className="w-full flex items-center justify-between p-8 hover:bg-white/5 transition-all text-left group"
                         >
-                            <div className="flex items-center gap-4">
-                                <span className="text-sm font-mono text-text-muted">Chapter {chapter.order || chapter.id.match(/\d+/)}</span>
-                                <span className="font-semibold text-lg">{chapter.title}</span>
+                            <div className="flex items-center gap-6">
+                                <div className={`w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center font-black text-xl border border-white/5 group-hover:border-white/10 transition-all ${accentColor}`}>
+                                    {chapter.order || chapter.id.match(/\d+/)}
+                                </div>
+                                <div>
+                                    <span className="text-xs font-black tracking-widest text-text-muted uppercase mb-1 block opacity-60">Chapter</span>
+                                    <span className="font-black text-2xl tracking-tight">{chapter.title}</span>
+                                </div>
                             </div>
-                            {expandedChapter === chapter.id ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+                            <div className={`p-2 rounded-full transition-transform duration-300 ${expandedChapter === chapter.id ? 'rotate-180 mb-1' : ''}`}>
+                                <ChevronDown className="w-6 h-6 text-text-muted" />
+                            </div>
                         </button>
 
                         <AnimatePresence>
                             {expandedChapter === chapter.id && (
                                 <motion.div
-                                    initial={{ height: 0 }}
-                                    animate={{ height: 'auto' }}
-                                    exit={{ height: 0 }}
-                                    className="overflow-hidden border-t border-border-subtle bg-white/[0.02]"
+                                    initial={{ height: 0, opacity: 0 }}
+                                    animate={{ height: 'auto', opacity: 1 }}
+                                    exit={{ height: 0, opacity: 0 }}
+                                    className="overflow-hidden border-t border-white/5 bg-black/20"
                                 >
-                                    <div className="p-2 space-y-1">
+                                    <div className="p-4 space-y-3">
                                         {articles[chapter.id]?.map((article) => (
-                                            <div key={article.id} className="rounded-xl overflow-hidden">
+                                            <div key={article.id} className="rounded-2xl overflow-hidden bg-white/5 border border-white/5">
                                                 <button
                                                     onClick={() => toggleArticle(article.id)}
-                                                    className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors text-left"
+                                                    className="w-full flex items-center justify-between p-6 hover:bg-white/5 transition-all text-left"
                                                 >
-                                                    <div className="flex items-center gap-3">
-                                                        <BookOpen className="w-4 h-4 text-text-muted" />
-                                                        <span className="font-medium">Article {article.article_n}: {article.title}</span>
+                                                    <div className="flex items-center gap-4">
+                                                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center bg-white/5 border border-white/5 ${accentColor}`}>
+                                                            <Hash size={16} />
+                                                        </div>
+                                                        <span className="font-bold text-lg tracking-tight">Article {article.article_n}: {article.title}</span>
                                                     </div>
-                                                    {expandedArticle === article.id ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                                                    <ChevronRight className={`w-5 h-5 text-text-muted transition-transform duration-300 ${expandedArticle === article.id ? 'rotate-90' : ''}`} />
                                                 </button>
 
                                                 <AnimatePresence>
@@ -105,32 +134,32 @@ function RulesView({ environment }) {
                                                             initial={{ height: 0 }}
                                                             animate={{ height: 'auto' }}
                                                             exit={{ height: 0 }}
-                                                            className="overflow-hidden"
+                                                            className="overflow-hidden border-t border-white/5 bg-black/40"
                                                         >
-                                                            <div className="p-4 pl-11 space-y-6">
+                                                            <div className="p-8 space-y-10">
                                                                 {rules[article.id]?.map((rule) => (
-                                                                    <div key={rule.id} className="group">
-                                                                        <div className="flex items-start justify-between gap-4">
-                                                                            <div className="space-y-1">
-                                                                                <div className="flex items-center gap-2">
-                                                                                    <span className="text-xs font-mono py-0.5 px-2 bg-white/10 rounded text-text-secondary">
+                                                                    <div key={rule.id} className="group relative">
+                                                                        <div className="flex flex-col md:flex-row items-start justify-between gap-6">
+                                                                            <div className="flex-1 space-y-4">
+                                                                                <div className="flex items-center gap-3">
+                                                                                    <span className={`text-sm font-black py-1 px-3 rounded-lg bg-white/5 border border-white/10 ${accentColor}`}>
                                                                                         {rule.rule_n}
                                                                                     </span>
-                                                                                    <span className="font-bold text-sm tracking-wide uppercase text-white/90">
+                                                                                    <h4 className="font-black text-xl tracking-tight text-white/90 leading-none">
                                                                                         {rule.title}
-                                                                                    </span>
+                                                                                    </h4>
                                                                                 </div>
-                                                                                <p className="text-text-secondary leading-relaxed">
+                                                                                <p className="text-lg text-text-secondary leading-relaxed font-medium">
                                                                                     {rule.text}
                                                                                 </p>
                                                                             </div>
 
                                                                             <button
                                                                                 onClick={() => setSelectedRuleForCase(rule)}
-                                                                                className="shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-lg bg-orange-500/10 text-orange-500 border border-orange-500/20 hover:bg-orange-500 hover:text-white transition-all text-xs font-semibold opacity-0 group-hover:opacity-100 focus:opacity-100"
+                                                                                className={`shrink-0 flex items-center gap-3 px-5 py-3 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all font-bold tracking-tight text-sm shadow-lg group-hover:translate-y-[-2px]`}
                                                                             >
-                                                                                <AlertCircle className="w-3 h-3" />
-                                                                                Casebook
+                                                                                <AlertCircle className={`w-5 h-5 ${accentColor}`} />
+                                                                                View Casebook
                                                                             </button>
                                                                         </div>
                                                                     </div>

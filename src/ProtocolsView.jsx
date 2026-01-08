@@ -1,22 +1,27 @@
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Clock, ShieldCheck, ClipboardList, Info } from 'lucide-react'
+import { ShieldCheck, Clock, ClipboardList, Zap } from 'lucide-react'
 import { api } from './services/api'
 
 function ProtocolsView({ environment }) {
-    const [data, setData] = useState({ gameProtocol: [], otherProtocols: [] })
+    const [type, setType] = useState('game') // 'game' | 'other'
+    const [protocols, setProtocols] = useState([])
     const [loading, setLoading] = useState(true)
-    const [activeSubTab, setActiveSubTab] = useState('game')
+
+    const isBeach = environment === 'beach'
+    const accentColor = isBeach ? 'text-beach-primary' : 'text-indoor-primary'
+    const accentBg = isBeach ? 'bg-beach-primary' : 'bg-indoor-primary'
+    const borderAccent = isBeach ? 'border-beach-primary/30' : 'border-indoor-primary/30'
 
     useEffect(() => {
         loadProtocols()
-    }, [environment])
+    }, [environment, type])
 
     const loadProtocols = async () => {
         setLoading(true)
         try {
-            const protocols = await api.getProtocols(environment)
-            setData(protocols)
+            const data = await api.getProtocols(environment, type)
+            setProtocols(data)
         } catch (e) {
             console.error(e)
         } finally {
@@ -24,102 +29,87 @@ function ProtocolsView({ environment }) {
         }
     }
 
-    if (loading) return <div className="flex items-center justify-center p-20 text-text-muted">Loading protocols...</div>
+    if (loading) return (
+        <div className="flex flex-col items-center justify-center p-32 text-text-muted gap-4">
+            <div className={`w-12 h-12 border-4 ${borderAccent} border-t-transparent rounded-full animate-spin`} />
+            <p className="font-bold tracking-widest uppercase text-sm">Loading Procedural Guides...</p>
+        </div>
+    )
 
     return (
-        <div className="animate-fade-in space-y-8">
-            <div>
-                <h1 className="text-3xl font-bold mb-2">Protocols</h1>
-                <p className="text-text-secondary">Official procedures for referees and teams.</p>
+        <div className="space-y-12 animate-fade-in pb-20">
+            <div className="text-center max-w-2xl mx-auto mb-16">
+                <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 mb-6 text-xs font-black tracking-[0.2em] uppercase ${accentColor}`}>
+                    <ShieldCheck size={14} /> Match Procedures
+                </div>
+                <h1 className="text-5xl md:text-6xl font-black mb-6 tracking-tight">Official <span className={accentColor}>Protocols</span></h1>
+                <p className="text-xl text-text-secondary font-medium">
+                    Standardized timings and procedures for every stage of the match,
+                    maintaining fairness and organization at all levels.
+                </p>
             </div>
 
-            <div className="flex bg-white/5 p-1 rounded-2xl w-fit">
-                <button
-                    onClick={() => setActiveSubTab('game')}
-                    className={`px-6 py-2 rounded-xl font-semibold transition-all ${activeSubTab === 'game' ? 'bg-white/10 text-white shadow-lg' : 'text-text-muted hover:text-white'}`}
-                >
-                    Game Protocol
-                </button>
-                <button
-                    onClick={() => setActiveSubTab('other')}
-                    className={`px-6 py-2 rounded-xl font-semibold transition-all ${activeSubTab === 'other' ? 'bg-white/10 text-white shadow-lg' : 'text-text-muted hover:text-white'}`}
-                >
-                    Other Protocols
-                </button>
+            <div className="flex justify-center mb-16">
+                <div className="flex p-1.5 bg-white/5 rounded-[24px] border border-white/10 w-full max-w-md shadow-2xl">
+                    <button
+                        onClick={() => setType('game')}
+                        className={`flex-1 flex items-center justify-center gap-3 py-4 rounded-[20px] font-black tracking-tight transition-all duration-300 ${type === 'game'
+                                ? `${accentBg} text-white shadow-xl`
+                                : 'text-text-secondary hover:text-white hover:bg-white/5'
+                            }`}
+                    >
+                        <Clock size={18} /> Game Protocol
+                    </button>
+                    <button
+                        onClick={() => setType('other')}
+                        className={`flex-1 flex items-center justify-center gap-3 py-4 rounded-[20px] font-black tracking-tight transition-all duration-300 ${type === 'other'
+                                ? `${accentBg} text-white shadow-xl`
+                                : 'text-text-secondary hover:text-white hover:bg-white/5'
+                            }`}
+                    >
+                        <Zap size={18} /> Other Protocols
+                    </button>
+                </div>
             </div>
 
             <AnimatePresence mode="wait">
-                {activeSubTab === 'game' ? (
-                    <motion.div
-                        key="game"
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: 10 }}
-                        className="space-y-4"
-                    >
-                        {data.gameProtocol.map((p) => (
-                            <div key={p.id} className="glass p-6 rounded-2xl border border-border-subtle">
-                                <div className="flex flex-col md:flex-row gap-6">
-                                    <div className="flex-1 space-y-4">
-                                        <div className="flex items-center gap-3">
-                                            <div className="px-3 py-1 rounded-full bg-orange-500/10 text-orange-500 text-xs font-bold uppercase tracking-widest">
-                                                {p.time_to_start}
-                                            </div>
-                                            <h3 className="text-xl font-bold">{p.protocoltype}</h3>
-                                        </div>
-                                        <p className="text-text-secondary leading-relaxed">{p.description}</p>
-
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-                                            <div className="bg-white/5 p-4 rounded-xl space-y-2">
-                                                <h4 className="text-xs font-bold uppercase text-text-muted flex items-center gap-2">
-                                                    <ClipboardList className="w-3 h-3" /> Referee Action
-                                                </h4>
-                                                <p className="text-sm font-medium">{p.referee || 'N/A'}</p>
-                                            </div>
-                                            <div className="bg-white/5 p-4 rounded-xl space-y-2">
-                                                <h4 className="text-xs font-bold uppercase text-text-muted flex items-center gap-2">
-                                                    <ShieldCheck className="w-3 h-3" /> Team Action
-                                                </h4>
-                                                <p className="text-sm font-medium">{p.teams || 'N/A'}</p>
-                                            </div>
-                                        </div>
+                <motion.div
+                    key={type}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="grid grid-cols-1 gap-6 max-w-4xl mx-auto"
+                >
+                    {protocols.map((protocol, index) => (
+                        <div
+                            key={protocol.id}
+                            className="glass p-10 rounded-[32px] border border-white/5 hover:border-white/20 transition-all duration-500 shadow-2xl group"
+                        >
+                            <div className="flex flex-col md:flex-row gap-8">
+                                <div className={`shrink-0 w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center ${accentColor} group-hover:scale-105 transition-transform duration-500`}>
+                                    <ClipboardList size={32} />
+                                </div>
+                                <div className="space-y-4 flex-1">
+                                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                        <h3 className="text-2xl font-black tracking-tight uppercase tracking-tighter">{protocol.title}</h3>
+                                        <span className={`px-4 py-2 rounded-xl bg-white/5 border border-white/10 font-black text-xs tracking-widest uppercase ${accentColor}`}>
+                                            SEQUENCE {index + 1}
+                                        </span>
                                     </div>
+                                    <p className="text-lg text-text-secondary font-medium leading-relaxed">
+                                        {protocol.protocolText}
+                                    </p>
                                 </div>
                             </div>
-                        ))}
-                    </motion.div>
-                ) : (
-                    <motion.div
-                        key="other"
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: 10 }}
-                        className="space-y-4"
-                    >
-                        {data.otherProtocols.map((p) => (
-                            <div key={p.id} className="glass p-6 rounded-2xl border border-border-subtle space-y-4">
-                                <h3 className="text-xl font-bold">{p.title}</h3>
-                                <div className="space-y-4">
-                                    {/* Handle JSON content if it's an array of objects or just text */}
-                                    {typeof p.content === 'string' ? (
-                                        <p className="text-text-secondary">{p.content}</p>
-                                    ) : Array.isArray(p.content) ? (
-                                        p.content.map((item, i) => (
-                                            <div key={i} className="flex gap-4 p-4 rounded-xl bg-white/5">
-                                                <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 shrink-0" />
-                                                <p className="text-text-secondary text-sm">{item.text || item}</p>
-                                            </div>
-                                        ))
-                                    ) : (
-                                        <pre className="text-xs bg-black/20 p-4 rounded-xl overflow-x-auto text-text-muted">
-                                            {JSON.stringify(p.content, null, 2)}
-                                        </pre>
-                                    )}
-                                </div>
-                            </div>
-                        ))}
-                    </motion.div>
-                )}
+                        </div>
+                    ))}
+
+                    {protocols.length === 0 && (
+                        <div className="text-center py-24 glass rounded-[32px] border border-dashed border-white/10">
+                            <p className="text-text-muted font-black tracking-widest uppercase">No protocols recorded for this category yet.</p>
+                        </div>
+                    )}
+                </motion.div>
             </AnimatePresence>
         </div>
     )

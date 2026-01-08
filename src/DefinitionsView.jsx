@@ -1,12 +1,17 @@
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Search, Info } from 'lucide-react'
+import { Info, Search, Type } from 'lucide-react'
 import { api } from './services/api'
 
 function DefinitionsView({ environment }) {
     const [definitions, setDefinitions] = useState([])
-    const [search, setSearch] = useState('')
     const [loading, setLoading] = useState(true)
+    const [searchTerm, setSearchTerm] = useState('')
+
+    const isBeach = environment === 'beach'
+    const accentColor = isBeach ? 'text-beach-primary' : 'text-indoor-primary'
+    const borderAccent = isBeach ? 'border-beach-primary/30' : 'border-indoor-primary/30'
+    const focusBorder = isBeach ? 'focus:border-beach-primary/50' : 'focus:border-indoor-primary/50'
 
     useEffect(() => {
         loadDefinitions()
@@ -24,53 +29,73 @@ function DefinitionsView({ environment }) {
         }
     }
 
-    const filtered = definitions.filter(d =>
-        d.term.toLowerCase().includes(search.toLowerCase()) ||
-        d.definition.toLowerCase().includes(search.toLowerCase())
+    const filteredDefinitions = definitions.filter(d =>
+        d.term.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        d.definition.toLowerCase().includes(searchTerm.toLowerCase())
     )
 
-    if (loading) return <div className="flex items-center justify-center p-20 text-text-muted">Loading definitions...</div>
+    if (loading) return (
+        <div className="flex flex-col items-center justify-center p-32 text-text-muted gap-4">
+            <div className={`w-12 h-12 border-4 ${borderAccent} border-t-transparent rounded-full animate-spin`} />
+            <p className="font-bold tracking-widest uppercase text-sm">Indexing Definitions...</p>
+        </div>
+    )
 
     return (
-        <div className="animate-fade-in space-y-8">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-                <div>
-                    <h1 className="text-3xl font-bold mb-2">Definitions & Terms</h1>
-                    <p className="text-text-secondary">Official terminology and their meanings.</p>
+        <div className="space-y-12 animate-fade-in pb-20">
+            <div className="text-center max-w-2xl mx-auto mb-16">
+                <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 mb-6 text-xs font-black tracking-[0.2em] uppercase ${accentColor}`}>
+                    <Info size={14} /> Official Terminology
                 </div>
-
-                <div className="relative w-full md:w-80">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
-                    <input
-                        type="text"
-                        placeholder="Search terms..."
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        className="w-full bg-white/5 border border-border-subtle rounded-xl py-3 pl-11 pr-4 focus:outline-none focus:border-white/20 transition-colors"
-                    />
-                </div>
+                <h1 className="text-5xl md:text-6xl font-black mb-6 tracking-tight">Rules <span className={accentColor}>Glossary</span></h1>
+                <p className="text-xl text-text-secondary font-medium">
+                    A comprehensive guide to all official {environment} volleyball terms,
+                    ensuring clarity and consistency in application.
+                </p>
             </div>
 
-            <div className="grid grid-cols-1 gap-4">
-                {filtered.map((item) => (
+            <div className="max-w-3xl mx-auto w-full mb-12 relative">
+                <div className="absolute inset-y-0 left-6 flex items-center pointer-events-none">
+                    <Search className="w-5 h-5 text-text-muted" />
+                </div>
+                <input
+                    type="text"
+                    placeholder="Search for terms, definitions, or keywords..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className={`w-full bg-white/5 border border-white/10 rounded-[28px] py-6 pl-16 pr-8 text-lg font-medium outline-none transition-all duration-300 shadow-2xl ${focusBorder} focus:bg-white/10`}
+                />
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 max-w-4xl mx-auto">
+                {filteredDefinitions.map((def, index) => (
                     <motion.div
-                        key={item.id}
-                        layout
-                        className="glass p-6 rounded-2xl border border-border-subtle hover:bg-white/[0.03] transition-colors"
+                        key={def.id}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.03 }}
+                        className="group glass p-8 rounded-[28px] border border-white/5 hover:border-white/20 transition-all duration-500 shadow-xl"
                     >
-                        <div className="flex items-start gap-4">
-                            <div className="p-2 rounded-lg bg-blue-500/10 text-blue-500 shrink-0">
-                                <Info className="w-5 h-5" />
+                        <div className="flex flex-col md:flex-row md:items-start gap-6">
+                            <div className={`w-12 h-12 shrink-0 rounded-2xl bg-white/5 flex items-center justify-center ${accentColor} border border-white/10 group-hover:scale-110 transition-transform`}>
+                                <Type size={24} />
                             </div>
-                            <div>
-                                <h3 className="text-lg font-bold mb-2">{item.term}</h3>
-                                <p className="text-text-secondary leading-relaxed">{item.definition}</p>
+                            <div className="space-y-3">
+                                <h3 className="text-2xl font-black tracking-tight uppercase tracking-tighter transition-all">
+                                    {def.term}
+                                </h3>
+                                <p className="text-lg text-text-secondary leading-relaxed font-medium">
+                                    {def.definition}
+                                </p>
                             </div>
                         </div>
                     </motion.div>
                 ))}
-                {filtered.length === 0 && (
-                    <div className="text-center py-20 text-text-muted">No terms found matching your search.</div>
+
+                {filteredDefinitions.length === 0 && (
+                    <div className="text-center py-20 bg-white/5 rounded-[32px] border border-dashed border-white/10">
+                        <p className="text-text-muted font-bold tracking-widest uppercase">No matching definitions found.</p>
+                    </div>
                 )}
             </div>
         </div>

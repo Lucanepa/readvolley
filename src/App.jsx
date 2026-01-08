@@ -1,46 +1,101 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Sun, Home, ChevronRight, Book, Image as ImageIcon, Info, ShieldCheck, List } from 'lucide-react'
+import { Sun, Home, ChevronRight } from 'lucide-react'
 import MainLayout from './components/MainLayout'
 
 function App() {
-    const [environment, setEnvironment] = useState(null) // 'beach' | 'indoor' | null
+    const [environment, setEnvironment] = useState(null)
+    const [hoveredEnv, setHoveredEnv] = useState(null)
 
     return (
-        <div className="min-h-screen bg-bg-dark overflow-x-hidden">
+        <div className="min-h-screen bg-bg-dark text-text-primary font-sans selection:bg-beach-primary/30">
             <AnimatePresence mode="wait">
                 {!environment ? (
                     <motion.div
                         key="selector"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        className="flex flex-col items-center justify-center min-h-screen p-6"
+                        exit={{ opacity: 0 }}
+                        className="relative min-h-screen flex items-center justify-center overflow-hidden"
                     >
-                        <motion.h1
-                            initial={{ y: -20 }}
-                            animate={{ y: 0 }}
-                            className="text-4xl md:text-6xl mb-4 text-center tracking-tight"
-                        >
-                            Volleyball <span className="text-beach-primary">Rules</span>
-                        </motion.h1>
-                        <p className="text-text-muted text-xs mb-10 opacity-50">v1.0.1</p>
+                        {/* Dynamic Backgrounds */}
+                        <div className="absolute inset-0 z-0">
+                            <div className="absolute inset-0 bg-black/60 z-10" />
+                            <AnimatePresence>
+                                {hoveredEnv === 'beach' && (
+                                    <motion.div
+                                        initial={{ opacity: 0, scale: 1.1 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        exit={{ opacity: 0, scale: 1.1 }}
+                                        transition={{ duration: 0.8 }}
+                                        className="absolute inset-0 bg-cover bg-center"
+                                        style={{ backgroundImage: 'url("/beach-bg.png")' }}
+                                    />
+                                )}
+                                {hoveredEnv === 'indoor' && (
+                                    <motion.div
+                                        initial={{ opacity: 0, scale: 1.1 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        exit={{ opacity: 0, scale: 1.1 }}
+                                        transition={{ duration: 0.8 }}
+                                        className="absolute inset-0 bg-cover bg-center"
+                                        style={{ backgroundImage: 'url("/indoor-bg.png")' }}
+                                    />
+                                )}
+                            </AnimatePresence>
+                            {/* Base Background */}
+                            <div
+                                className="absolute inset-0 bg-cover bg-center opacity-40"
+                                style={{ backgroundImage: 'url("/beach-bg.png")' }}
+                            />
+                        </div>
 
-                        <div className="flex flex-col md:flex-row gap-8 w-full max-w-4xl">
-                            <EnvironmentCard
-                                type="beach"
-                                title="Beach"
-                                icon={<Sun className="w-12 h-12 text-beach-primary" />}
-                                onClick={() => setEnvironment('beach')}
-                                colorClass="hover:border-beach-primary group"
-                            />
-                            <EnvironmentCard
-                                type="indoor"
-                                title="Indoor"
-                                icon={<Home className="w-12 h-12 text-indoor-primary" />}
-                                onClick={() => setEnvironment('indoor')}
-                                colorClass="hover:border-indoor-primary group"
-                            />
+                        <div className="relative z-20 container mx-auto px-6 flex flex-col items-center">
+                            <motion.div
+                                initial={{ y: -50, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                transition={{ delay: 0.2, duration: 0.6 }}
+                                className="text-center mb-16"
+                            >
+                                <h1 className="text-6xl md:text-8xl font-black mb-4 tracking-tighter">
+                                    VOLLEY<span className="text-beach-primary italic">RULES</span>
+                                </h1>
+                                <p className="text-xl text-text-secondary max-w-2xl mx-auto font-medium">
+                                    The ultimate companion for officials and enthusiasts.
+                                    Browse regulations, diagrams, and protocols with precision.
+                                </p>
+                            </motion.div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-5xl">
+                                <EnvironmentCard
+                                    type="beach"
+                                    title="BEACH"
+                                    subtitle="Golden Sands & Sun"
+                                    icon={<Sun className="w-10 h-10" />}
+                                    onHover={() => setHoveredEnv('beach')}
+                                    onBlur={() => setHoveredEnv(null)}
+                                    onClick={() => setEnvironment('beach')}
+                                    accentColor="beach"
+                                />
+                                <EnvironmentCard
+                                    type="indoor"
+                                    title="INDOOR"
+                                    subtitle="Courts & Intensity"
+                                    icon={<Home className="w-10 h-10" />}
+                                    onHover={() => setHoveredEnv('indoor')}
+                                    onBlur={() => setHoveredEnv(null)}
+                                    onClick={() => setEnvironment('indoor')}
+                                    accentColor="indoor"
+                                />
+                            </div>
+
+                            <motion.p
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 0.5 }}
+                                className="mt-16 text-xs tracking-widest uppercase opacity-50"
+                            >
+                                Powered by OpenVolley • v1.1.0
+                            </motion.p>
                         </div>
                     </motion.div>
                 ) : (
@@ -55,22 +110,29 @@ function App() {
     )
 }
 
-function EnvironmentCard({ title, icon, onClick, colorClass }) {
+function EnvironmentCard({ title, subtitle, icon, onClick, onHover, onBlur, accentColor }) {
+    const isBeach = accentColor === 'beach'
+    const colorClass = isBeach ? 'text-beach-primary' : 'text-indoor-primary'
+    const borderClass = isBeach ? 'hover:border-beach-primary/50' : 'hover:border-indoor-primary/50'
+    const glowClass = isBeach ? 'group-hover:shadow-[0_0_50px_-12px_rgba(245,158,11,0.3)]' : 'group-hover:shadow-[0_0_50px_-12px_rgba(59,130,246,0.3)]'
+
     return (
         <motion.button
-            whileHover={{ scale: 1.02, translateY: -5 }}
+            whileHover={{ y: -10 }}
             whileTap={{ scale: 0.98 }}
+            onMouseEnter={onHover}
+            onMouseLeave={onBlur}
             onClick={onClick}
-            className={`glass flex-1 p-12 rounded-3xl flex flex-col items-center justify-center gap-6 transition-all duration-300 border-2 border-transparent ${colorClass}`}
+            className={`group relative glass p-10 rounded-[32px] flex flex-col items-start text-left transition-all duration-500 border-2 border-white/5 ${borderClass} ${glowClass}`}
         >
-            <div className="p-6 rounded-2xl bg-white/5 group-hover:bg-white/10 transition-colors">
+            <div className={`p-4 rounded-2xl bg-white/5 mb-8 group-hover:bg-white/10 transition-colors ${colorClass}`}>
                 {icon}
             </div>
-            <h2 className="text-3xl font-bold">{title}</h2>
-            <p className="text-text-secondary text-center">
-                Browse official regulations, diagrams, and referee protocols.
-            </p>
-            <ChevronRight className="w-6 h-6 text-text-muted group-hover:translate-x-1 transition-transform" />
+            <h2 className="text-5xl font-black mb-2 tracking-tight group-hover:translate-x-1 transition-transform">{title}</h2>
+            <p className="text-text-secondary text-lg mb-8 font-medium">{subtitle}</p>
+            <div className="mt-auto flex items-center gap-2 text-sm font-bold tracking-widest uppercase opacity-0 group-hover:opacity-100 transition-all duration-300">
+                Explore Rules <ChevronRight className="w-4 h-4" />
+            </div>
         </motion.button>
     )
 }
