@@ -20,8 +20,8 @@ function ProtocolsView({ environment }) {
     const loadProtocols = async () => {
         setLoading(true)
         try {
-            const data = await api.getProtocols(environment, type)
-            setProtocols(data)
+            const data = await api.getProtocols(environment)
+            setProtocols(type === 'game' ? data.gameProtocol : data.otherProtocols)
         } catch (e) {
             console.error(e)
         } finally {
@@ -37,7 +37,7 @@ function ProtocolsView({ environment }) {
     )
 
     return (
-        <div className="space-y-12 animate-fade-in pb-20">
+        <div className="space-y-12 animate-fade-in">
             <div className="text-center max-w-2xl mx-auto mb-16">
                 <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 mb-6 text-xs font-black tracking-[0.2em] uppercase ${accentColor}`}>
                     <ShieldCheck size={14} /> Match Procedures
@@ -54,8 +54,8 @@ function ProtocolsView({ environment }) {
                     <button
                         onClick={() => setType('game')}
                         className={`flex-1 flex items-center justify-center gap-3 py-4 rounded-[20px] font-black tracking-tight transition-all duration-300 ${type === 'game'
-                                ? `${accentBg} text-white shadow-xl`
-                                : 'text-text-secondary hover:text-white hover:bg-white/5'
+                            ? `${accentBg} text-white shadow-xl`
+                            : 'text-text-secondary hover:text-white hover:bg-white/5'
                             }`}
                     >
                         <Clock size={18} /> Game Protocol
@@ -63,8 +63,8 @@ function ProtocolsView({ environment }) {
                     <button
                         onClick={() => setType('other')}
                         className={`flex-1 flex items-center justify-center gap-3 py-4 rounded-[20px] font-black tracking-tight transition-all duration-300 ${type === 'other'
-                                ? `${accentBg} text-white shadow-xl`
-                                : 'text-text-secondary hover:text-white hover:bg-white/5'
+                            ? `${accentBg} text-white shadow-xl`
+                            : 'text-text-secondary hover:text-white hover:bg-white/5'
                             }`}
                     >
                         <Zap size={18} /> Other Protocols

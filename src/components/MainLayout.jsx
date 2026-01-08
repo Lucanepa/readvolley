@@ -41,7 +41,7 @@ function MainLayout({ environment, onBack }) {
     return (
         <div className="min-h-screen bg-bg-dark text-text-primary flex flex-col">
             {/* Header */}
-            <header className="fixed top-0 left-0 right-0 z-50 glass border-b border-white/5 px-6 h-20 flex items-center justify-between">
+            <header className="fixed top-0 left-0 right-0 z-50 glass border-b border-white/5 px-6 h-10 flex items-center justify-between">
                 <div className="flex items-center gap-4">
                     <button
                         onClick={onBack}
@@ -50,26 +50,26 @@ function MainLayout({ environment, onBack }) {
                         <ChevronLeft className="w-6 h-6 group-hover:-translate-x-1 transition-transform" />
                     </button>
                     <div className="flex items-center gap-2">
-                        <span className={`text-2xl font-black ${accentColor}`}>
+                        <span className={`text-xl font-black ${accentColor}`}>
                             {environment.toUpperCase()}
                         </span>
-                        <span className="text-2xl font-light opacity-40">VOLLEY</span>
+                        <span className="text-xl font-light opacity-40">VOLLEY</span>
                     </div>
                 </div>
 
                 {/* Desktop Nav */}
-                <nav className="hidden lg:flex items-center gap-1 bg-white/5 p-1 rounded-2xl border border-white/5">
+                <nav className="hidden lg:flex items-center gap-1 bg-white/5 p-0.5 rounded-lg border border-white/5 h-7">
                     {navItems.map(item => (
                         <button
                             key={item.id}
                             onClick={() => setActiveTab(item.id)}
-                            className={`px-5 py-2.5 rounded-xl flex items-center gap-2 text-sm font-bold transition-all duration-300 ${activeTab === item.id
+                            className={`px-3 py-1 rounded-md flex items-center gap-2 text-[11px] font-black transition-all duration-300 h-full ${activeTab === item.id
                                 ? `${accentBg} text-white shadow-lg`
                                 : 'text-text-secondary hover:text-white hover:bg-white/5'
                                 }`}
                         >
-                            {item.icon}
-                            {item.label}
+                            {/* Hide icon on tiny header to save space */}
+                            {item.label.toUpperCase()}
                         </button>
                     ))}
                 </nav>
@@ -147,7 +147,7 @@ function MainLayout({ environment, onBack }) {
             </AnimatePresence>
 
             {/* Content Area */}
-            <main className="flex-1 mt-20 pt-8 p-6 md:p-12">
+            <main className="flex-1 mt-10 pt-6 pb-20 p-6 md:px-12">
                 <div className="max-w-6xl mx-auto">
                     <motion.div
                         key={activeTab}
@@ -160,8 +160,8 @@ function MainLayout({ environment, onBack }) {
                 </div>
             </main>
 
-            {/* Subtle Footer */}
-            <footer className="p-8 text-center text-text-muted text-xs tracking-wider border-t border-white/5 mt-auto">
+            {/* Footer */}
+            <footer className="h-10 flex items-center justify-center text-text-muted text-[10px] tracking-[0.2em] border-t border-white/5 bg-bg-dark/50 backdrop-blur-sm z-50">
                 © 2026 OPEN VOLLEY • OFFICIAL RULES & CASEBOOK
             </footer>
         </div>
