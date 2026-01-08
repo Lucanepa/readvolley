@@ -74,7 +74,6 @@ function RulesView({ environment }) {
                     animate={{ scale: 1, opacity: 1 }}
                     className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 mb-6 text-xs font-black tracking-[0.2em] uppercase ${accentColor}`}
                 >
-                    <BookOpen size={14} /> Official Rulebook
                 </motion.div>
                 <h1 className="text-5xl md:text-6xl font-black mb-6 tracking-tight">Structured <span className={accentColor}>Rules</span></h1>
             </div>
