@@ -1,3 +1,4 @@
+# Triggering redeploy with configured secrets
 name: Deploy to GitHub Pages
 
 on:
