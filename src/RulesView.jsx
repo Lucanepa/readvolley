@@ -11,6 +11,7 @@ function RulesView({ environment }) {
     const [expandedArticle, setExpandedArticle] = useState(null)
     const [articles, setArticles] = useState({})
     const [rules, setRules] = useState({})
+    const [casebookData, setCasebookData] = useState({}) // Mapping: ruleId -> [caseNumbers]
 
     const [selectedRuleForCase, setSelectedRuleForCase] = useState(null)
 
@@ -53,9 +54,22 @@ function RulesView({ environment }) {
             return
         }
         setExpandedArticle(articleId)
-        if (!rules[articleId]) {
-            const data = await api.getRules(articleId)
-            setRules(prev => ({ ...prev, [articleId]: data }))
+
+        // Fetch rules if not already fetched
+        let currentRules = rules[articleId]
+        if (!currentRules) {
+            currentRules = await api.getRules(articleId)
+            setRules(prev => ({ ...prev, [articleId]: currentRules }))
+        }
+
+        // Fetch casebook data for these rules if any
+        if (currentRules && currentRules.length > 0) {
+            try {
+                const data = await api.getCasebookData(currentRules.map(r => r.id))
+                setCasebookData(prev => ({ ...prev, ...data }))
+            } catch (e) {
+                console.error("Error checking casebook existence:", e)
+            }
         }
     }
 
@@ -75,23 +89,26 @@ function RulesView({ environment }) {
                     className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 mb-6 text-xs font-black tracking-[0.2em] uppercase ${accentColor}`}
                 >
                 </motion.div>
-                <h1 className="text-5xl md:text-6xl font-black mb-6 tracking-tight">Structured <span className={accentColor}>Rules</span></h1>
+                <h1 className="text-5xl md:text-6xl font-black mb-6 tracking-tight" style={{ marginBottom: '20px' }}><span className={accentColor}>Rules of the Game</span></h1>
             </div>
 
-            <div className="space-y-8 max-w-6xl mx-auto w-full">
-                {chapters.map((chapter) => (
+            <div className="flex flex-col max-w-6xl mx-auto w-full" style={{ gap: '20px' }}>
+                {chapters.map((chapter, index) => (
                     <div key={chapter.id} className="glass rounded-[32px] overflow-hidden border 
-                    border-white/5 shadow-2xl transition-all duration-500 hover:border-white/10">
+                    border-white/5 shadow-2xl transition-all duration-500 hover:border-white/10 w-full"
+                        style={{
+                            marginTop: index === 0 ? '10px' : '0',
+                            marginBottom: index === chapters.length - 1 ? '10px' : '0'
+                        }}>
                         <button
                             onClick={() => toggleChapter(chapter.id)}
                             className="w-full flex items-center justify-between p-8 hover:bg-white/5 transition-all text-left group"
                         >
                             <div className="flex items-center gap-6">
-                                <div className={`w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center font-black text-xl border border-white/5 group-hover:border-white/10 transition-all ${accentColor}`}>
+                                <div className={`w-7 h-7 rounded-full bg-white/5 flex items-center justify-center font-black text-[10px] border border-white/5 group-hover:border-white/10 transition-all ${accentColor}`}>
                                     {chapter.order || chapter.id.match(/\d+/)}
                                 </div>
                                 <div>
-                                    <span className="text-xs font-black tracking-widest text-text-muted uppercase mb-1 block opacity-60">Chapter</span>
                                     <span className="font-black text-2xl tracking-tight">{chapter.title}</span>
                                 </div>
                             </div>
@@ -108,18 +125,22 @@ function RulesView({ environment }) {
                                     exit={{ height: 0, opacity: 0 }}
                                     className="overflow-hidden border-t border-white/5 bg-black/20"
                                 >
-                                    <div className="p-4 space-y-3">
-                                        {articles[chapter.id]?.map((article) => (
-                                            <div key={article.id} className="rounded-2xl overflow-hidden bg-white/5 border border-white/5">
+                                    <div className="flex flex-col" style={{ gap: '20px', padding: '15px' }}>
+                                        {articles[chapter.id]?.map((article, index) => (
+                                            <div key={article.id} className="rounded-2xl overflow-hidden bg-white/5 border border-white/5"
+                                                style={{
+                                                    marginTop: index === 0 ? '10px' : '0',
+                                                    marginBottom: index === articles[chapter.id].length - 1 ? '10px' : '0'
+                                                }}>
                                                 <button
                                                     onClick={() => toggleArticle(article.id)}
                                                     className="w-full flex items-center justify-between p-6 hover:bg-white/5 transition-all text-left"
                                                 >
                                                     <div className="flex items-center gap-4">
-                                                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center bg-white/5 border border-white/5 ${accentColor}`}>
-                                                            <Hash size={16} />
+                                                        <div className={`w-7 h-7 rounded-full flex items-center justify-center bg-white/5 border border-white/5 text-[10px] font-black ${accentColor}`}>
+                                                            {article.article_n}
                                                         </div>
-                                                        <span className="font-bold text-lg tracking-tight">Article {article.article_n}: {article.title}</span>
+                                                        <span className="font-bold text-lg tracking-tight">{article.title}</span>
                                                     </div>
                                                     <ChevronRight className={`w-5 h-5 text-text-muted transition-transform duration-300 ${expandedArticle === article.id ? 'rotate-90' : ''}`} />
                                                 </button>
@@ -132,31 +153,50 @@ function RulesView({ environment }) {
                                                             exit={{ height: 0 }}
                                                             className="overflow-hidden border-t border-white/5 bg-black/40"
                                                         >
-                                                            <div className="p-10 space-y-16">
-                                                                {rules[article.id]?.map((rule) => (
-                                                                    <div key={rule.id} className="group relative">
-                                                                        <div className="flex flex-col md:flex-row items-start justify-between gap-6">
-                                                                            <div className="flex-1 space-y-4">
-                                                                                <div className="flex items-center gap-3">
-                                                                                    <span className={`text-sm font-black py-1 px-3 rounded-lg bg-white/5 border border-white/10 ${accentColor}`}>
-                                                                                        {rule.rule_n}
-                                                                                    </span>
-                                                                                    <h4 className="font-black text-xl tracking-tight text-white/90 leading-none">
-                                                                                        {rule.title}
-                                                                                    </h4>
-                                                                                </div>
-                                                                                <p className="text-lg text-text-secondary leading-relaxed font-medium">
-                                                                                    {rule.text}
-                                                                                </p>
+                                                            <div className="flex flex-col" style={{ gap: '20px', padding: '15px' }}>
+                                                                {rules[article.id]?.map((rule, index) => (
+                                                                    <div key={rule.id} className="group relative"
+                                                                        style={{
+                                                                            marginTop: index === 0 ? '10px' : '0',
+                                                                            marginBottom: index === rules[article.id].length - 1 ? '10px' : '0'
+                                                                        }}>
+                                                                        <div className="flex gap-10 items-baseline">
+                                                                            {/* Rule Number Column */}
+                                                                            <div className={`shrink-0 w-16 text-xl font-black tracking-tight ${accentColor} opacity-50 group-hover:opacity-100 transition-opacity leading-tight text-left`}>
+                                                                                {rule.rule_n}
                                                                             </div>
 
-                                                                            <button
-                                                                                onClick={() => setSelectedRuleForCase(rule)}
-                                                                                className={`shrink-0 flex items-center gap-3 px-5 py-3 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all font-bold tracking-tight text-sm shadow-lg group-hover:translate-y-[-2px]`}
-                                                                            >
-                                                                                <AlertCircle className={`w-5 h-5 ${accentColor}`} />
-                                                                                View Casebook
-                                                                            </button>
+                                                                            {/* Content Column */}
+                                                                            <div className="flex-1">
+                                                                                {/* Title Row - Only rendered if title or casebook exists */}
+                                                                                {((index === 0 || rule.title !== rules[article.id][index - 1]?.title) || casebookData[rule.id]) && (
+                                                                                    <div className="flex flex-col md:flex-row items-baseline justify-between gap-6 mb-4">
+                                                                                        <div className="flex-1 flex items-baseline gap-3">
+                                                                                            {(index === 0 || rule.title !== rules[article.id][index - 1]?.title) && (
+                                                                                                <h4 className="font-black text-xl tracking-tight text-white/90 leading-tight">
+                                                                                                    {rule.title}
+                                                                                                </h4>
+                                                                                            )}
+
+                                                                                            {casebookData[rule.id] && (
+                                                                                                <button
+                                                                                                    onClick={() => setSelectedRuleForCase(rule)}
+                                                                                                    className="flex items-center gap-2 px-3 py-1 rounded-lg bg-orange-500/10 border border-orange-500/20 hover:bg-orange-500/20 transition-all text-[10px] font-black tracking-wider text-orange-500 uppercase ml-2 shadow-lg align-middle"
+                                                                                                >
+                                                                                                    <AlertCircle size={12} />
+                                                                                                    {casebookData[rule.id].length > 1 ? 'Cases' : 'Case'} {casebookData[rule.id].join(', ')}
+                                                                                                </button>
+                                                                                            )}
+                                                                                        </div>
+                                                                                    </div>
+                                                                                )}
+
+                                                                                {!rule.is_placeholder && rule.text !== rule.title && (
+                                                                                    <p className="text-xl text-text-secondary leading-tight font-medium text-justify">
+                                                                                        {rule.text}
+                                                                                    </p>
+                                                                                )}
+                                                                            </div>
                                                                         </div>
                                                                     </div>
                                                                 ))}
@@ -178,7 +218,7 @@ function RulesView({ environment }) {
                 rule={selectedRuleForCase}
                 onClose={() => setSelectedRuleForCase(null)}
             />
-        </div>
+        </div >
     )
 }
 

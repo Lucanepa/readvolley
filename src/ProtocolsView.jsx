@@ -78,7 +78,7 @@ function ProtocolsView({ environment }) {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
-                    className="grid grid-cols-1 gap-6 max-w-4xl mx-auto"
+                    className="grid grid-cols-1 gap-8 max-w-6xl mx-auto w-full"
                 >
                     {protocols.map((protocol, index) => (
                         <div
@@ -91,14 +91,18 @@ function ProtocolsView({ environment }) {
                                 </div>
                                 <div className="space-y-4 flex-1">
                                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                                        <h3 className="text-2xl font-black tracking-tight uppercase tracking-tighter">{protocol.title}</h3>
+                                        {(index === 0 || protocol.title !== protocols[index - 1]?.title) && (
+                                            <h3 className="text-2xl font-black tracking-tight uppercase tracking-tighter">{protocol.title}</h3>
+                                        )}
                                         <span className={`px-4 py-2 rounded-xl bg-white/5 border border-white/10 font-black text-xs tracking-widest uppercase ${accentColor}`}>
                                             SEQUENCE {index + 1}
                                         </span>
                                     </div>
-                                    <p className="text-lg text-text-secondary font-medium leading-relaxed">
-                                        {protocol.protocolText}
-                                    </p>
+                                    {protocol.protocolText !== protocol.title && (
+                                        <p className="text-lg text-text-secondary font-medium leading-relaxed">
+                                            {protocol.protocolText}
+                                        </p>
+                                    )}
                                 </div>
                             </div>
                         </div>

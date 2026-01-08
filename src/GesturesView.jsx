@@ -48,7 +48,7 @@ function GesturesView({ environment }) {
                 </p>
             </div>
 
-            <div className="grid grid-cols-1 gap-12 max-w-5xl mx-auto">
+            <div className="grid grid-cols-1 gap-12 max-w-6xl mx-auto w-full">
                 {gestures.map((gesture, index) => (
                     <motion.div
                         key={gesture.id}
@@ -78,10 +78,14 @@ function GesturesView({ environment }) {
                                             SIGNAL {gesture.gestureNumber || index + 1}
                                         </span>
                                     </div>
-                                    <h3 className="text-4xl font-black tracking-tighter uppercase">{gesture.title}</h3>
-                                    <p className="text-xl text-text-secondary font-medium leading-relaxed">
-                                        {gesture.description}
-                                    </p>
+                                    {(index === 0 || gesture.title !== gestures[index - 1]?.title) && (
+                                        <h3 className="text-4xl font-black tracking-tighter uppercase">{gesture.title}</h3>
+                                    )}
+                                    {gesture.description !== gesture.title && (
+                                        <p className="text-xl text-text-secondary font-medium leading-relaxed">
+                                            {gesture.description}
+                                        </p>
+                                    )}
                                 </div>
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
