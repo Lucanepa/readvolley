@@ -37,8 +37,8 @@ function ProtocolsView({ environment }) {
     )
 
     return (
-        <div className="space-y-12 animate-fade-in">
-            <div className="text-center max-w-2xl mx-auto mb-16">
+        <div className="space-y-24 animate-fade-in pb-32">
+            <div className="text-center max-w-2xl mx-auto mb-24">
                 <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 mb-6 text-xs font-black tracking-[0.2em] uppercase ${accentColor}`}>
                     <ShieldCheck size={14} /> Match Procedures
                 </div>
@@ -49,7 +49,7 @@ function ProtocolsView({ environment }) {
                 </p>
             </div>
 
-            <div className="flex justify-center mb-16">
+            <div className="flex justify-center mb-20">
                 <div className="flex p-1.5 bg-white/5 rounded-[24px] border border-white/10 w-full max-w-md shadow-2xl">
                     <button
                         onClick={() => setType('game')}
@@ -83,7 +83,7 @@ function ProtocolsView({ environment }) {
                     {protocols.map((protocol, index) => (
                         <div
                             key={protocol.id}
-                            className="glass p-10 rounded-[32px] border border-white/5 hover:border-white/20 transition-all duration-500 shadow-2xl group"
+                            className="glass p-12 rounded-[40px] border border-white/5 hover:border-white/20 transition-all duration-500 shadow-2xl group"
                         >
                             <div className="flex flex-col md:flex-row gap-8">
                                 <div className={`shrink-0 w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center ${accentColor} group-hover:scale-105 transition-transform duration-500`}>

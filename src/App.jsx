@@ -52,7 +52,7 @@ function App() {
                                 initial={{ y: -50, opacity: 0 }}
                                 animate={{ y: 0, opacity: 1 }}
                                 transition={{ delay: 0.2, duration: 0.6 }}
-                                className="text-center mb-16"
+                                className="text-center mb-24"
                             >
                                 <h1 className="text-6xl md:text-8xl font-black mb-6 tracking-tighter">
                                     VOLLEY<span className="text-beach-primary italic">RULES</span>
@@ -63,7 +63,7 @@ function App() {
                                 </p>
                             </motion.div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-5xl">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 w-full max-w-6xl">
                                 <EnvironmentCard
                                     type="indoor"
                                     title="VOLLEYBALL"
@@ -120,13 +120,13 @@ function EnvironmentCard({ title, subtitle, icon, onClick, onHover, onBlur, acce
             onMouseEnter={onHover}
             onMouseLeave={onBlur}
             onClick={onClick}
-            className={`group relative glass p-12 py-16 rounded-[40px] flex flex-col items-center justify-center text-center transition-all duration-500 border-2 border-white/5 ${borderClass} ${glowClass}`}
+            className={`group relative glass p-16 py-24 rounded-[48px] flex flex-col items-center justify-center text-center transition-all duration-700 border-2 border-white/5 ${borderClass} ${glowClass}`}
         >
-            <div className={`p-6 rounded-3xl bg-white/5 mb-8 group-hover:bg-white/10 transition-all duration-500 shadow-inner ${colorClass}`}>
+            <div className={`p-8 rounded-3xl bg-white/5 mb-12 group-hover:bg-white/10 transition-all duration-500 shadow-inner ${colorClass}`}>
                 {icon}
             </div>
-            <h2 className="text-4xl font-black mb-3 tracking-tight group-hover:scale-110 transition-transform duration-500">{title}</h2>
-            <p className="text-text-secondary text-base mb-10 font-medium opacity-60 tracking-wide">{subtitle}</p>
+            <h2 className="text-5xl font-black mb-6 tracking-tight group-hover:scale-110 transition-transform duration-500">{title}</h2>
+            <p className="text-text-secondary text-lg mb-12 font-medium opacity-60 tracking-wide">{subtitle}</p>
             <div className="flex items-center gap-2 text-[10px] font-black tracking-[0.2em] uppercase opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-4 group-hover:translate-y-0">
                 Enter Arena <ChevronRight size={14} />
             </div>

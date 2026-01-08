@@ -66,8 +66,8 @@ function MainLayout({ environment, onBack }) {
                         <button
                             onClick={() => setIsMenuOpen(!isMenuOpen)}
                             className={`flex items-center gap-3 px-4 py-1.5 rounded-xl border transition-all duration-300 ${isMenuOpen
-                                    ? `${accentBorder} bg-white/10`
-                                    : 'border-white/5 bg-white/5 hover:bg-white/10'
+                                ? `${accentBorder} bg-white/10`
+                                : 'border-white/5 bg-white/5 hover:bg-white/10'
                                 }`}
                         >
                             <div className={accentColor}>{activeItem.icon}</div>
@@ -100,8 +100,8 @@ function MainLayout({ environment, onBack }) {
                                                         setIsMenuOpen(false)
                                                     }}
                                                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all ${activeTab === item.id
-                                                            ? `${accentBg} text-white`
-                                                            : 'hover:bg-white/5 text-text-secondary hover:text-white'
+                                                        ? `${accentBg} text-white`
+                                                        : 'hover:bg-white/5 text-text-secondary hover:text-white'
                                                         }`}
                                                 >
                                                     <div className={activeTab === item.id ? 'text-white' : accentColor}>
@@ -129,7 +129,7 @@ function MainLayout({ environment, onBack }) {
             <div style={{ height: '40px' }} className="w-full shrink-0" />
 
             {/* Main Content Area - Perfectly Centered */}
-            <main className="flex-1 flex flex-col items-center justify-start py-12 px-6 md:px-12 w-full">
+            <main className="flex-1 flex flex-col items-center justify-start py-20 px-6 md:px-12 w-full">
                 <div className="w-full max-w-5xl mx-auto flex flex-col items-center">
                     <motion.div
                         key={activeTab}

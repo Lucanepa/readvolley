@@ -67,8 +67,8 @@ function RulesView({ environment }) {
     )
 
     return (
-        <div className="space-y-12 animate-fade-in pb-20">
-            <div className="text-center max-w-2xl mx-auto mb-16">
+        <div className="space-y-24 animate-fade-in pb-32">
+            <div className="text-center max-w-2xl mx-auto mb-20">
                 <motion.div
                     initial={{ scale: 0.9, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
@@ -78,9 +78,10 @@ function RulesView({ environment }) {
                 <h1 className="text-5xl md:text-6xl font-black mb-6 tracking-tight">Structured <span className={accentColor}>Rules</span></h1>
             </div>
 
-            <div className="space-y-6 max-w-4xl mx-auto">
+            <div className="space-y-8 max-w-4xl mx-auto">
                 {chapters.map((chapter) => (
-                    <div key={chapter.id} className="glass rounded-[32px] overflow-hidden border border-white/5 shadow-2xl transition-all duration-500 hover:border-white/10">
+                    <div key={chapter.id} className="glass rounded-[32px] overflow-hidden border 
+                    border-white/5 shadow-2xl transition-all duration-500 hover:border-white/10">
                         <button
                             onClick={() => toggleChapter(chapter.id)}
                             className="w-full flex items-center justify-between p-8 hover:bg-white/5 transition-all text-left group"
@@ -131,7 +132,7 @@ function RulesView({ environment }) {
                                                             exit={{ height: 0 }}
                                                             className="overflow-hidden border-t border-white/5 bg-black/40"
                                                         >
-                                                            <div className="p-8 space-y-10">
+                                                            <div className="p-10 space-y-16">
                                                                 {rules[article.id]?.map((rule) => (
                                                                     <div key={rule.id} className="group relative">
                                                                         <div className="flex flex-col md:flex-row items-start justify-between gap-6">

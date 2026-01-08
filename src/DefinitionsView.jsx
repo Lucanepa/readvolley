@@ -42,8 +42,8 @@ function DefinitionsView({ environment }) {
     )
 
     return (
-        <div className="space-y-12 animate-fade-in pb-20">
-            <div className="text-center max-w-2xl mx-auto mb-16">
+        <div className="space-y-20 animate-fade-in pb-32">
+            <div className="text-center max-w-2xl mx-auto mb-24">
                 <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 mb-6 text-xs font-black tracking-[0.2em] uppercase ${accentColor}`}>
                     <Info size={14} /> Official Terminology
                 </div>
@@ -67,14 +67,14 @@ function DefinitionsView({ environment }) {
                 />
             </div>
 
-            <div className="grid grid-cols-1 gap-4 max-w-4xl mx-auto">
+            <div className="grid grid-cols-1 gap-6 max-w-4xl mx-auto">
                 {filteredDefinitions.map((def, index) => (
                     <motion.div
                         key={def.id}
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: index * 0.03 }}
-                        className="group glass p-8 rounded-[28px] border border-white/5 hover:border-white/20 transition-all duration-500 shadow-xl"
+                        className="group glass p-10 rounded-[32px] border border-white/5 hover:border-white/20 transition-all duration-500 shadow-xl"
                     >
                         <div className="flex flex-col md:flex-row md:items-start gap-6">
                             <div className={`w-12 h-12 shrink-0 rounded-2xl bg-white/5 flex items-center justify-center ${accentColor} border border-white/10 group-hover:scale-110 transition-transform`}>

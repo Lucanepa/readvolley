@@ -35,8 +35,8 @@ function DiagramsView({ environment }) {
     )
 
     return (
-        <div className="space-y-12 animate-fade-in pb-20">
-            <div className="text-center max-w-2xl mx-auto mb-16">
+        <div className="space-y-24 animate-fade-in pb-32">
+            <div className="text-center max-w-2xl mx-auto mb-24">
                 <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 mb-6 text-xs font-black tracking-[0.2em] uppercase ${accentColor}`}>
                     <ImageIcon size={14} /> Visual Reference
                 </div>
@@ -47,7 +47,7 @@ function DiagramsView({ environment }) {
                 </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 max-w-6xl mx-auto">
                 {diagrams.map((diagram, index) => (
                     <motion.div
                         key={diagram.id}
@@ -73,7 +73,7 @@ function DiagramsView({ environment }) {
                                 </span>
                             </div>
                         </div>
-                        <div className="p-8">
+                        <div className="p-10">
                             <h3 className="text-2xl font-black tracking-tight mb-2 uppercase group-hover:translate-x-1 transition-transform tracking-tighter">
                                 {diagram.name}
                             </h3>

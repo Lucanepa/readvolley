@@ -36,8 +36,8 @@ function GesturesView({ environment }) {
     )
 
     return (
-        <div className="space-y-12 animate-fade-in pb-20">
-            <div className="text-center max-w-2xl mx-auto mb-16">
+        <div className="space-y-24 animate-fade-in pb-32">
+            <div className="text-center max-w-2xl mx-auto mb-24">
                 <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 mb-6 text-xs font-black tracking-[0.2em] uppercase ${accentColor}`}>
                     <List size={14} /> Official Signals
                 </div>
@@ -48,14 +48,14 @@ function GesturesView({ environment }) {
                 </p>
             </div>
 
-            <div className="grid grid-cols-1 gap-8 max-w-5xl mx-auto">
+            <div className="grid grid-cols-1 gap-12 max-w-5xl mx-auto">
                 {gestures.map((gesture, index) => (
                     <motion.div
                         key={gesture.id}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.05 }}
-                        className="group glass rounded-[40px] overflow-hidden border border-white/5 hover:border-white/10 transition-all duration-500 shadow-2xl"
+                        className="group glass rounded-[48px] overflow-hidden border border-white/5 hover:border-white/10 transition-all duration-700 shadow-2xl"
                     >
                         <div className="flex flex-col lg:flex-row">
                             {/* Image Section */}
@@ -71,7 +71,7 @@ function GesturesView({ environment }) {
                             </div>
 
                             {/* Info Section */}
-                            <div className="lg:w-2/3 p-10 lg:p-14 flex flex-col justify-center gap-8">
+                            <div className="lg:w-2/3 p-12 lg:p-16 flex flex-col justify-center gap-12">
                                 <div className="space-y-3">
                                     <div className="flex items-center gap-3">
                                         <span className={`px-4 py-1.5 rounded-xl glass border border-white/10 font-bold text-xs tracking-widest uppercase ${accentColor}`}>
@@ -84,25 +84,25 @@ function GesturesView({ environment }) {
                                     </p>
                                 </div>
 
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div className="p-6 rounded-3xl bg-white/5 border border-white/5 flex items-start gap-4 transition-colors hover:bg-white/10">
-                                        <div className={`p-2 rounded-xl bg-blend-soft-light ${gesture.referee_1 ? accentBg : 'bg-white/10'}`}>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                    <div className="p-8 rounded-[32px] bg-white/5 border border-white/5 flex items-start gap-4 transition-colors hover:bg-white/10">
+                                        <div className={`p-3 rounded-2xl bg-blend-soft-light ${gesture.referee_1 ? accentBg : 'bg-white/10'}`}>
                                             <User size={20} className="text-white" />
                                         </div>
                                         <div>
                                             <p className="text-[10px] font-black tracking-widest uppercase opacity-40">1st Referee</p>
-                                            <p className={`font-bold ${gesture.referee_1 ? 'text-white' : 'text-text-muted'}`}>
+                                            <p className={`font-bold text-lg ${gesture.referee_1 ? 'text-white' : 'text-text-muted'}`}>
                                                 {gesture.referee_1 ? 'Responsible' : 'N/A'}
                                             </p>
                                         </div>
                                     </div>
-                                    <div className="p-6 rounded-3xl bg-white/5 border border-white/5 flex items-start gap-4 transition-colors hover:bg-white/10">
-                                        <div className={`p-2 rounded-xl bg-blend-soft-light ${gesture.referee_2 ? accentBg : 'bg-white/10'}`}>
+                                    <div className="p-8 rounded-[32px] bg-white/5 border border-white/5 flex items-start gap-4 transition-colors hover:bg-white/10">
+                                        <div className={`p-3 rounded-2xl bg-blend-soft-light ${gesture.referee_2 ? accentBg : 'bg-white/10'}`}>
                                             <Users size={20} className="text-white" />
                                         </div>
                                         <div>
                                             <p className="text-[10px] font-black tracking-widest uppercase opacity-40">2nd Referee</p>
-                                            <p className={`font-bold ${gesture.referee_2 ? 'text-white' : 'text-text-muted'}`}>
+                                            <p className={`font-bold text-lg ${gesture.referee_2 ? 'text-white' : 'text-text-muted'}`}>
                                                 {gesture.referee_2 ? 'Responsible' : 'N/A'}
                                             </p>
                                         </div>
