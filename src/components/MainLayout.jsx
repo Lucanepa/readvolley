@@ -41,7 +41,7 @@ function MainLayout({ environment, onBack }) {
     return (
         <div className="min-h-screen bg-bg-dark text-text-primary flex flex-col">
             {/* Header */}
-            <header className="fixed top-0 left-0 right-0 z-50 glass border-b border-white/5 px-6 h-10 flex items-center justify-between">
+            <header className="fixed top-0 left-0 right-0 z-50 glass border-b border-white/5 px-10 h-10 flex items-center justify-between shadow-sm">
                 <div className="flex items-center gap-4">
                     <button
                         onClick={onBack}
@@ -147,7 +147,7 @@ function MainLayout({ environment, onBack }) {
             </AnimatePresence>
 
             {/* Content Area */}
-            <main className="flex-1 mt-10 pt-6 pb-20 p-6 md:px-12">
+            <main className="flex-1 mt-14 pt-8 pb-24 px-6 md:px-16">
                 <div className="max-w-6xl mx-auto">
                     <motion.div
                         key={activeTab}

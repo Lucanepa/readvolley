@@ -77,13 +77,9 @@ function RulesView({ environment }) {
                     <BookOpen size={14} /> Official Rulebook
                 </motion.div>
                 <h1 className="text-5xl md:text-6xl font-black mb-6 tracking-tight">Structured <span className={accentColor}>Rules</span></h1>
-                <p className="text-xl text-text-secondary font-medium">
-                    Navigate through the official {environment} volleyball hierarchy.
-                    Data is synced directly from international standards.
-                </p>
             </div>
 
-            <div className="space-y-4 max-w-4xl mx-auto w-full">
+            <div className="space-y-6 max-w-4xl mx-auto">
                 {chapters.map((chapter) => (
                     <div key={chapter.id} className="glass rounded-[32px] overflow-hidden border border-white/5 shadow-2xl transition-all duration-500 hover:border-white/10">
                         <button
