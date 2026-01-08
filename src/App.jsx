@@ -20,10 +20,11 @@ function App() {
                         <motion.h1
                             initial={{ y: -20 }}
                             animate={{ y: 0 }}
-                            className="text-4xl md:text-6xl mb-12 text-center tracking-tight"
+                            className="text-4xl md:text-6xl mb-4 text-center tracking-tight"
                         >
                             Volleyball <span className="text-beach-primary">Rules</span>
                         </motion.h1>
+                        <p className="text-text-muted text-xs mb-10 opacity-50">v1.0.1</p>
 
                         <div className="flex flex-col md:flex-row gap-8 w-full max-w-4xl">
                             <EnvironmentCard
