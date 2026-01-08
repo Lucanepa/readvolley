@@ -21,7 +21,8 @@ function DefinitionsView({ environment }) {
         setLoading(true)
         try {
             const data = await api.getDefinitions(environment)
-            setDefinitions(data)
+            const sorted = [...data].sort((a, b) => a.term.localeCompare(b.term))
+            setDefinitions(sorted)
         } catch (e) {
             console.error(e)
         } finally {
@@ -88,7 +89,7 @@ function DefinitionsView({ environment }) {
             </div>
 
             <div style={{ maxWidth: '48rem', margin: '0 auto', width: '100%', marginBottom: '1.5rem', position: 'relative' }}>
-                <div style={{ position: 'absolute', insetY: 0, left: '1.25rem', display: 'flex', alignItems: 'center', pointerEvents: 'none', height: '100%' }}>
+                <div style={{ position: 'absolute', top: 0, bottom: 0, left: '1.25rem', display: 'flex', alignItems: 'center', pointerEvents: 'none', height: '100%' }}>
                     <Search style={{ width: '1.25rem', height: '1.25rem', color: theme.colors.text.muted }} />
                 </div>
                 <input

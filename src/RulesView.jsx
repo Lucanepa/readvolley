@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronDown, ChevronRight, BookOpen, AlertCircle, Hash } from 'lucide-react'
 import { api } from './services/api'
-import CasebookModal from './components/CasebookModal'
+import { theme } from './styles/theme'
 
 function RulesView({ environment }) {
     const [chapters, setChapters] = useState([])
@@ -12,13 +12,13 @@ function RulesView({ environment }) {
     const [articles, setArticles] = useState({})
     const [rules, setRules] = useState({})
     const [casebookData, setCasebookData] = useState({}) // Mapping: ruleId -> [caseNumbers]
-
-    const [selectedRuleForCase, setSelectedRuleForCase] = useState(null)
+    const [expandedRuleCases, setExpandedRuleCases] = useState(null) // ID of rule whose cases are expanded
+    const [fullCases, setFullCases] = useState({}) // Mapping: ruleId -> [caseDetails]
 
     const isBeach = environment === 'beach'
-    const accentColor = isBeach ? 'text-beach-primary' : 'text-indoor-primary'
-    const accentBg = isBeach ? 'bg-beach-primary' : 'bg-indoor-primary'
-    const accentBorder = isBeach ? 'border-beach-primary/30' : 'border-indoor-primary/30'
+    const color = isBeach ? theme.colors.beach.primary : theme.colors.indoor.primary
+    const accentBg = isBeach ? theme.colors.beach.primary : theme.colors.indoor.primary
+    const accentBorder = isBeach ? 'rgba(245,158,11,0.3)' : 'rgba(59,130,246,0.3)'
 
     useEffect(() => {
         loadChapters()
@@ -73,152 +73,367 @@ function RulesView({ environment }) {
         }
     }
 
+    const toggleCaseAccordion = async (ruleId) => {
+        if (expandedRuleCases === ruleId) {
+            setExpandedRuleCases(null)
+            return
+        }
+        setExpandedRuleCases(ruleId)
+        if (!fullCases[ruleId]) {
+            try {
+                const data = await api.getCasebookForRules([ruleId])
+                setFullCases(prev => ({ ...prev, [ruleId]: data }))
+            } catch (e) {
+                console.error("Error loading case details:", e)
+            }
+        }
+    }
+
     if (loading) return (
-        <div className="flex flex-col items-center justify-center p-32 text-text-muted gap-4">
-            <div className={`w-12 h-12 border-4 ${accentBorder} border-t-transparent rounded-full animate-spin`} />
-            <p className="font-bold tracking-widest uppercase text-sm">Synchronizing Rulebook...</p>
+        <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '4rem 2rem',
+            color: theme.colors.text.muted,
+            gap: '1.5rem'
+        }}>
+            <div style={{
+                width: '3rem',
+                height: '3rem',
+                border: `0.25rem solid ${accentBorder}`,
+                borderTopColor: 'transparent',
+                borderRadius: '50%',
+                animation: 'spin 1s linear infinite'
+            }} />
+            <p style={{ fontWeight: '700', letterSpacing: '0.1em', textTransform: 'uppercase', fontSize: '0.85rem' }}>Synchronizing Rulebook...</p>
+            <style>{`
+                @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+            `}</style>
         </div>
     )
 
     return (
-        <div className="space-y-24 animate-fade-in pb-32">
-            <div className="text-center max-w-2xl mx-auto mb-20">
-                <motion.div
-                    initial={{ scale: 0.9, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 mb-6 text-xs font-black tracking-[0.2em] uppercase ${accentColor}`}
-                >
-                </motion.div>
-                <h1 className="text-5xl md:text-6xl font-black mb-6 tracking-tight" style={{ marginBottom: '20px' }}><span className={accentColor}>Rules of the Game</span></h1>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.1rem', paddingBottom: '1rem', width: '100%' }}>
+            <div style={{ textAlign: 'center', maxWidth: '42rem', margin: '0', marginBottom: '0.5rem' }}>
+                <h1 style={{ fontSize: '3.5rem', fontWeight: '900', marginBottom: '0.75rem', letterSpacing: '-0.025em', fontFamily: 'Outfit, sans-serif' }}>
+                    <span style={{ color: color }}>Rules of the Game</span>
+                </h1>
             </div>
 
-            <div className="flex flex-col max-w-6xl mx-auto w-full" style={{ gap: '20px' }}>
-                {chapters.map((chapter, index) => (
-                    <div key={chapter.id} className="glass rounded-[32px] overflow-hidden border 
-                    border-white/5 shadow-2xl transition-all duration-500 hover:border-white/10 w-full"
-                        style={{
-                            marginTop: index === 0 ? '10px' : '0',
-                            marginBottom: index === chapters.length - 1 ? '10px' : '0'
-                        }}>
-                        <button
-                            onClick={() => toggleChapter(chapter.id)}
-                            className="w-full flex items-center justify-between p-8 hover:bg-white/5 transition-all text-left group"
+            <div style={{ display: 'flex', flexDirection: 'column', maxWidth: theme.styles.container.maxWidth, margin: '0 auto', width: '100%', gap: '0.5rem' }}>
+                {chapters.map((chapter, index) => {
+                    const isExp = expandedChapter === chapter.id
+                    return (
+                        <div key={chapter.id} style={{
+                            ...theme.styles.glass,
+                            borderRadius: '2rem',
+                            overflow: 'hidden',
+                            border: '0.0625rem solid rgba(255,255,255,0.05)',
+                            boxShadow: '0 1.5rem 3rem -0.75rem rgba(0, 0, 0, 0.5)',
+                            transition: 'all 0.5s ease',
+                            width: '100%',
+                            marginTop: index === 0 ? '0.625rem' : '0',
+                            marginBottom: index === chapters.length - 1 ? '0.625rem' : '0'
+                        }}
+                            onMouseEnter={(e) => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'}
+                            onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.05)'}
                         >
-                            <div className="flex items-center gap-6">
-                                <div className={`w-7 h-7 rounded-full bg-white/5 flex items-center justify-center font-black text-[10px] border border-white/5 group-hover:border-white/10 transition-all ${accentColor}`}>
-                                    {chapter.order || chapter.id.match(/\d+/)}
+                            <button
+                                onClick={() => toggleChapter(chapter.id)}
+                                style={{
+                                    width: '100%',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    padding: '0.75rem 1rem',
+                                    transition: 'all 0.2s',
+                                    textAlign: 'left',
+                                    cursor: 'pointer'
+                                }}
+                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'}
+                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                            >
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+                                    <div style={{
+                                        width: '1.75rem',
+                                        height: '1.75rem',
+                                        borderRadius: '50%',
+                                        backgroundColor: 'rgba(255,255,255,0.05)',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        fontWeight: '900',
+                                        fontSize: '0.65rem',
+                                        border: '0.0625rem solid rgba(255,255,255,0.05)',
+                                        transition: 'all 0.2s',
+                                        color: color
+                                    }}>
+                                        {chapter.order || chapter.id.match(/\d+/)}
+                                    </div>
+                                    <span style={{ fontWeight: '900', fontSize: '1.4rem', letterSpacing: '-0.025em' }}>{chapter.title}</span>
                                 </div>
-                                <div>
-                                    <span className="font-black text-2xl tracking-tight">{chapter.title}</span>
+                                <div style={{
+                                    padding: '0.5rem',
+                                    borderRadius: '50%',
+                                    transition: 'transform 0.3s',
+                                    transform: isExp ? 'rotate(180deg)' : 'none'
+                                }}>
+                                    <ChevronDown size={24} style={{ color: theme.colors.text.muted }} />
                                 </div>
-                            </div>
-                            <div className={`p-2 rounded-full transition-transform duration-300 ${expandedChapter === chapter.id ? 'rotate-180 mb-1' : ''}`}>
-                                <ChevronDown className="w-6 h-6 text-text-muted" />
-                            </div>
-                        </button>
+                            </button>
 
-                        <AnimatePresence>
-                            {expandedChapter === chapter.id && (
-                                <motion.div
-                                    initial={{ height: 0, opacity: 0 }}
-                                    animate={{ height: 'auto', opacity: 1 }}
-                                    exit={{ height: 0, opacity: 0 }}
-                                    className="overflow-hidden border-t border-white/5 bg-black/20"
-                                >
-                                    <div className="flex flex-col" style={{ gap: '20px', padding: '15px' }}>
-                                        {articles[chapter.id]?.map((article, index) => (
-                                            <div key={article.id} className="rounded-2xl overflow-hidden bg-white/5 border border-white/5"
-                                                style={{
-                                                    marginTop: index === 0 ? '10px' : '0',
-                                                    marginBottom: index === articles[chapter.id].length - 1 ? '10px' : '0'
+                            <AnimatePresence>
+                                {isExp && (
+                                    <motion.div
+                                        initial={{ height: 0, opacity: 0 }}
+                                        animate={{ height: 'auto', opacity: 1 }}
+                                        exit={{ height: 0, opacity: 0 }}
+                                        style={{ overflow: 'hidden', borderTop: '0.0625rem solid rgba(255,255,255,0.05)', backgroundColor: 'rgba(0,0,0,0.2)' }}
+                                    >
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', padding: '1rem' }}>
+                                            {articles[chapter.id]?.map((article, aIndex) => (
+                                                <div key={article.id} style={{
+                                                    borderRadius: '1.25rem',
+                                                    overflow: 'hidden',
+                                                    backgroundColor: 'rgba(255,255,255,0.05)',
+                                                    border: '0.0625rem solid rgba(255,255,255,0.05)',
+                                                    marginTop: aIndex === 0 ? '0.625rem' : '0',
+                                                    marginBottom: aIndex === articles[chapter.id].length - 1 ? '0.625rem' : '0'
                                                 }}>
-                                                <button
-                                                    onClick={() => toggleArticle(article.id)}
-                                                    className="w-full flex items-center justify-between p-6 hover:bg-white/5 transition-all text-left"
-                                                >
-                                                    <div className="flex items-center gap-4">
-                                                        <div className={`w-7 h-7 rounded-full flex items-center justify-center bg-white/5 border border-white/5 text-[10px] font-black ${accentColor}`}>
-                                                            {article.article_n}
+                                                    <button
+                                                        onClick={() => toggleArticle(article.id)}
+                                                        style={{
+                                                            width: '100%',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'space-between',
+                                                            padding: '1.25rem 1.75rem',
+                                                            textAlign: 'left',
+                                                            cursor: 'pointer',
+                                                            transition: 'all 0.2s'
+                                                        }}
+                                                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'}
+                                                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                                    >
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+                                                            <div style={{
+                                                                width: '1.75rem',
+                                                                height: '1.75rem',
+                                                                borderRadius: '50%',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                justifyContent: 'center',
+                                                                backgroundColor: 'rgba(255,255,255,0.05)',
+                                                                border: '0.0625rem solid rgba(255,255,255,0.05)',
+                                                                fontSize: '0.65rem',
+                                                                fontWeight: '900',
+                                                                color: color
+                                                            }}>
+                                                                {article.article_n}
+                                                            </div>
+                                                            <span style={{ fontWeight: '800', fontSize: '1.1rem', letterSpacing: '-0.02em' }}>{article.title}</span>
                                                         </div>
-                                                        <span className="font-bold text-lg tracking-tight">{article.title}</span>
-                                                    </div>
-                                                    <ChevronRight className={`w-5 h-5 text-text-muted transition-transform duration-300 ${expandedArticle === article.id ? 'rotate-90' : ''}`} />
-                                                </button>
+                                                        <ChevronRight size={20} style={{
+                                                            color: theme.colors.text.muted,
+                                                            transition: 'transform 0.3s',
+                                                            transform: expandedArticle === article.id ? 'rotate(90deg)' : 'none'
+                                                        }} />
+                                                    </button>
 
-                                                <AnimatePresence>
-                                                    {expandedArticle === article.id && (
-                                                        <motion.div
-                                                            initial={{ height: 0 }}
-                                                            animate={{ height: 'auto' }}
-                                                            exit={{ height: 0 }}
-                                                            className="overflow-hidden border-t border-white/5 bg-black/40"
-                                                        >
-                                                            <div className="flex flex-col" style={{ gap: '20px', padding: '15px' }}>
-                                                                {rules[article.id]?.map((rule, index) => (
-                                                                    <div key={rule.id} className="group relative"
-                                                                        style={{
-                                                                            marginTop: index === 0 ? '10px' : '0',
-                                                                            marginBottom: index === rules[article.id].length - 1 ? '10px' : '0'
+                                                    <AnimatePresence>
+                                                        {expandedArticle === article.id && (
+                                                            <motion.div
+                                                                initial={{ height: 0 }}
+                                                                animate={{ height: 'auto' }}
+                                                                exit={{ height: 0 }}
+                                                                style={{ overflow: 'hidden', borderTop: '0.0625rem solid rgba(255,255,255,0.05)', backgroundColor: 'rgba(0,0,0,0.4)' }}
+                                                            >
+                                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', padding: '1rem' }}>
+                                                                    {rules[article.id]?.map((rule, rIndex) => (
+                                                                        <div key={rule.id} style={{
+                                                                            position: 'relative',
+                                                                            marginTop: rIndex === 0 ? '0.5rem' : '0',
+                                                                            marginBottom: rIndex === rules[article.id].length - 1 ? '0.5rem' : '0'
                                                                         }}>
-                                                                        <div className="flex gap-10 items-baseline">
-                                                                            {/* Rule Number Column */}
-                                                                            <div className={`shrink-0 w-16 text-xl font-black tracking-tight ${accentColor} opacity-50 group-hover:opacity-100 transition-opacity leading-tight text-left`}>
-                                                                                {rule.rule_n}
-                                                                            </div>
+                                                                            <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'baseline' }}>
+                                                                                {/* Rule Number Column */}
+                                                                                <div style={{
+                                                                                    flexShrink: 0,
+                                                                                    width: '3.5rem',
+                                                                                    fontSize: '1.1rem',
+                                                                                    fontWeight: '900',
+                                                                                    letterSpacing: '-0.025em',
+                                                                                    color: color,
+                                                                                    opacity: 0.5,
+                                                                                    lineHeight: '1.2',
+                                                                                    textAlign: 'left'
+                                                                                }}>
+                                                                                    {rule.rule_n}
+                                                                                </div>
 
-                                                                            {/* Content Column */}
-                                                                            <div className="flex-1">
-                                                                                {/* Title Row - Only rendered if title or casebook exists */}
-                                                                                {((index === 0 || rule.title !== rules[article.id][index - 1]?.title) || casebookData[rule.id]) && (
-                                                                                    <div className="flex flex-col md:flex-row items-baseline justify-between gap-6 mb-4">
-                                                                                        <div className="flex-1 flex items-baseline gap-3">
-                                                                                            {(index === 0 || rule.title !== rules[article.id][index - 1]?.title) && (
-                                                                                                <h4 className="font-black text-xl tracking-tight text-white/90 leading-tight">
-                                                                                                    {rule.title}
-                                                                                                </h4>
-                                                                                            )}
+                                                                                {/* Content Column */}
+                                                                                <div style={{ flex: 1 }}>
+                                                                                    {/* Title Row */}
+                                                                                    {((rIndex === 0 || rule.title !== rules[article.id][rIndex - 1]?.title) || casebookData[rule.id]) && (
+                                                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '0.75rem' }}>
+                                                                                            <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.75rem', flexWrap: 'wrap' }}>
+                                                                                                {(rIndex === 0 || rule.title !== rules[article.id][rIndex - 1]?.title) && (
+                                                                                                    <h4 style={{ fontWeight: '900', fontSize: '1.15rem', opacity: 0.9, lineHeight: '1.2', margin: 0, letterSpacing: '-0.01em' }}>
+                                                                                                        {rule.title}
+                                                                                                    </h4>
+                                                                                                )}
 
-                                                                                            {casebookData[rule.id] && (
-                                                                                                <button
-                                                                                                    onClick={() => setSelectedRuleForCase(rule)}
-                                                                                                    className="flex items-center gap-2 px-3 py-1 rounded-lg bg-orange-500/10 border border-orange-500/20 hover:bg-orange-500/20 transition-all text-[10px] font-black tracking-wider text-orange-500 uppercase ml-2 shadow-lg align-middle"
-                                                                                                >
-                                                                                                    <AlertCircle size={12} />
-                                                                                                    {casebookData[rule.id].length > 1 ? 'Cases' : 'Case'} {casebookData[rule.id].join(', ')}
-                                                                                                </button>
-                                                                                            )}
+                                                                                                {casebookData[rule.id] && (
+                                                                                                    <button
+                                                                                                        onClick={() => toggleCaseAccordion(rule.id)}
+                                                                                                        style={{
+                                                                                                            display: 'flex',
+                                                                                                            alignItems: 'center',
+                                                                                                            gap: '0.4rem',
+                                                                                                            padding: '0.25rem 0.6rem',
+                                                                                                            borderRadius: '0.5rem',
+                                                                                                            border: '0.0625rem solid',
+                                                                                                            transition: 'all 0.2s',
+                                                                                                            fontSize: '0.6rem',
+                                                                                                            fontWeight: '900',
+                                                                                                            letterSpacing: '0.05em',
+                                                                                                            textTransform: 'uppercase',
+                                                                                                            cursor: 'pointer',
+                                                                                                            backgroundColor: expandedRuleCases === rule.id ? '#f97316' : 'rgba(249,115,22,0.1)',
+                                                                                                            borderColor: expandedRuleCases === rule.id ? '#f97316' : 'rgba(249,115,22,0.2)',
+                                                                                                            color: expandedRuleCases === rule.id ? '#ffffff' : '#f97316'
+                                                                                                        }}
+                                                                                                    >
+                                                                                                        <AlertCircle size={10} />
+                                                                                                        {casebookData[rule.id].length > 1 ? 'Cases' : 'Case'} {casebookData[rule.id].join(', ')}
+                                                                                                        <ChevronDown size={10} style={{ transition: 'transform 0.3s', transform: expandedRuleCases === rule.id ? 'rotate(180deg)' : 'none' }} />
+                                                                                                    </button>
+                                                                                                )}
+                                                                                            </div>
                                                                                         </div>
-                                                                                    </div>
-                                                                                )}
+                                                                                    )}
 
-                                                                                {!rule.is_placeholder && rule.text !== rule.title && (
-                                                                                    <p className="text-xl text-text-secondary leading-tight font-medium text-justify">
-                                                                                        {rule.text}
-                                                                                    </p>
-                                                                                )}
+                                                                                    {!rule.is_placeholder && rule.text !== rule.title && (
+                                                                                        <p style={{ fontSize: '1.15rem', color: theme.colors.text.secondary, lineHeight: '1.4', fontWeight: '500', textAlign: 'justify', margin: 0 }}>
+                                                                                            {rule.text}
+                                                                                        </p>
+                                                                                    )}
+
+                                                                                    {/* Inline Casebook Accordion */}
+                                                                                    <AnimatePresence>
+                                                                                        {expandedRuleCases === rule.id && (
+                                                                                            <motion.div
+                                                                                                initial={{ height: 0, opacity: 0 }}
+                                                                                                animate={{ height: 'auto', opacity: 1 }}
+                                                                                                exit={{ height: 0, opacity: 0 }}
+                                                                                                style={{ overflow: 'hidden' }}
+                                                                                            >
+                                                                                                <div style={{ marginTop: '1rem', marginBottom: '1rem', display: 'flex', flexDirection: 'column', gap: '2rem', paddingBottom: '1rem' }}>
+                                                                                                    {!fullCases[rule.id] ? (
+                                                                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '1rem 0' }}>
+                                                                                                            <div style={{
+                                                                                                                width: '1.25rem',
+                                                                                                                height: '1.25rem',
+                                                                                                                border: '0.125rem solid rgba(249,115,22,0.3)',
+                                                                                                                borderTopColor: '#f97316',
+                                                                                                                borderRadius: '50%',
+                                                                                                                animation: 'spin 1s linear infinite'
+                                                                                                            }} />
+                                                                                                            <span style={{ fontSize: '0.7rem', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'rgba(249,115,22,0.7)' }}>Consulting official records...</span>
+                                                                                                        </div>
+                                                                                                    ) : fullCases[rule.id].length === 0 ? (
+                                                                                                        <p style={{ fontSize: '0.875rem', color: theme.colors.text.muted, fontStyle: 'italic', padding: '2rem 1rem' }}>No detailed scenarios available for this rule.</p>
+                                                                                                    ) : (
+                                                                                                        fullCases[rule.id].map((entry) => (
+                                                                                                            <div key={entry.id} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                                                                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 0.5rem' }}>
+                                                                                                                    <span style={{
+                                                                                                                        fontSize: '0.6rem',
+                                                                                                                        fontWeight: '900',
+                                                                                                                        textTransform: 'uppercase',
+                                                                                                                        letterSpacing: '0.15em',
+                                                                                                                        color: '#f97316',
+                                                                                                                        backgroundColor: 'rgba(249,115,22,0.1)',
+                                                                                                                        padding: '0.4rem 0.6rem',
+                                                                                                                        borderRadius: '0.5rem',
+                                                                                                                        border: '0.0625rem solid rgba(249,115,22,0.2)'
+                                                                                                                    }}>
+                                                                                                                        Scenario {entry.case_number}
+                                                                                                                    </span>
+                                                                                                                    {entry.video_link && (
+                                                                                                                        <a
+                                                                                                                            href={entry.video_link}
+                                                                                                                            target="_blank"
+                                                                                                                            rel="noopener noreferrer"
+                                                                                                                            style={{
+                                                                                                                                fontSize: '0.7rem',
+                                                                                                                                fontWeight: '700',
+                                                                                                                                color: '#60a5fa',
+                                                                                                                                textDecoration: 'none',
+                                                                                                                                padding: '0.3rem 0.6rem',
+                                                                                                                                backgroundColor: 'rgba(96, 165, 250, 0.05)',
+                                                                                                                                borderRadius: '0.4rem',
+                                                                                                                                display: 'flex',
+                                                                                                                                alignItems: 'center',
+                                                                                                                                gap: '0.3rem'
+                                                                                                                            }}
+                                                                                                                        >
+                                                                                                                            Video Proof <ChevronRight size={10} />
+                                                                                                                        </a>
+                                                                                                                    )}
+                                                                                                                </div>
+                                                                                                                <div style={{
+                                                                                                                    padding: '1rem',
+                                                                                                                    borderRadius: '1.5rem',
+                                                                                                                    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                                                                                                                    border: '0.0625rem solid rgba(255, 255, 255, 0.05)',
+                                                                                                                    display: 'flex',
+                                                                                                                    flexDirection: 'column',
+                                                                                                                    gap: '0.75rem',
+                                                                                                                    boxShadow: '0 1rem 2.5rem -0.5rem rgba(0, 0, 0, 0.5)',
+                                                                                                                    backdropFilter: 'blur(0.5rem)',
+                                                                                                                    margin: '0'
+                                                                                                                }}>
+                                                                                                                    <p style={{
+                                                                                                                        fontSize: '1rem', color: '#ffffff', lineHeight: '1.5', fontWeight: '700',
+                                                                                                                        fontStyle: 'italic', letterSpacing: '-0.01em', margin: 0, textAlign: 'justify'
+                                                                                                                    }}>
+                                                                                                                        "{entry.case_text}"
+                                                                                                                    </p>
+                                                                                                                    <div style={{ paddingTop: '0.75rem', borderTop: '0.0625rem solid rgba(255, 255, 255, 0.1)' }}>
+                                                                                                                        <p style={{ fontSize: '0.95rem', color: theme.colors.text.secondary, lineHeight: '1.5', fontWeight: '600', margin: 0, textAlign: 'justify' }}>
+                                                                                                                            {entry.case_ruling}
+                                                                                                                        </p>
+                                                                                                                    </div>
+                                                                                                                </div>
+                                                                                                            </div>
+                                                                                                        ))
+                                                                                                    )}
+                                                                                                </div>
+                                                                                            </motion.div>
+                                                                                        )}
+                                                                                    </AnimatePresence>
+                                                                                </div>
                                                                             </div>
                                                                         </div>
-                                                                    </div>
-                                                                ))}
-                                                            </div>
-                                                        </motion.div>
-                                                    )}
-                                                </AnimatePresence>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-                    </div>
-                ))}
+                                                                    ))}
+                                                                </div>
+                                                            </motion.div>
+                                                        )}
+                                                    </AnimatePresence>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+                    )
+                })}
             </div>
-
-            <CasebookModal
-                rule={selectedRuleForCase}
-                onClose={() => setSelectedRuleForCase(null)}
-            />
-        </div >
+        </div>
     )
 }
 

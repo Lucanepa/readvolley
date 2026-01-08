@@ -2,29 +2,29 @@ import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
     Book, Image as ImageIcon, Info, ShieldCheck, List,
-    Menu, X, ChevronLeft, Search, ChevronDown
+    ChevronLeft, Search, ChevronDown
 } from 'lucide-react'
 import RulesView from '../RulesView'
 import DiagramsView from '../DiagramsView'
 import DefinitionsView from '../DefinitionsView'
 import ProtocolsView from '../ProtocolsView'
 import GesturesView from '../GesturesView'
+import { theme } from '../styles/theme'
 
 function MainLayout({ environment, onBack }) {
     const [activeTab, setActiveTab] = useState('rules')
     const [isMenuOpen, setIsMenuOpen] = useState(false)
 
     const isBeach = environment === 'beach'
-    const accentColor = isBeach ? 'text-beach-primary' : 'text-indoor-primary'
-    const accentBg = isBeach ? 'bg-beach-primary' : 'bg-indoor-primary'
-    const accentBorder = isBeach ? 'border-beach-primary/30' : 'border-indoor-primary/30'
+    const color = isBeach ? theme.colors.beach.primary : theme.colors.indoor.primary
+    const accentBg = isBeach ? theme.colors.beach.primary : theme.colors.indoor.primary
 
     const navItems = [
-        { id: 'rules', label: 'RULES', icon: <Book size={16} /> },
-        { id: 'diagrams', label: 'DIAGRAMS', icon: <ImageIcon size={16} /> },
-        { id: 'definitions', label: 'DEFINITIONS', icon: <Info size={16} /> },
-        { id: 'protocols', label: 'PROTOCOLS', icon: <ShieldCheck size={16} /> },
-        { id: 'gestures', label: 'GESTURES', icon: <List size={16} /> },
+        { id: 'rules', label: 'RULES', icon: <Book size={18} /> },
+        { id: 'diagrams', label: 'DIAGRAMS', icon: <ImageIcon size={18} /> },
+        { id: 'definitions', label: 'DEFINITIONS', icon: <Info size={18} /> },
+        { id: 'protocols', label: 'PROTOCOLS', icon: <ShieldCheck size={18} /> },
+        { id: 'gestures', label: 'HAND SIGNALS', icon: <List size={18} /> },
     ]
 
     const activeItem = navItems.find(item => item.id === activeTab)
@@ -41,128 +41,246 @@ function MainLayout({ environment, onBack }) {
     }
 
     return (
-        <div className="min-h-screen bg-bg-dark text-text-primary flex flex-col font-sans items-center overflow-x-hidden">
-            {/* Header - Fixed & Centered using VW/Left-1/2 */}
+        <div style={{
+            minHeight: '100dvh',
+            backgroundColor: theme.colors.bg.dark,
+            color: theme.colors.text.primary,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            overflowX: 'hidden',
+            fontFamily: 'Inter, system-ui, sans-serif'
+        }}>
+            {/* Header - Fixed & Fluid */}
             <header
-                className="fixed top-0 left-1/2 -translate-x-1/2 z-50 glass border-b border-white/5 px-8 md:px-16 w-full max-w-6xl shadow-2xl"
-                style={{ height: '40px' }}
+                style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    zIndex: 100,
+                    ...theme.styles.glass,
+                    padding: '0 1rem',
+                    width: '100%',
+                    maxWidth: theme.styles.container.maxWidth,
+                    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+                    height: theme.spacing.headerHeight,
+                    display: 'flex',
+                    alignItems: 'center'
+                }}
             >
-                <div className="h-full w-full flex items-center">
-                    {/* Left Column: 33% */}
-                    <div className="w-[33%] flex items-center justify-start">
-                        <div className="flex items-center gap-4">
-                            <button
-                                onClick={onBack}
-                                className="p-1.5 hover:bg-white/5 rounded-lg transition-colors group"
-                                style={{ marginLeft: '20px' }}
-                            >
-                                <ChevronLeft size={20} className="group-hover:-translate-x-0.5 transition-transform" />
-                            </button>
-                            <div className="flex items-center gap-2">
-                                <span className={`text-lg font-black tracking-tighter ${accentColor}`}>
-                                    {environment.toUpperCase()}
-                                </span>
-                                <div className="w-px h-3 bg-white/10 mx-1" />
-                                <span className="text-sm font-bold opacity-40 translate-y-[1px]">VOLLEY</span>
-                            </div>
+                <div style={{
+                    height: '100%',
+                    width: '100%',
+                    display: 'grid',
+                    gridTemplateColumns: '1fr auto 1fr',
+                    alignItems: 'center'
+                }}>
+                    {/* Left: Back + Env (Compact for mobile) */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifySelf: 'start' }}>
+                        <button
+                            onClick={onBack}
+                            style={{
+                                padding: '0.5rem',
+                                borderRadius: '0.5rem',
+                                transition: 'background-color 0.2s',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                cursor: 'pointer'
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'}
+                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                        >
+                            <ChevronLeft size={20} />
+                        </button>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                            <span style={{
+                                fontSize: '1rem',
+                                fontWeight: '900',
+                                letterSpacing: '-0.02em',
+                                color: color,
+                                fontFamily: 'Outfit, sans-serif'
+                            }}>
+                                {environment.toUpperCase()}
+                            </span>
                         </div>
                     </div>
 
-                    {/* Middle Column: 34% (Centered) */}
-                    <div className="w-[34%] flex items-center justify-center">
-                        {/* Collapsible Nav Menu */}
-                        <div className="relative">
-                            <button
-                                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                                className={`flex items-center gap-8 px-4 py-1.5 rounded-xl border transition-all duration-300 ${isMenuOpen
-                                    ? `${accentBg} border-white/20 shadow-lg`
-                                    : 'border-white/5 bg-white/5 hover:bg-white/10'
-                                    }`}
-                            >
-                                <div className={isMenuOpen ? 'text-white' : accentColor}>{activeItem.icon}</div>
-                                <span className="text-[11px] font-black tracking-widest">{activeItem.label}</span>
-                                <ChevronDown size={14} className={`opacity-40 transition-transform duration-300 ${isMenuOpen ? 'rotate-180' : ''}`} />
-                            </button>
+                    {/* Middle: Menu Trigger (Main control) */}
+                    <div style={{ position: 'relative', justifySelf: 'center' }}>
+                        <button
+                            onClick={() => setIsMenuOpen(!isMenuOpen)}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.75rem',
+                                padding: '0.4rem 0.8rem',
+                                borderRadius: '0.75rem',
+                                border: '1px solid',
+                                borderColor: isMenuOpen ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.05)',
+                                backgroundColor: isMenuOpen ? accentBg : 'rgba(255,255,255,0.05)',
+                                transition: 'all 0.3s ease',
+                                cursor: 'pointer',
+                                boxShadow: isMenuOpen ? '0 10px 15px -3px rgba(0,0,0,0.1)' : 'none'
+                            }}
+                        >
+                            <div style={{ color: isMenuOpen ? '#ffffff' : color }}>{activeItem.icon}</div>
+                            <span style={{ fontSize: '0.65rem', fontWeight: '900', letterSpacing: '0.05em' }}>{activeItem.label}</span>
+                            <ChevronDown size={14} style={{ opacity: 0.4, transition: 'transform 0.3s', transform: isMenuOpen ? 'rotate(180deg)' : 'none' }} />
+                        </button>
 
-                            <AnimatePresence>
-                                {isMenuOpen && (
-                                    <>
-                                        <motion.div
-                                            initial={{ opacity: 0 }}
-                                            animate={{ opacity: 1 }}
-                                            exit={{ opacity: 0 }}
-                                            className="fixed inset-0 z-40 bg-black/40 backdrop-blur-[2px]"
-                                            onClick={() => setIsMenuOpen(false)}
-                                        />
-                                        <motion.div
-                                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                            className="absolute top-full mt-2 left-1/2 -translate-x-1/2 w-auto bg-black rounded-2xl border border-white/10 shadow-2xl z-50 overflow-hidden"
-                                            style={{ padding: '10px', width: 'auto', alignItems: 'center', justifyContent: 'center', display: 'flex', flexDirection: 'column', gap: '20px' }}
-                                        >
-                                            <div className="p-2 flex flex-col" style={{ gap: '3px' }}>
-                                                {navItems.map(item => (
-                                                    <button
-                                                        key={item.id}
-                                                        onClick={() => {
-                                                            setActiveTab(item.id)
-                                                            setIsMenuOpen(false)
-                                                        }}
-                                                        className={`w-full flex items-center gap-5 px-4 py-3 pl-12 rounded-xl text-left transition-all ${activeTab === item.id
-                                                            ? `${accentBg} text-white`
-                                                            : 'hover:bg-white/5 text-text-secondary hover:text-white'
-                                                            }`}
-                                                    >
-                                                        <div className={activeTab === item.id ? 'text-white' : accentColor}>
-                                                            {item.icon}
-                                                        </div>
-                                                        <span className="text-xs font-black tracking-wider">{item.label}</span>
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </motion.div>
-                                    </>
-                                )}
-                            </AnimatePresence>
-                        </div>
+                        <AnimatePresence>
+                            {isMenuOpen && (
+                                <>
+                                    <motion.div
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        style={{
+                                            position: 'fixed',
+                                            inset: 0,
+                                            zIndex: 200,
+                                            backgroundColor: 'rgba(0,0,0,0.6)',
+                                            backdropFilter: 'blur(4px)'
+                                        }}
+                                        onClick={() => setIsMenuOpen(false)}
+                                    />
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                        style={{
+                                            position: 'absolute',
+                                            top: '110%',
+                                            right: '0',
+                                            width: '14rem',
+                                            backgroundColor: '#000000',
+                                            borderRadius: '1.25rem',
+                                            border: '1px solid rgba(255,255,255,0.1)',
+                                            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.8)',
+                                            zIndex: 210,
+                                            overflow: 'hidden',
+                                            padding: '0.5rem',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            gap: '0.25rem'
+                                        }}
+                                    >
+                                        {navItems.map(item => (
+                                            <button
+                                                key={item.id}
+                                                onClick={() => {
+                                                    setActiveTab(item.id)
+                                                    setIsMenuOpen(false)
+                                                }}
+                                                style={{
+                                                    width: '100%',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '1rem',
+                                                    padding: '0.75rem 1rem',
+                                                    borderRadius: '0.75rem',
+                                                    textAlign: 'left',
+                                                    transition: 'all 0.2s',
+                                                    backgroundColor: activeTab === item.id ? accentBg : 'transparent',
+                                                    color: activeTab === item.id ? '#ffffff' : theme.colors.text.secondary,
+                                                    cursor: 'pointer'
+                                                }}
+                                                onMouseEnter={(e) => {
+                                                    if (activeTab !== item.id) {
+                                                        e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'
+                                                        e.currentTarget.style.color = '#ffffff'
+                                                    }
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                    if (activeTab !== item.id) {
+                                                        e.currentTarget.style.backgroundColor = 'transparent'
+                                                        e.currentTarget.style.color = theme.colors.text.secondary
+                                                    }
+                                                }}
+                                            >
+                                                <div style={{ color: activeTab === item.id ? '#ffffff' : color }}>
+                                                    {item.icon}
+                                                </div>
+                                                <span style={{ fontSize: '0.75rem', fontWeight: '800', letterSpacing: '0.02em' }}>{item.label}</span>
+                                            </button>
+                                        ))}
+                                    </motion.div>
+                                </>
+                            )}
+                        </AnimatePresence>
                     </div>
 
-                    {/* Right Column: 33% */}
-                    <div className="w-[33%] flex items-center justify-end">
-                        <div className="flex items-center gap-3">
-                            <button style={{ marginRight: '20px' }} className="p-2 glass rounded-lg hover:bg-white/10 transition-all border border-white/5 opacity-60 hover:opacity-100">
-                                <Search size={18} />
-                            </button>
-                        </div>
+                    {/* Right: Search (Compact) */}
+                    <div style={{ justifySelf: 'end' }}>
+                        <button
+                            style={{
+                                padding: '0.5rem',
+                                ...theme.styles.glass,
+                                borderRadius: '0.5rem',
+                                transition: 'all 0.2s',
+                                opacity: 0.6,
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                            }}
+                            onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)' }}
+                            onMouseLeave={(e) => { e.currentTarget.style.opacity = '0.6'; e.currentTarget.style.backgroundColor = theme.styles.glass.background }}
+                        >
+                            <Search size={18} />
+                        </button>
                     </div>
                 </div>
             </header>
 
-            {/* Viewport heights for spacing */}
-            <div style={{ height: '40px' }} className="w-full shrink-0" />
+            {/* Spacer for Fixed Header */}
+            <div style={{ height: theme.spacing.headerHeight, width: '100%', flexShrink: 0 }} />
 
-            {/* Main Content Area - Locked width and centered */}
-            <main className="w-full max-w-6xl flex flex-col items-center justify-start py-24 px-6 md:px-12 flex-1">
+            {/* Main Content Area */}
+            <main style={{
+                width: '100%',
+                maxWidth: theme.styles.container.maxWidth,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                padding: '1rem',
+                flex: 1
+            }}>
                 <motion.div
                     key={activeTab}
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, ease: "circOut" }}
-                    className="w-full flex flex-col items-center"
+                    transition={{ duration: 0.4, ease: "easeOut" }}
+                    style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}
                 >
                     {renderContent()}
                 </motion.div>
             </main>
 
-            <div style={{ height: '40px' }} className="w-full shrink-0" />
+            {/* Spacer for Fixed Footer */}
+            <div style={{ height: theme.spacing.footerHeight, width: '100%', flexShrink: 0 }} />
 
-            {/* Footer - Fixed & Centered */}
+            {/* Footer - Fixed & Fluid */}
             <footer
-                className="fixed bottom-0 left-1/2 -translate-x-1/2 z-50 glass border-t border-white/5 flex items-center justify-center w-full max-w-6xl"
-                style={{ height: '40px' }}
+                style={{
+                    position: 'fixed',
+                    bottom: 0,
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    zIndex: 100,
+                    ...theme.styles.glass,
+                    borderTop: '1px solid rgba(255,255,255,0.05)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '100%',
+                    maxWidth: theme.styles.container.maxWidth,
+                    height: theme.spacing.footerHeight
+                }}
             >
-                <span className="text-[10px] font-bold tracking-[0.3em] text-text-muted opacity-60 uppercase">
+                <span style={{ fontSize: '0.6rem', fontWeight: '700', letterSpacing: '0.2em', color: theme.colors.text.muted, opacity: 0.6, textTransform: 'uppercase', textAlign: 'center' }}>
                     © 2026 OpenVolley • Elite Rules Companion
                 </span>
             </footer>
