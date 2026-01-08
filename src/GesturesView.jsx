@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { List, User, Users, AlertTriangle } from 'lucide-react'
+import { List } from 'lucide-react'
 import { api } from './services/api'
+import { theme } from './styles/theme'
 
 function GesturesView({ environment }) {
     const [gestures, setGestures] = useState([])
     const [loading, setLoading] = useState(true)
 
     const isBeach = environment === 'beach'
-    const accentColor = isBeach ? 'text-beach-primary' : 'text-indoor-primary'
-    const accentBg = isBeach ? 'bg-beach-primary' : 'bg-indoor-primary'
-    const borderAccent = isBeach ? 'border-beach-primary/30' : 'border-indoor-primary/30'
+    const color = isBeach ? theme.colors.beach.primary : theme.colors.indoor.primary
+    const accentBorder = isBeach ? 'rgba(245,158,11,0.3)' : 'rgba(59,130,246,0.3)'
 
     useEffect(() => {
         loadGestures()
@@ -29,100 +29,242 @@ function GesturesView({ environment }) {
     }
 
     if (loading) return (
-        <div className="flex flex-col items-center justify-center p-32 text-text-muted gap-4">
-            <div className={`w-12 h-12 border-4 ${borderAccent} border-t-transparent rounded-full animate-spin`} />
-            <p className="font-bold tracking-widest uppercase text-sm">Preparing Referee Signals...</p>
+        <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '4rem 1rem',
+            color: theme.colors.text.muted,
+            gap: '1.5rem'
+        }}>
+            <div style={{
+                width: '3rem',
+                height: '3rem',
+                border: `0.25rem solid ${accentBorder}`,
+                borderTopColor: 'transparent',
+                borderRadius: '50%',
+                animation: 'spin 1s linear infinite'
+            }} />
+            <p style={{ fontWeight: '700', letterSpacing: '0.1em', textTransform: 'uppercase', fontSize: '0.85rem' }}>Preparing Referee Signals...</p>
+            <style>{`
+                @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+            `}</style>
         </div>
     )
 
     return (
-        <div className="space-y-24 animate-fade-in pb-32">
-            <div className="text-center max-w-2xl mx-auto mb-24">
-                <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 mb-6 text-xs font-black tracking-[0.2em] uppercase ${accentColor}`}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.1rem', paddingBottom: '1rem', width: '100%' }}>
+            <div style={{ textAlign: 'center', maxWidth: '42rem', margin: '0 auto', marginBottom: '0.5rem' }}>
+                <div style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    padding: '0.3rem 0.8rem',
+                    borderRadius: '99rem',
+                    backgroundColor: 'rgba(255,255,255,0.05)',
+                    border: '0.0625rem solid rgba(255,255,255,0.1)',
+                    marginBottom: '0.75rem',
+                    fontSize: '0.65rem',
+                    fontWeight: '900',
+                    letterSpacing: '0.15rem',
+                    textTransform: 'uppercase',
+                    color: color
+                }}>
                     <List size={14} /> Official Signals
                 </div>
-                <h1 className="text-5xl md:text-6xl font-black mb-6 tracking-tight">Referee <span className={accentColor}>Gestures</span></h1>
-                <p className="text-xl text-text-secondary font-medium">
-                    The visual language of officiating. Explore standard hand signals
-                    and the corresponding responsibilities for match officials.
-                </p>
+                <h1 style={{ fontSize: '3.5rem', fontWeight: '900', marginBottom: '0.75rem', letterSpacing: '-0.025em', fontFamily: 'Outfit, sans-serif' }}>
+                    Referee <span style={{ color: color }}>Hand Signals</span>
+                </h1>
             </div>
 
-            <div className="grid grid-cols-1 gap-12 max-w-6xl mx-auto w-full">
+            <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 400px), 1fr))',
+                gap: '1.25rem',
+                maxWidth: theme.styles.container.maxWidth,
+                margin: '0 auto',
+                width: '100%'
+            }}>
                 {gestures.map((gesture, index) => (
                     <motion.div
                         key={gesture.id}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.05 }}
-                        className="group glass rounded-[48px] overflow-hidden border border-white/5 hover:border-white/10 transition-all duration-700 shadow-2xl"
+                        style={{
+                            ...theme.styles.glass,
+                            borderRadius: '2rem',
+                            overflow: 'hidden',
+                            border: '0.0625rem solid rgba(255,255,255,0.05)',
+                            transition: 'all 0.5s',
+                            boxShadow: '0 1.5rem 3rem -0.75rem rgba(0, 0, 0, 0.5)',
+                            padding: '1.5rem',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            gap: '1.25rem'
+                        }}
                     >
-                        <div className="flex flex-col lg:flex-row">
-                            {/* Image Section */}
-                            <div className="lg:w-1/3 bg-black/40 p-10 flex items-center justify-center border-b lg:border-b-0 lg:border-r border-white/5">
-                                <div className="relative">
-                                    <div className={`absolute -inset-4 rounded-full blur-3xl opacity-20 ${accentBg}`} />
-                                    <img
-                                        src={gesture.url}
-                                        alt={gesture.title}
-                                        className="relative w-full max-w-[200px] h-auto object-contain group-hover:scale-110 transition-transform duration-700"
-                                    />
-                                </div>
+                        {/* 1. Number and Title */}
+                        <div style={{ textAlign: 'center', width: '100%' }}>
+                            <div style={{
+                                display: 'inline-block',
+                                padding: '0.25rem 0.6rem',
+                                borderRadius: '0.5rem',
+                                backgroundColor: 'rgba(255,255,255,0.05)',
+                                border: '0.0625rem solid rgba(255,255,255,0.1)',
+                                fontWeight: '700',
+                                fontSize: '0.65rem',
+                                letterSpacing: '0.1em',
+                                textTransform: 'uppercase',
+                                color: color,
+                                marginBottom: '0.5rem'
+                            }}>
+                                SIGNAL {gesture.gestureNumber || gesture.gesture_n}
                             </div>
-
-                            {/* Info Section */}
-                            <div className="lg:w-2/3 p-12 lg:p-16 flex flex-col justify-center gap-12">
-                                <div className="space-y-3">
-                                    <div className="flex items-center gap-3">
-                                        <span className={`px-4 py-1.5 rounded-xl glass border border-white/10 font-bold text-xs tracking-widest uppercase ${accentColor}`}>
-                                            SIGNAL {gesture.gestureNumber || index + 1}
-                                        </span>
-                                    </div>
-                                    {(index === 0 || gesture.title !== gestures[index - 1]?.title) && (
-                                        <h3 className="text-4xl font-black tracking-tighter uppercase">{gesture.title}</h3>
-                                    )}
-                                    {gesture.description !== gesture.title && (
-                                        <p className="text-xl text-text-secondary font-medium leading-relaxed">
-                                            {gesture.description}
-                                        </p>
-                                    )}
-                                </div>
-
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                    <div className="p-8 rounded-[32px] bg-white/5 border border-white/5 flex items-start gap-4 transition-colors hover:bg-white/10">
-                                        <div className={`p-3 rounded-2xl bg-blend-soft-light ${gesture.referee_1 ? accentBg : 'bg-white/10'}`}>
-                                            <User size={20} className="text-white" />
-                                        </div>
-                                        <div>
-                                            <p className="text-[10px] font-black tracking-widest uppercase opacity-40">1st Referee</p>
-                                            <p className={`font-bold text-lg ${gesture.referee_1 ? 'text-white' : 'text-text-muted'}`}>
-                                                {gesture.referee_1 ? 'Responsible' : 'N/A'}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <div className="p-8 rounded-[32px] bg-white/5 border border-white/5 flex items-start gap-4 transition-colors hover:bg-white/10">
-                                        <div className={`p-3 rounded-2xl bg-blend-soft-light ${gesture.referee_2 ? accentBg : 'bg-white/10'}`}>
-                                            <Users size={20} className="text-white" />
-                                        </div>
-                                        <div>
-                                            <p className="text-[10px] font-black tracking-widest uppercase opacity-40">2nd Referee</p>
-                                            <p className={`font-bold text-lg ${gesture.referee_2 ? 'text-white' : 'text-text-muted'}`}>
-                                                {gesture.referee_2 ? 'Responsible' : 'N/A'}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            <h3 style={{
+                                fontSize: '1.25rem',
+                                fontWeight: '900',
+                                letterSpacing: '-0.04em',
+                                textTransform: 'uppercase',
+                                margin: 0,
+                                lineHeight: '1.2',
+                                minHeight: '3rem',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                            }}>
+                                {gesture.title}
+                            </h3>
                         </div>
+
+                        {/* 2. Image */}
+                        <div style={{
+                            position: 'relative',
+                            width: '100%',
+                            flex: 1,
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            padding: '1rem',
+                            backgroundColor: 'rgba(0,0,0,0.2)',
+                            borderRadius: '1.5rem',
+                            border: '0.0625rem solid rgba(255,255,255,0.05)',
+                            minHeight: '200px'
+                        }}>
+                            <div style={{
+                                position: 'absolute',
+                                inset: 0,
+                                borderRadius: '1.5rem',
+                                filter: 'blur(2.5rem)',
+                                opacity: 0.1,
+                                backgroundColor: color,
+                                zIndex: 0
+                            }} />
+                            <img
+                                src={gesture.url}
+                                alt={gesture.title}
+                                style={{
+                                    position: 'relative',
+                                    width: '100%',
+                                    height: '100%',
+                                    maxHeight: '200px',
+                                    objectFit: 'contain',
+                                    zIndex: 1,
+                                    transition: 'transform 0.5s ease'
+                                }}
+                                onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+                                onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                            />
+                        </div>
+
+                        {/* 3. Note */}
+                        <div style={{ textAlign: 'center', width: '100%', minHeight: '3rem' }}>
+                            {gesture.text && (
+                                <p style={{ fontSize: '1rem', color: theme.colors.text.primary, fontWeight: '500', lineHeight: '1.4', margin: 0, marginBottom: '0.25rem' }}>
+                                    {gesture.text}
+                                </p>
+                            )}
+                            {gesture.notes && (
+                                <p style={{ fontSize: '0.85rem', color: theme.colors.text.secondary, fontWeight: '400', lineHeight: '1.4', margin: 0, fontStyle: 'italic', opacity: 0.8 }}>
+                                    {gesture.notes}
+                                </p>
+                            )}
+                        </div>
+
+                        {/* 4. Referees - Compact */}
+                        {(gesture.first_r || gesture.second_r) && (
+                            <div style={{
+                                display: 'flex',
+                                gap: '0.5rem',
+                                flexWrap: 'wrap',
+                                justifyContent: 'center',
+                                width: '100%',
+                                marginTop: 'auto',
+                                borderTop: '0.0625rem solid rgba(255,255,255,0.05)',
+                                paddingTop: '1rem'
+                            }}>
+                                {gesture.first_r && (
+                                    <div style={{
+                                        padding: '0.4rem 0.75rem',
+                                        borderRadius: '0.75rem',
+                                        backgroundColor: gesture.first_r_special ? `${color}15` : 'rgba(255,255,255,0.03)',
+                                        border: gesture.first_r_special ? `0.0625rem dashed ${color}` : '0.0625rem solid rgba(255,255,255,0.1)',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '0.5rem',
+                                        minWidth: '10rem',
+                                        justifyContent: 'center'
+                                    }}>
+                                        <span style={{ fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: '#fff' }}>
+                                            1st Referee
+                                        </span>
+                                        {gesture.first_r_special && (
+                                            <span style={{ fontSize: '0.65rem', fontWeight: '800', color: color, textTransform: 'uppercase', letterSpacing: '0.02em' }}>
+                                                (Special)
+                                            </span>
+                                        )}
+                                    </div>
+                                )}
+
+                                {gesture.second_r && (
+                                    <div style={{
+                                        padding: '0.4rem 0.75rem',
+                                        borderRadius: '0.75rem',
+                                        backgroundColor: gesture.second_r_special ? `${color}15` : 'rgba(255,255,255,0.03)',
+                                        border: gesture.second_r_special ? `0.0625rem dashed ${color}` : '0.0625rem solid rgba(255,255,255,0.1)',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '0.5rem',
+                                        minWidth: '10rem',
+                                        justifyContent: 'center'
+                                    }}>
+                                        <span style={{ fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: '#fff' }}>
+                                            2nd Referee
+                                        </span>
+                                        {gesture.second_r_special && (
+                                            <span style={{ fontSize: '0.65rem', fontWeight: '800', color: color, textTransform: 'uppercase', letterSpacing: '0.02em' }}>
+                                                (Special)
+                                            </span>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                        {(!gesture.first_r && !gesture.second_r) && (
+                            <div style={{ marginTop: 'auto', paddingTop: '1rem', minHeight: '2rem' }}></div>
+                        )}
+
                     </motion.div>
                 ))}
-            </div>
 
-            {gestures.length === 0 && (
-                <div className="text-center py-24 glass rounded-[40px] border border-dashed border-white/10">
-                    <p className="text-text-muted font-bold tracking-widest uppercase">Visualizing gestures, please wait...</p>
-                </div>
-            )}
+                {gestures.length === 0 && (
+                    <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '4rem 1rem', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: '2rem', border: '0.0625rem dashed rgba(255,255,255,0.1)' }}>
+                        <p style={{ color: theme.colors.text.muted, fontWeight: '700', letterSpacing: '0.1em', textTransform: 'uppercase', fontSize: '0.8rem' }}>Visualizing hand signals, please wait...</p>
+                    </div>
+                )}
+            </div>
         </div>
     )
 }
