@@ -38,7 +38,8 @@ export const api = {
         const { data, error } = await supabase
             .from('casebook')
             .select('*')
-            .contains('rule_reference_array', ruleIds)
+            // Using a raw filter to ensure proper JSON array formatting which PostgREST expects for jsonb contains
+            .filter('rule_reference_array', 'cs', `["${ruleIds[0]}"]`)
 
         if (error) throw error
         return data

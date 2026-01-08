@@ -64,8 +64,8 @@ function MainLayout({ environment, onBack }) {
                             key={item.id}
                             onClick={() => setActiveTab(item.id)}
                             className={`px-5 py-2.5 rounded-xl flex items-center gap-2 text-sm font-bold transition-all duration-300 ${activeTab === item.id
-                                    ? `${accentBg} text-white shadow-lg`
-                                    : 'text-text-secondary hover:text-white hover:bg-white/5'
+                                ? `${accentBg} text-white shadow-lg`
+                                : 'text-text-secondary hover:text-white hover:bg-white/5'
                                 }`}
                         >
                             {item.icon}
@@ -121,8 +121,8 @@ function MainLayout({ environment, onBack }) {
                                             setIsSidebarOpen(false)
                                         }}
                                         className={`p-5 rounded-2xl flex items-center gap-4 text-lg font-bold transition-all ${activeTab === item.id
-                                                ? `${accentBg} text-white`
-                                                : 'bg-white/5 text-text-secondary hover:bg-white/10 hover:text-white'
+                                            ? `${accentBg} text-white`
+                                            : 'bg-white/5 text-text-secondary hover:bg-white/10 hover:text-white'
                                             }`}
                                     >
                                         <div className={activeTab === item.id ? 'text-white' : accentColor}>
@@ -147,7 +147,7 @@ function MainLayout({ environment, onBack }) {
             </AnimatePresence>
 
             {/* Content Area */}
-            <main className="flex-1 mt-20 p-6 md:p-12">
+            <main className="flex-1 mt-20 pt-8 p-6 md:p-12">
                 <div className="max-w-6xl mx-auto">
                     <motion.div
                         key={activeTab}
