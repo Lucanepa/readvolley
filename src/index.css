@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root {
   font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -13,20 +17,22 @@
   -moz-osx-font-smoothing: grayscale;
 
   /* Theme Colors */
-  --beach-primary: #f59e0b; /* Amber 500 */
+  --beach-primary: #f59e0b;
+  /* Amber 500 */
   --beach-secondary: #d97706;
-  --indoor-primary: #3b82f6; /* Blue 500 */
+  --indoor-primary: #3b82f6;
+  /* Blue 500 */
   --indoor-secondary: #2563eb;
-  
+
   --bg-darker: #050505;
   --bg-dark: #0a0a0a;
   --bg-surface: #1a1a1a;
   --bg-hover: #2a2a2a;
-  
+
   --text-primary: #ffffff;
   --text-secondary: #a1a1aa;
   --text-muted: #71717a;
-  
+
   --border-subtle: #333333;
   --glass-bg: rgba(26, 26, 26, 0.8);
 }
@@ -49,7 +55,11 @@ body {
   width: 100%;
 }
 
-h1, h2, h3, h4, .font-heading {
+h1,
+h2,
+h3,
+h4,
+.font-heading {
   font-family: 'Outfit', sans-serif;
   font-weight: 700;
   color: var(--text-primary);
@@ -76,8 +86,15 @@ button {
 
 /* Animations */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .animate-fade-in {
