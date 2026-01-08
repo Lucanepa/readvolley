@@ -43,11 +43,8 @@ function App() {
                                     />
                                 )}
                             </AnimatePresence>
-                            {/* Base Background */}
-                            <div
-                                className="absolute inset-0 bg-cover bg-center opacity-40"
-                                style={{ backgroundImage: 'url("/beach-bg.png")' }}
-                            />
+                            {/* Neutral Base Background (Implicitly bg-dark) */}
+                            <div className="absolute inset-0 bg-bg-dark opacity-100" />
                         </div>
 
                         <div className="relative z-20 container mx-auto px-6 flex flex-col items-center">
@@ -94,7 +91,7 @@ function App() {
                                 animate={{ opacity: 0.5 }}
                                 className="mt-16 text-xs tracking-widest uppercase opacity-50"
                             >
-                                Powered by OpenVolley • v1.1.0
+                                Powered by OpenVolley • v1.2.0
                             </motion.p>
                         </div>
                     </motion.div>
@@ -123,14 +120,14 @@ function EnvironmentCard({ title, subtitle, icon, onClick, onHover, onBlur, acce
             onMouseEnter={onHover}
             onMouseLeave={onBlur}
             onClick={onClick}
-            className={`group relative glass p-10 rounded-[32px] flex flex-col items-start text-left transition-all duration-500 border-2 border-white/5 ${borderClass} ${glowClass}`}
+            className={`group relative glass p-12 py-16 rounded-[40px] flex flex-col items-center justify-center text-center transition-all duration-500 border-2 border-white/5 ${borderClass} ${glowClass}`}
         >
-            <div className={`p-4 rounded-2xl bg-white/5 mb-8 group-hover:bg-white/10 transition-colors ${colorClass}`}>
+            <div className={`p-5 rounded-2xl bg-white/5 mb-8 group-hover:bg-white/10 transition-colors shadow-inner ${colorClass}`}>
                 {icon}
             </div>
-            <h2 className="text-5xl font-black mb-2 tracking-tight group-hover:translate-x-1 transition-transform">{title}</h2>
-            <p className="text-text-secondary text-lg mb-8 font-medium">{subtitle}</p>
-            <div className="mt-auto flex items-center gap-2 text-sm font-bold tracking-widest uppercase opacity-0 group-hover:opacity-100 transition-all duration-300">
+            <h2 className="text-5xl font-black mb-3 tracking-tight group-hover:scale-105 transition-transform duration-500">{title}</h2>
+            <p className="text-text-secondary text-lg mb-10 font-medium opacity-80">{subtitle}</p>
+            <div className="flex items-center gap-2 text-sm font-bold tracking-widest uppercase opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-4 group-hover:translate-y-0">
                 Explore Rules <ChevronRight className="w-4 h-4" />
             </div>
         </motion.button>
