@@ -1,40 +1,39 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  --font-family-sans: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+
+  --color-beach-primary: #f59e0b;
+  --color-beach-secondary: #d97706;
+  --color-indoor-primary: #3b82f6;
+  --color-indoor-secondary: #2563eb;
+
+  --color-bg-darker: #050505;
+  --color-bg-dark: #0a0a0a;
+  --color-bg-surface: #1a1a1a;
+  --color-bg-hover: #2a2a2a;
+
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #a1a1aa;
+  --color-text-muted: #71717a;
+
+  --color-border-subtle: #333333;
+  --glass-bg: rgba(26, 26, 26, 0.8);
+}
 
 :root {
-  font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: var(--font-family-sans);
   line-height: 1.5;
   font-weight: 400;
 
   color-scheme: dark;
   color: rgba(255, 255, 255, 0.87);
-  background-color: #0a0a0a;
+  background-color: var(--color-bg-dark);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-
-  /* Theme Colors */
-  --beach-primary: #f59e0b;
-  /* Amber 500 */
-  --beach-secondary: #d97706;
-  --indoor-primary: #3b82f6;
-  /* Blue 500 */
-  --indoor-secondary: #2563eb;
-
-  --bg-darker: #050505;
-  --bg-dark: #0a0a0a;
-  --bg-surface: #1a1a1a;
-  --bg-hover: #2a2a2a;
-
-  --text-primary: #ffffff;
-  --text-secondary: #a1a1aa;
-  --text-muted: #71717a;
-
-  --border-subtle: #333333;
-  --glass-bg: rgba(26, 26, 26, 0.8);
 }
 
 * {
@@ -48,7 +47,7 @@ body {
   display: flex;
   min-width: 320px;
   min-height: 100vh;
-  background-color: var(--bg-dark);
+  background-color: var(--color-bg-dark);
 }
 
 #root {
@@ -62,7 +61,7 @@ h4,
 .font-heading {
   font-family: 'Outfit', sans-serif;
   font-weight: 700;
-  color: var(--text-primary);
+  color: var(--color-text-primary);
 }
 
 button {
@@ -77,7 +76,7 @@ button {
   background: var(--glass-bg);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--color-border-subtle);
 }
 
 .transition-all {
