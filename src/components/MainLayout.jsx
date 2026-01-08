@@ -44,7 +44,7 @@ function MainLayout({ environment, onBack }) {
         <div className="min-h-screen bg-bg-dark text-text-primary flex flex-col font-sans">
             {/* Header - Fixed 40px */}
             <header className="fixed top-0 left-0 right-0 z-50 glass border-b border-white/5 px-8 md:px-16" style={{ height: '40px' }}>
-                <div className="h-full max-w-7xl mx-auto flex items-center justify-between gap-4">
+                <div className="h-full max-w-6xl mx-auto flex items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
                         <button
                             onClick={onBack}
@@ -129,8 +129,8 @@ function MainLayout({ environment, onBack }) {
             <div style={{ height: '40px' }} className="w-full shrink-0" />
 
             {/* Main Content Area - Perfectly Centered */}
-            <main className="flex-1 flex flex-col items-center justify-start py-20 px-6 md:px-12 w-full">
-                <div className="w-full max-w-5xl mx-auto flex flex-col items-center">
+            <main className="flex-1 flex flex-col items-center justify-start py-20 px-6 md:px-12 w-full overflow-y-auto">
+                <div className="w-full max-w-6xl mx-auto flex flex-col items-center">
                     <motion.div
                         key={activeTab}
                         initial={{ opacity: 0, y: 20 }}
