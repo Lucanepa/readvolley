@@ -78,7 +78,7 @@ function RulesView({ environment }) {
                 <h1 className="text-5xl md:text-6xl font-black mb-6 tracking-tight">Structured <span className={accentColor}>Rules</span></h1>
             </div>
 
-            <div className="space-y-8 max-w-4xl mx-auto">
+            <div className="space-y-8 max-w-6xl mx-auto w-full">
                 {chapters.map((chapter) => (
                     <div key={chapter.id} className="glass rounded-[32px] overflow-hidden border 
                     border-white/5 shadow-2xl transition-all duration-500 hover:border-white/10">
