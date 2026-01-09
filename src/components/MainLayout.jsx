@@ -2,13 +2,14 @@ import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
     Book, Image as ImageIcon, Info, ShieldCheck, List,
-    ChevronLeft, Search, ChevronDown
+    ChevronLeft, Search, ChevronDown, MoreHorizontal
 } from 'lucide-react'
 import RulesView from '../RulesView'
 import DiagramsView from '../DiagramsView'
 import DefinitionsView from '../DefinitionsView'
 import ProtocolsView from '../ProtocolsView'
 import GesturesView from '../GesturesView'
+import ExtraView from '../ExtraView'
 import { theme } from '../styles/theme'
 
 function MainLayout({ environment, onBack, onOpenSearch }) {
@@ -25,6 +26,7 @@ function MainLayout({ environment, onBack, onOpenSearch }) {
         { id: 'definitions', label: 'DEFINITIONS', icon: <Info size={18} /> },
         { id: 'protocols', label: 'PROTOCOLS', icon: <ShieldCheck size={18} /> },
         { id: 'gestures', label: 'HAND SIGNALS', icon: <List size={18} /> },
+        { id: 'extra', label: 'EXTRA', icon: <MoreHorizontal size={18} /> },
     ]
 
     const activeItem = navItems.find(item => item.id === activeTab)
@@ -36,6 +38,7 @@ function MainLayout({ environment, onBack, onOpenSearch }) {
             case 'definitions': return <DefinitionsView environment={environment} />
             case 'protocols': return <ProtocolsView environment={environment} />
             case 'gestures': return <GesturesView environment={environment} />
+            case 'extra': return <ExtraView environment={environment} />
             default: return <RulesView environment={environment} />
         }
     }
