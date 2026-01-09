@@ -171,5 +171,45 @@ export const api = {
         if (e2) throw e2
 
         return { gameProtocol, otherProtocols }
+    },
+
+    async getAllSearchData() {
+        // Fetch everything in parallel
+        const [
+            { data: chapters },
+            { data: articles },
+            { data: rules },
+            { data: cases },
+            { data: definitions },
+            { data: gameProtocols },
+            { data: otherProtocols },
+            { data: diagrams },
+            { data: gestures },
+            { data: casebookRules }
+        ] = await Promise.all([
+            supabase.from('chapters').select('*'),
+            supabase.from('articles').select('*'),
+            supabase.from('rules').select('*'),
+            supabase.from('casebook').select('*'),
+            supabase.from('definitions').select('*'),
+            supabase.from('game_protocol').select('*'),
+            supabase.from('other_protocols').select('*'),
+            supabase.from('diagrams').select('*'),
+            supabase.from('gestures').select('*'),
+            supabase.from('casebook_rules').select('*')
+        ])
+
+        return {
+            chapters: chapters || [],
+            articles: articles || [],
+            rules: rules || [],
+            cases: cases || [],
+            definitions: definitions || [],
+            gameProtocols: gameProtocols || [],
+            otherProtocols: otherProtocols || [],
+            diagrams: diagrams || [],
+            gestures: gestures || [],
+            casebookRules: casebookRules || []
+        }
     }
 }

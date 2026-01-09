@@ -11,7 +11,7 @@ import ProtocolsView from '../ProtocolsView'
 import GesturesView from '../GesturesView'
 import { theme } from '../styles/theme'
 
-function MainLayout({ environment, onBack }) {
+function MainLayout({ environment, onBack, onOpenSearch }) {
     const [activeTab, setActiveTab] = useState('rules')
     const [isMenuOpen, setIsMenuOpen] = useState(false)
 
@@ -215,6 +215,7 @@ function MainLayout({ environment, onBack }) {
                     {/* Right: Search (Compact) */}
                     <div style={{ justifySelf: 'end' }}>
                         <button
+                            onClick={onOpenSearch}
                             style={{
                                 padding: '0.5rem',
                                 ...theme.styles.glass,

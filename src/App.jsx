@@ -1,12 +1,14 @@
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Sun, Home, ChevronRight } from 'lucide-react'
+import { Sun, Home, ChevronRight, Search } from 'lucide-react'
 import MainLayout from './components/MainLayout'
+import SearchView from './SearchView'
 import { theme } from './styles/theme'
 
 function App() {
     const [environment, setEnvironment] = useState(null)
     const [hoveredEnv, setHoveredEnv] = useState(null)
+    const [isSearchOpen, setIsSearchOpen] = useState(false)
 
     return (
         <div style={{
@@ -135,6 +137,41 @@ function App() {
                                 />
                             </div>
 
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ delay: 0.8 }}
+                                style={{
+                                    marginTop: '4rem',
+                                    display: 'flex',
+                                    justifyContent: 'center'
+                                }}
+                            >
+                                <button
+                                    onClick={() => setIsSearchOpen(true)}
+                                    style={{
+                                        ...theme.styles.glass,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '0.75rem',
+                                        padding: '1rem 2rem',
+                                        borderRadius: '1.5rem',
+                                        color: '#ffffff',
+                                        cursor: 'pointer',
+                                        fontSize: '1rem',
+                                        fontWeight: '800',
+                                        letterSpacing: '0.05em',
+                                        transition: 'all 0.3s ease',
+                                        border: '1px solid rgba(255, 255, 255, 0.1)'
+                                    }}
+                                    onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.transform = 'scale(1.05)' }}
+                                    onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(26, 26, 26, 0.8)'; e.currentTarget.style.transform = 'scale(1)' }}
+                                >
+                                    <Search size={20} />
+                                    SEARCH EVERYTHING
+                                </button>
+                            </motion.div>
+
                             <motion.p
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 0.5 }}
@@ -157,7 +194,25 @@ function App() {
                         key="main"
                         environment={environment}
                         onBack={() => setEnvironment(null)}
+                        onOpenSearch={() => setIsSearchOpen(true)}
                     />
+                )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+                {isSearchOpen && (
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        transition={{ duration: 0.3 }}
+                        style={{ position: 'fixed', inset: 0, zIndex: 1000 }}
+                    >
+                        <SearchView
+                            onClose={() => setIsSearchOpen(false)}
+                            initialEnvironment={environment}
+                        />
+                    </motion.div>
                 )}
             </AnimatePresence>
         </div>
