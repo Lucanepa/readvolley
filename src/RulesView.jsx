@@ -14,6 +14,9 @@ function RulesView({ environment }) {
     const [casebookData, setCasebookData] = useState({}) // Mapping: ruleId -> [caseNumbers]
     const [expandedRuleCases, setExpandedRuleCases] = useState(null) // ID of rule whose cases are expanded
     const [fullCases, setFullCases] = useState({}) // Mapping: ruleId -> [caseDetails]
+    const [articleHasGuidelines, setArticleHasGuidelines] = useState({}) // articleId -> boolean
+    const [articleGuidelines, setArticleGuidelines] = useState({}) // articleId -> [guidelineDetails]
+    const [expandedArticleGuidelines, setExpandedArticleGuidelines] = useState(null) // ID of article whose guidelines are expanded
 
     const isBeach = environment === 'beach'
     const color = isBeach ? theme.colors.beach.primary : theme.colors.indoor.primary
@@ -70,6 +73,18 @@ function RulesView({ environment }) {
             } catch (e) {
                 console.error("Error checking casebook existence:", e)
             }
+
+            // Check guidelines existence
+            if (articleHasGuidelines[articleId] === undefined) {
+                try {
+                    const ruleIds = currentRules.map(r => r.id)
+                    console.log("RulesView: Checking guidelines for article:", articleId, "rules:", ruleIds)
+                    const exists = await api.getGuidelinesExistence(articleId, ruleIds)
+                    setArticleHasGuidelines(prev => ({ ...prev, [articleId]: exists }))
+                } catch (e) {
+                    console.error("RulesView: Error checking guidelines existence:", e)
+                }
+            }
         }
     }
 
@@ -85,6 +100,25 @@ function RulesView({ environment }) {
                 setFullCases(prev => ({ ...prev, [ruleId]: data }))
             } catch (e) {
                 console.error("Error loading case details:", e)
+            }
+        }
+    }
+
+    const toggleArticleGuidelines = async (articleId) => {
+        console.log("RulesView: Toggling guidelines for article:", articleId)
+        if (expandedArticleGuidelines === articleId) {
+            setExpandedArticleGuidelines(null)
+            return
+        }
+        setExpandedArticleGuidelines(articleId)
+        if (!articleGuidelines[articleId]) {
+            try {
+                const ruleIds = rules[articleId]?.map(r => r.id) || []
+                console.log("RulesView: Fetching full guidelines for article:", articleId, "rules:", ruleIds)
+                const data = await api.getGuidelinesForArticle(articleId, ruleIds)
+                setArticleGuidelines(prev => ({ ...prev, [articleId]: data }))
+            } catch (e) {
+                console.error("RulesView: Error loading guidelines:", e)
             }
         }
     }
@@ -118,7 +152,7 @@ function RulesView({ environment }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.1rem', paddingBottom: '1rem', width: '100%' }}>
             <div style={{ textAlign: 'center', maxWidth: '42rem', margin: '0', marginBottom: '0.5rem' }}>
                 <h1 style={{ fontSize: '3.5rem', fontWeight: '900', marginBottom: '0.75rem', letterSpacing: '-0.025em', fontFamily: 'Outfit, sans-serif' }}>
-                    <span style={{ color: color }}>Rules of the Game</span>
+                 Rules of the <span style={{ color: color }}>Game</span>
                 </h1>
             </div>
 
@@ -251,6 +285,107 @@ function RulesView({ environment }) {
                                                                 style={{ overflow: 'hidden', borderTop: '0.0625rem solid rgba(255,255,255,0.05)', backgroundColor: 'rgba(0,0,0,0.4)' }}
                                                             >
                                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', padding: '1rem' }}>
+                                                                    {/* Referee Guidelines Button */}
+                                                                    {articleHasGuidelines[article.id] && (
+                                                                        <div style={{ padding: '0.5rem 0' }}>
+                                                                            <button
+                                                                                onClick={() => toggleArticleGuidelines(article.id)}
+                                                                                style={{
+                                                                                    width: '100%',
+                                                                                    display: 'flex',
+                                                                                    alignItems: 'center',
+                                                                                    justifyContent: 'center',
+                                                                                    gap: '0.75rem',
+                                                                                    padding: '1rem',
+                                                                                    borderRadius: '1rem',
+                                                                                    border: '0.0625rem solid',
+                                                                                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                                                                    fontSize: '0.9rem',
+                                                                                    fontWeight: '800',
+                                                                                    letterSpacing: '0.05em',
+                                                                                    textTransform: 'uppercase',
+                                                                                    cursor: 'pointer',
+                                                                                    backgroundColor: expandedArticleGuidelines === article.id ? color : 'rgba(255,255,255,0.05)',
+                                                                                    borderColor: expandedArticleGuidelines === article.id ? color : 'rgba(255,255,255,0.1)',
+                                                                                    color: expandedArticleGuidelines === article.id ? '#000000' : '#ffffff',
+                                                                                    boxShadow: expandedArticleGuidelines === article.id ? `0 0.5rem 1.5rem -0.25rem ${color}66` : 'none'
+                                                                                }}
+                                                                            >
+                                                                                <BookOpen size={18} />
+                                                                                Referee Guidelines and Instructions
+                                                                                <ChevronDown size={18} style={{ transition: 'transform 0.4s', transform: expandedArticleGuidelines === article.id ? 'rotate(180deg)' : 'none' }} />
+                                                                            </button>
+
+                                                                            <AnimatePresence>
+                                                                                {expandedArticleGuidelines === article.id && (
+                                                                                    <motion.div
+                                                                                        initial={{ height: 0, opacity: 0 }}
+                                                                                        animate={{ height: 'auto', opacity: 1 }}
+                                                                                        exit={{ height: 0, opacity: 0 }}
+                                                                                        style={{ overflow: 'hidden' }}
+                                                                                    >
+                                                                                        <div style={{
+                                                                                            marginTop: '1.5rem',
+                                                                                            marginBottom: '1rem',
+                                                                                            display: 'flex',
+                                                                                            flexDirection: 'column',
+                                                                                            gap: '1.25rem',
+                                                                                            padding: '1.5rem',
+                                                                                            borderRadius: '1.5rem',
+                                                                                            backgroundColor: 'rgba(255,255,255,0.02)',
+                                                                                            border: '0.0625rem solid rgba(255,255,255,0.05)'
+                                                                                        }}>
+                                                                                            {!articleGuidelines[article.id] ? (
+                                                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '1rem 0' }}>
+                                                                                                    <div style={{
+                                                                                                        width: '1.25rem',
+                                                                                                        height: '1.25rem',
+                                                                                                        border: `0.125rem solid ${accentBorder}`,
+                                                                                                        borderTopColor: color,
+                                                                                                        borderRadius: '50%',
+                                                                                                        animation: 'spin 1s linear infinite'
+                                                                                                    }} />
+                                                                                                    <span style={{ fontSize: '0.7rem', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.1em', color: theme.colors.text.muted }}>Loading guidelines...</span>
+                                                                                                </div>
+                                                                                            ) : (
+                                                                                                articleGuidelines[article.id].map((gl) => (
+                                                                                                    <div key={gl.id} style={{
+                                                                                                        display: 'flex',
+                                                                                                        flexDirection: 'column',
+                                                                                                        gap: '0.75rem',
+                                                                                                        paddingBottom: '1.25rem',
+                                                                                                        borderBottom: '0.0625rem solid rgba(255,255,255,0.05)',
+                                                                                                        lastChild: { borderBottom: 'none' }
+                                                                                                    }}>
+                                                                                                        {gl.title && (
+                                                                                                            <h5 style={{ fontSize: '1.1rem', fontWeight: '900', color: color, margin: 0 }}>{gl.title}</h5>
+                                                                                                        )}
+                                                                                                        <p style={{ fontSize: '1.05rem', color: '#ffffff', lineHeight: '1.5', fontWeight: '600', margin: 0, textAlign: 'justify' }}>
+                                                                                                            {gl.text}
+                                                                                                        </p>
+                                                                                                        {gl.notes && (
+                                                                                                            <div style={{
+                                                                                                                padding: '0.75rem 1rem',
+                                                                                                                borderRadius: '0.75rem',
+                                                                                                                backgroundColor: 'rgba(255,255,255,0.03)',
+                                                                                                                borderLeft: `0.125rem solid ${color}`,
+                                                                                                                marginTop: '0.25rem'
+                                                                                                            }}>
+                                                                                                                <p style={{ fontSize: '0.9rem', color: theme.colors.text.secondary, fontWeight: '500', fontStyle: 'italic', margin: 0 }}>
+                                                                                                                    {gl.notes}
+                                                                                                                </p>
+                                                                                                            </div>
+                                                                                                        )}
+                                                                                                    </div>
+                                                                                                ))
+                                                                                            )}
+                                                                                        </div>
+                                                                                    </motion.div>
+                                                                                )}
+                                                                            </AnimatePresence>
+                                                                        </div>
+                                                                    )}
+
                                                                     {rules[article.id]?.map((rule, rIndex) => (
                                                                         <div key={rule.id} style={{
                                                                             position: 'relative',

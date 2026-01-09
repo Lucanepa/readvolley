@@ -91,8 +91,9 @@ function SearchView({ onClose, initialEnvironment }) {
             })
         }
 
-        // 3. Guidelines (Definitions)
+        // 3. Guidelines
         if (categories.includes('guidelines')) {
+            // Check definitions (legacy guidelines)
             allData.definitions.forEach(def => {
                 if (def.rules_type === envFilter) {
                     const termMatch = def.term?.toLowerCase().includes(searchLower)
@@ -105,6 +106,26 @@ function SearchView({ onClose, initialEnvironment }) {
                             title: def.term,
                             content: def.definition,
                             raw: def
+                        })
+                    }
+                }
+            })
+
+            // Check new guidelines table
+            allData.guidelines.forEach(gl => {
+                if (gl.rules_type === envFilter) {
+                    const titleMatch = gl.title?.toLowerCase().includes(searchLower)
+                    const textMatch = gl.text?.toLowerCase().includes(searchLower)
+                    const notesMatch = gl.notes?.toLowerCase().includes(searchLower)
+
+                    if (titleMatch || textMatch || notesMatch) {
+                        results.push({
+                            type: 'guidelines',
+                            id: `gl-${gl.id}`,
+                            title: gl.title || 'Guideline',
+                            content: gl.text,
+                            subContent: gl.notes,
+                            raw: gl
                         })
                     }
                 }

@@ -58,29 +58,9 @@ function ProtocolsView({ environment }) {
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.1rem', paddingBottom: '1rem', width: '100%' }}>
             <div style={{ textAlign: 'center', maxWidth: '42rem', margin: '0 auto', marginBottom: '0.5rem' }}>
-                <div style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    padding: '0.3rem 0.8rem',
-                    borderRadius: '99rem',
-                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                    border: '0.0625rem solid rgba(255, 255, 255, 0.1)',
-                    marginBottom: '0.75rem',
-                    fontSize: '0.65rem',
-                    fontWeight: '900',
-                    letterSpacing: '0.15em',
-                    textTransform: 'uppercase',
-                    color: color
-                }}>
-                    <ShieldCheck size={14} /> Match Procedures
-                </div>
                 <h1 style={{ fontSize: '3.5rem', fontWeight: '900', marginBottom: '0.75rem', letterSpacing: '-0.025em', fontFamily: 'Outfit, sans-serif' }}>
                     Official <span style={{ color: color }}>Protocols</span>
                 </h1>
-                <p style={{ fontSize: '1.1rem', color: theme.colors.text.secondary, fontWeight: '500', marginBottom: '1.5rem', lineHeight: '1.4' }}>
-                    Standardized timings and procedures for every stage of the match.
-                </p>
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.5rem' }}>
@@ -156,61 +136,126 @@ function ProtocolsView({ environment }) {
                         width: '100%'
                     }}
                 >
-                    {protocols.map((protocol, index) => (
-                        <div
-                            key={protocol.id}
-                            style={{
-                                ...theme.styles.glass,
-                                padding: '1.5rem',
-                                borderRadius: '2rem',
-                                border: '0.0625rem solid rgba(255, 255, 255, 0.05)',
-                                transition: 'all 0.5s ease',
-                                boxShadow: '0 1.5rem 3rem -0.75rem rgba(0, 0, 0, 0.5)'
-                            }}
-                            onMouseEnter={(e) => e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)'}
-                            onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.05)'}
-                        >
-                            <div style={{ display: 'flex', flexDirection: 'row', gap: '1.25rem' }}>
-                                <div style={{
-                                    flexShrink: 0,
-                                    width: '3.5rem',
-                                    height: '3.5rem',
-                                    borderRadius: '1rem',
-                                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                                    border: '0.0625rem solid rgba(255, 255, 255, 0.1)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    color: color,
-                                    transition: 'transform 0.5s ease'
-                                }} onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-                                    onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}>
-                                    <ClipboardList size={24} />
-                                </div>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', flex: 1 }}>
-                                    <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
-                                        <h3 style={{ fontSize: '1.25rem', fontWeight: '900', letterSpacing: '-0.02em', textTransform: 'uppercase' }}>{protocol.title}</h3>
-                                        <span style={{
-                                            padding: '0.3rem 0.75rem',
-                                            borderRadius: '0.625rem',
-                                            backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                                            border: '0.0625rem solid rgba(255, 255, 255, 0.1)',
-                                            fontWeight: '900',
-                                            fontSize: '0.65rem',
-                                            letterSpacing: '0.05em',
-                                            textTransform: 'uppercase',
-                                            color: color
-                                        }}>
-                                            STEP {index + 1}
-                                        </span>
+                    {type === 'game' ? (
+                        <div style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '0.5rem',
+                            ...theme.styles.glass,
+                            padding: '1.5rem',
+                            borderRadius: '2rem',
+                            border: '0.0625rem solid rgba(255, 255, 255, 0.05)',
+                        }}>
+                            {/* Header */}
+                            <div style={{
+                                display: 'grid',
+                                gridTemplateColumns: '8rem 2fr 1fr 1fr',
+                                gap: '1rem',
+                                padding: '0 1rem 1rem 1rem',
+                                borderBottom: '1px solid rgba(255,255,255,0.1)',
+                                marginBottom: '0.5rem',
+                                fontSize: '0.75rem',
+                                fontWeight: '900',
+                                letterSpacing: '0.1em',
+                                textTransform: 'uppercase',
+                                color: theme.colors.text.muted
+                            }}>
+                                <div>Time to Start</div>
+                                <div>Description</div>
+                                <div>Referees</div>
+                                <div>Teams</div>
+                            </div>
+
+                            {/* Rows */}
+                            {protocols.map((protocol, index) => (
+                                <div
+                                    key={protocol.id}
+                                    style={{
+                                        display: 'grid',
+                                        gridTemplateColumns: '8rem 2fr 1fr 1fr',
+                                        gap: '1rem',
+                                        padding: '1rem',
+                                        borderRadius: '1rem',
+                                        transition: 'background-color 0.2s',
+                                        fontSize: '0.9rem',
+                                        alignItems: 'start',
+                                        borderBottom: index !== protocols.length - 1 ? '1px solid rgba(255,255,255,0.03)' : 'none'
+                                    }}
+                                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.03)'}
+                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                >
+                                    <div style={{ fontWeight: '800', color: color }}>
+                                        {protocol.time_to_start || protocol.time || '-'}
                                     </div>
-                                    <p style={{ fontSize: '1.05rem', color: theme.colors.text.secondary, fontWeight: '500', lineHeight: '1.5' }}>
-                                        {protocol.protocolText}
-                                    </p>
+                                    <div style={{ color: theme.colors.text.primary, lineHeight: '1.5', textAlign: 'justify' }}>
+                                        {protocol.description || protocol.title || '-'}
+                                    </div>
+                                    <div style={{ color: theme.colors.text.secondary, fontSize: '0.85rem', textAlign: 'justify' }}>
+                                        {protocol.referees || '-'}
+                                    </div>
+                                    <div style={{ color: theme.colors.text.secondary, fontSize: '0.85rem', textAlign: 'justify' }}>
+                                        {protocol.teams || '-'}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        protocols.map((protocol, index) => (
+                            <div
+                                key={protocol.id}
+                                style={{
+                                    ...theme.styles.glass,
+                                    padding: '1.5rem',
+                                    borderRadius: '2rem',
+                                    border: '0.0625rem solid rgba(255, 255, 255, 0.05)',
+                                    transition: 'all 0.5s ease',
+                                    boxShadow: '0 1.5rem 3rem -0.75rem rgba(0, 0, 0, 0.5)'
+                                }}
+                                onMouseEnter={(e) => e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)'}
+                                onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.05)'}
+                            >
+                                <div style={{ display: 'flex', flexDirection: 'row', gap: '1.25rem' }}>
+                                    <div style={{
+                                        flexShrink: 0,
+                                        width: '3.5rem',
+                                        height: '3.5rem',
+                                        borderRadius: '1rem',
+                                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                        border: '0.0625rem solid rgba(255, 255, 255, 0.1)',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        color: color,
+                                        transition: 'transform 0.5s ease'
+                                    }} onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+                                        onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}>
+                                        <ClipboardList size={24} />
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', flex: 1 }}>
+                                        <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
+                                            <h3 style={{ fontSize: '1.25rem', fontWeight: '900', letterSpacing: '-0.02em', textTransform: 'uppercase' }}>{protocol.title}</h3>
+                                            <span style={{
+                                                padding: '0.3rem 0.75rem',
+                                                borderRadius: '0.625rem',
+                                                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                                border: '0.0625rem solid rgba(255, 255, 255, 0.1)',
+                                                fontWeight: '900',
+                                                fontSize: '0.65rem',
+                                                letterSpacing: '0.05em',
+                                                textTransform: 'uppercase',
+                                                color: color
+                                            }}>
+                                                STEP {index + 1}
+                                            </span>
+                                        </div>
+                                        <p style={{ fontSize: '1.05rem', color: theme.colors.text.secondary, fontWeight: '500', lineHeight: '1.5', textAlign: 'justify' }}>
+                                            {protocol.protocolText}
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    ))}
+                        ))
+                    )}
 
                     {protocols.length === 0 && (
                         <div style={{

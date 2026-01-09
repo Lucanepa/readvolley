@@ -102,6 +102,90 @@ export const api = {
         return ruleToCases
     },
 
+    async getGuidelinesForArticle(articleId, ruleIds = []) {
+        console.log("Fetching Guidelines for Article:", articleId, "Rule IDs:", ruleIds)
+
+        // 1. Get guidelines directly linked to the article
+        const { data: artData, error: artError } = await supabase
+            .from('guidelines')
+            .select('*')
+            .eq('article_id', articleId)
+
+        if (artError) {
+            console.error("Error fetching article guidelines:", articleId, artError)
+            throw artError
+        }
+
+        let results = artData || []
+
+        // 2. Get guidelines linked to any rule in that article
+        if (ruleIds.length > 0) {
+            const { data: ruleData, error: ruleError } = await supabase
+                .from('guidelines')
+                .select('*')
+                .in('rule_id', ruleIds)
+
+            if (ruleError) {
+                console.error("Error fetching rule guidelines:", ruleIds, ruleError)
+                throw ruleError
+            }
+
+            // Merge and deduplicate by ID
+            if (ruleData) {
+                const existingIds = new Set(results.map(g => g.id))
+                ruleData.forEach(g => {
+                    if (!existingIds.has(g.id)) {
+                        results.push(g)
+                    }
+                })
+            }
+        }
+
+        console.log("Guidelines found:", results.length)
+        return results
+    },
+
+    async getGuidelinesExistence(articleId, ruleIds = []) {
+        console.log("Checking existence for Article:", articleId, "Rules:", ruleIds)
+
+        // Check article association
+        const { data: artData, error: artError } = await supabase
+            .from('guidelines')
+            .select('id')
+            .eq('article_id', articleId)
+            .limit(1)
+
+        if (artError) {
+            console.error("Error checking article guideline existence:", artError)
+            throw artError
+        }
+        if (artData?.length > 0) {
+            console.log("Found guideline by article_id")
+            return true
+        }
+
+        // Check rule associations
+        if (ruleIds.length > 0) {
+            const { data: ruleData, error: ruleError } = await supabase
+                .from('guidelines')
+                .select('id')
+                .in('rule_id', ruleIds)
+                .limit(1)
+
+            if (ruleError) {
+                console.error("Error checking rule guideline existence:", ruleError)
+                throw ruleError
+            }
+            if (ruleData?.length > 0) {
+                console.log("Found guideline by rule_id")
+                return true
+            }
+        }
+
+        console.log("No guidelines found for article/rules")
+        return false
+    },
+
     async getDefinitions(rulesType) {
         const { data, error } = await supabase
             .from('definitions')
@@ -209,7 +293,8 @@ export const api = {
             otherProtocols: otherProtocols || [],
             diagrams: diagrams || [],
             gestures: gestures || [],
-            casebookRules: casebookRules || []
+            casebookRules: casebookRules || [],
+            guidelines: (await supabase.from('guidelines').select('*')).data || []
         }
     }
 }

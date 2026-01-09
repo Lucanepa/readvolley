@@ -57,29 +57,9 @@ function GesturesView({ environment }) {
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.1rem', paddingBottom: '1rem', width: '100%' }}>
             <div style={{ textAlign: 'center', maxWidth: '42rem', margin: '0 auto', marginBottom: '0.5rem' }}>
-                <div style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    padding: '0.3rem 0.8rem',
-                    borderRadius: '99rem',
-                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                    border: '0.0625rem solid rgba(255, 255, 255, 0.1)',
-                    marginBottom: '0.75rem',
-                    fontSize: '0.65rem',
-                    fontWeight: '900',
-                    letterSpacing: '0.15em',
-                    textTransform: 'uppercase',
-                    color: color
-                }}>
-                    <List size={14} /> Official Signals
-                </div>
                 <h1 style={{ fontSize: '3.5rem', fontWeight: '900', marginBottom: '0.75rem', letterSpacing: '-0.025em', fontFamily: 'Outfit, sans-serif' }}>
                     Referee <span style={{ color: color }}>Hand Signals</span>
                 </h1>
-                <p style={{ fontSize: '1.1rem', color: theme.colors.text.secondary, fontWeight: '500', marginBottom: '1.5rem', lineHeight: '1.4' }}>
-                    Official referee hand signals for match orchestration and rule enforcement.
-                </p>
             </div>
 
             <div style={{
