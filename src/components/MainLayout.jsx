@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
     Book, Image as ImageIcon, Info, ShieldCheck, List,
-    ChevronLeft, Search, ChevronDown, MoreHorizontal
+    ChevronLeft, Search, ChevronDown, MoreHorizontal, Lock, LogOut
 } from 'lucide-react'
 import RulesView from '../RulesView'
 import DiagramsView from '../DiagramsView'
@@ -10,11 +10,14 @@ import DefinitionsView from '../DefinitionsView'
 import ProtocolsView from '../ProtocolsView'
 import GesturesView from '../GesturesView'
 import ExtraView from '../ExtraView'
+import LoginView from '../LoginView'
 import { theme } from '../styles/theme'
+import { supabase } from '../lib/supabase'
 
-function MainLayout({ environment, onBack, onOpenSearch }) {
+function MainLayout({ environment, onBack, onOpenSearch, user }) {
     const [activeTab, setActiveTab] = useState('rules')
     const [isMenuOpen, setIsMenuOpen] = useState(false)
+    const [showLogin, setShowLogin] = useState(false)
 
     const isBeach = environment === 'beach'
     const color = isBeach ? theme.colors.beach.primary : theme.colors.indoor.primary
@@ -38,9 +41,13 @@ function MainLayout({ environment, onBack, onOpenSearch }) {
             case 'definitions': return <DefinitionsView environment={environment} />
             case 'protocols': return <ProtocolsView environment={environment} />
             case 'gestures': return <GesturesView environment={environment} />
-            case 'extra': return <ExtraView environment={environment} />
+            case 'extra': return <ExtraView environment={environment} user={user} onLogin={() => setShowLogin(true)} />
             default: return <RulesView environment={environment} />
         }
+    }
+
+    const handleLogout = async () => {
+        await supabase.auth.signOut()
     }
 
     return (
@@ -59,22 +66,23 @@ function MainLayout({ environment, onBack, onOpenSearch }) {
                 style={{
                     position: 'fixed',
                     top: 0,
-                    left: '50%',
-                    transform: 'translateX(-50%)',
+                    left: 0,
+                    right: 0,
                     zIndex: 100,
                     ...theme.styles.glass,
-                    padding: '0 1rem',
                     width: '100%',
-                    maxWidth: theme.styles.container.maxWidth,
                     boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
                     height: theme.spacing.headerHeight,
                     display: 'flex',
+                    justifyContent: 'center',
                     alignItems: 'center'
                 }}
             >
                 <div style={{
                     height: '100%',
                     width: '100%',
+                    maxWidth: theme.styles.container.maxWidth,
+                    padding: '0 1rem',
                     display: 'grid',
                     gridTemplateColumns: '1fr auto 1fr',
                     alignItems: 'center'
@@ -271,23 +279,76 @@ function MainLayout({ environment, onBack, onOpenSearch }) {
                 style={{
                     position: 'fixed',
                     bottom: 0,
-                    left: '50%',
-                    transform: 'translateX(-50%)',
+                    left: 0,
+                    right: 0,
                     zIndex: 100,
                     ...theme.styles.glass,
                     borderTop: '1px solid rgba(255,255,255,0.05)',
                     display: 'flex',
-                    alignItems: 'center',
                     justifyContent: 'center',
+                    alignItems: 'center',
                     width: '100%',
-                    maxWidth: theme.styles.container.maxWidth,
                     height: theme.spacing.footerHeight
                 }}
             >
-                <span style={{ fontSize: '0.6rem', fontWeight: '700', letterSpacing: '0.2em', color: theme.colors.text.muted, opacity: 0.6, textTransform: 'uppercase', textAlign: 'center' }}>
-                    © 2026 OpenVolley • Elite Rules Companion
-                </span>
+                <div style={{
+                    width: '100%',
+                    maxWidth: theme.styles.container.maxWidth,
+                    height: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '1rem',
+                    padding: '0 1rem'
+                }}>
+                    <span style={{ fontSize: '0.6rem', fontWeight: '700', letterSpacing: '0.2em', color: theme.colors.text.muted, opacity: 0.6, textTransform: 'uppercase', textAlign: 'center' }}>
+                        © 2026 OpenVolley • Elite Rules Companion
+                    </span>
+
+                    {/* Auth Trigger */}
+
+                    <button
+                        onClick={() => user ? handleLogout() : setShowLogin(true)}
+                        style={{
+                            background: 'none',
+                            border: 'none',
+                            color: theme.colors.text.muted,
+                            opacity: 0.5,
+                            cursor: 'pointer',
+                            padding: '0.5rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            fontSize: '0.7rem',
+                            fontWeight: '600',
+                            letterSpacing: '0.05em',
+                            textTransform: 'uppercase',
+                            transition: 'opacity 0.2s'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
+                        onMouseLeave={(e) => e.currentTarget.style.opacity = '0.5'}
+                        title={user ? 'Sign Out' : 'Admin Login'}
+                    >
+                        {user ? (
+                            <>
+                                <LogOut size={12} />
+                                <span>Sign Out</span>
+                            </>
+                        ) : (
+                            <>
+                                <Lock size={12} />
+                                <span>Manage</span>
+                            </>
+                        )}
+                    </button>
+                </div>
             </footer>
+
+            <AnimatePresence>
+                {showLogin && (
+                    <LoginView onClose={() => setShowLogin(false)} />
+                )}
+            </AnimatePresence>
         </div>
     )
 }

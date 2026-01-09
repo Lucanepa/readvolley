@@ -269,7 +269,8 @@ export const api = {
             { data: otherProtocols },
             { data: diagrams },
             { data: gestures },
-            { data: casebookRules }
+            { data: casebookRules },
+            { data: extras }
         ] = await Promise.all([
             supabase.from('chapters').select('*'),
             supabase.from('articles').select('*'),
@@ -280,7 +281,8 @@ export const api = {
             supabase.from('other_protocols').select('*'),
             supabase.from('diagrams').select('*'),
             supabase.from('gestures').select('*'),
-            supabase.from('casebook_rules').select('*')
+            supabase.from('casebook_rules').select('*'),
+            supabase.from('extras').select('*')
         ])
 
         return {
@@ -294,7 +296,50 @@ export const api = {
             diagrams: diagrams || [],
             gestures: gestures || [],
             casebookRules: casebookRules || [],
-            guidelines: (await supabase.from('guidelines').select('*')).data || []
+            guidelines: (await supabase.from('guidelines').select('*')).data || [],
+            extras: extras || []
         }
+    },
+
+    async updateExtra(id, updates) {
+        const { data, error } = await supabase
+            .from('extras')
+            .update(updates)
+            .eq('id', id)
+            .select()
+
+        if (error) throw error
+        return data
+    },
+
+    async deleteExtra(id) {
+        const { error } = await supabase
+            .from('extras')
+            .delete()
+            .eq('id', id)
+
+        if (error) throw error
+        return true
+    },
+
+    async getExtras(rulesType) {
+        const { data, error } = await supabase
+            .from('extras')
+            .select('*')
+            .eq('rules_type', rulesType)
+            .order('created_at', { ascending: false })
+
+        if (error) throw error
+        return data
+    },
+
+    async addExtra(extraData) {
+        const { data, error } = await supabase
+            .from('extras')
+            .insert([extraData])
+            .select()
+
+        if (error) throw error
+        return data
     }
 }

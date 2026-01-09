@@ -1,16 +1,32 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Sun, Home, ChevronRight, Search, Trophy } from 'lucide-react'
 import MainLayout from './components/MainLayout'
 import SearchView from './SearchView'
 import SwissVolleyView from './SwissVolleyView'
 import { theme } from './styles/theme'
+import { supabase } from './lib/supabase'
 
 function App() {
     const [environment, setEnvironment] = useState(null)
     const [hoveredEnv, setHoveredEnv] = useState(null)
     const [isSearchOpen, setIsSearchOpen] = useState(false)
     const [isSwissVolleyOpen, setIsSwissVolleyOpen] = useState(false)
+    const [user, setUser] = useState(null)
+
+    useEffect(() => {
+        // Check active session
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            setUser(session?.user ?? null)
+        })
+
+        // Listen for changes
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            setUser(session?.user ?? null)
+        })
+
+        return () => subscription.unsubscribe()
+    }, [])
 
     return (
         <div style={{
@@ -208,7 +224,7 @@ function App() {
                                     fontWeight: '700'
                                 }}
                             >
-                                Powered by OpenVolley • v1.2.5
+                                Powered by OpenVolley • v1.2.6
                             </motion.p>
                         </div>
                     </motion.div>
@@ -216,6 +232,7 @@ function App() {
                     <MainLayout
                         key="main"
                         environment={environment}
+                        user={user}
                         onBack={() => setEnvironment(null)}
                         onOpenSearch={() => setIsSearchOpen(true)}
                     />
