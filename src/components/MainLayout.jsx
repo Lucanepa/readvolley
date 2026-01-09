@@ -115,7 +115,7 @@ function MainLayout({ environment, onBack, onOpenSearch }) {
                                 display: 'flex',
                                 alignItems: 'center',
                                 gap: '0.75rem',
-                                padding: '0.4rem 0.8rem',
+                                padding: '0.2rem 0.2rem',
                                 borderRadius: '0.75rem',
                                 border: '1px solid',
                                 borderColor: isMenuOpen ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.05)',

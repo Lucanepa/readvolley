@@ -11,7 +11,7 @@ function SearchView({ onClose, initialEnvironment }) {
 
     // Filters
     const [envFilter, setEnvFilter] = useState(initialEnvironment || 'indoor') // 'indoor' | 'beach'
-    const [categories, setCategories] = useState(['rulebook', 'casebook', 'guidelines', 'protocol', 'diagrams', 'gestures'])
+    const [category, setCategory] = useState('all')
 
     useEffect(() => {
         loadData()
@@ -29,14 +29,6 @@ function SearchView({ onClose, initialEnvironment }) {
         }
     }
 
-    const toggleCategory = (cat) => {
-        setCategories(prev =>
-            prev.includes(cat)
-                ? prev.filter(c => c !== cat)
-                : [...prev, cat]
-        )
-    }
-
     const filteredResults = useMemo(() => {
         if (!allData || !searchTerm.trim()) return []
 
@@ -44,7 +36,7 @@ function SearchView({ onClose, initialEnvironment }) {
         const results = []
 
         // 1. Rules (Rulebook)
-        if (categories.includes('rulebook')) {
+        if (category === 'all' || category === 'rulebook') {
             allData.rules.forEach(rule => {
                 if (rule.rules_type === envFilter) {
                     const titleMatch = rule.title?.toLowerCase().includes(searchLower)
@@ -65,7 +57,7 @@ function SearchView({ onClose, initialEnvironment }) {
         }
 
         // 2. Casebook
-        if (categories.includes('casebook')) {
+        if (category === 'all' || category === 'casebook') {
             // Find rules for current environment
             const envRules = new Set(allData.rules.filter(r => r.rules_type === envFilter).map(r => r.id))
             // Find case IDs linked to these rules
@@ -92,7 +84,7 @@ function SearchView({ onClose, initialEnvironment }) {
         }
 
         // 3. Guidelines
-        if (categories.includes('guidelines')) {
+        if (category === 'all' || category === 'guidelines') {
             // Check definitions (legacy guidelines)
             allData.definitions.forEach(def => {
                 if (def.rules_type === envFilter) {
@@ -133,7 +125,7 @@ function SearchView({ onClose, initialEnvironment }) {
         }
 
         // 4. Protocols
-        if (categories.includes('protocol')) {
+        if (category === 'all' || category === 'protocol') {
             allData.gameProtocols.forEach(p => {
                 if (p.rules_type === envFilter) {
                     const titleMatch = p.title?.toLowerCase().includes(searchLower)
@@ -169,7 +161,7 @@ function SearchView({ onClose, initialEnvironment }) {
         }
 
         // 5. Diagrams
-        if (categories.includes('diagrams')) {
+        if (category === 'all' || category === 'diagrams') {
             allData.diagrams.forEach(d => {
                 if (d.rules_type === envFilter) {
                     const titleMatch = d.diagram_name?.toLowerCase().includes(searchLower)
@@ -189,7 +181,7 @@ function SearchView({ onClose, initialEnvironment }) {
         }
 
         // 6. Gestures (Hand Signals)
-        if (categories.includes('gestures')) {
+        if (category === 'all' || category === 'gestures') {
             allData.gestures.forEach(g => {
                 if (g.rules_type === envFilter) {
                     const titleMatch = g.gesture_name?.toLowerCase().includes(searchLower)
@@ -209,7 +201,7 @@ function SearchView({ onClose, initialEnvironment }) {
         }
 
         return results
-    }, [allData, searchTerm, envFilter, categories])
+    }, [allData, searchTerm, envFilter, category])
 
     return (
         <div style={{
@@ -328,6 +320,7 @@ function SearchView({ onClose, initialEnvironment }) {
                         <span style={{ fontSize: '0.7rem', fontWeight: '900', letterSpacing: '0.1em', textTransform: 'uppercase', color: theme.colors.text.muted }}>Categories</span>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
                             {[
+                                { id: 'all', label: 'All', icon: <Search size={14} /> },
                                 { id: 'rulebook', label: 'Rulebook', icon: <Book size={14} /> },
                                 { id: 'casebook', label: 'Casebook', icon: <AlertCircle size={14} /> },
                                 { id: 'guidelines', label: 'Guidelines', icon: <Info size={14} /> },
@@ -335,11 +328,11 @@ function SearchView({ onClose, initialEnvironment }) {
                                 { id: 'diagrams', label: 'Diagrams', icon: <ImageIcon size={14} /> },
                                 { id: 'gestures', label: 'Signals', icon: <List size={14} /> }
                             ].map(cat => {
-                                const active = categories.includes(cat.id)
+                                const active = category === cat.id
                                 return (
                                     <button
                                         key={cat.id}
-                                        onClick={() => toggleCategory(cat.id)}
+                                        onClick={() => setCategory(cat.id)}
                                         style={{
                                             display: 'flex',
                                             alignItems: 'center',

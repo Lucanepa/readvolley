@@ -6,6 +6,7 @@ import { theme } from './styles/theme'
 
 function ProtocolsView({ environment }) {
     const [type, setType] = useState('game') // 'game' | 'other'
+    const [subFilter, setSubFilter] = useState('All')
     const [protocols, setProtocols] = useState([])
     const [loading, setLoading] = useState(true)
 
@@ -15,6 +16,7 @@ function ProtocolsView({ environment }) {
     const accentBorder = isBeach ? 'rgba(245,158,11,0.3)' : 'rgba(59,130,246,0.3)'
 
     useEffect(() => {
+        setSubFilter('All')
         loadProtocols()
     }, [environment, type])
 
@@ -54,6 +56,42 @@ function ProtocolsView({ environment }) {
             `}</style>
         </div>
     )
+
+    const renderText = (text) => {
+        if (!text) return null
+        return text.toString().replace(/\\n/g, '\n').split('\n').map((line, i) => {
+            const trimmed = line.trim()
+            if (!trimmed) return <div key={i} style={{ height: '0.5rem' }} />
+
+            // Check for title:
+            // 1. Whole line is uppercase (standard title)
+            // 2. Text before first parenthesis is uppercase (e.g. "HEADER (subtitle)")
+            const preParen = trimmed.split('(')[0]
+            const hasEnoughCaps = (str) => (str.match(/[A-Z]/g) || []).length > 4
+            const isAllUpper = (str) => str === str.toUpperCase()
+
+            const isTitle = (isAllUpper(trimmed) && hasEnoughCaps(trimmed)) ||
+                (trimmed.includes('(') && isAllUpper(preParen) && hasEnoughCaps(preParen))
+
+            // Check for list: matches "1.", "1 .", "a)", "- ", "• ", "▪ "
+            const isList = /^(\s*[-•▪]|\d+\s*[.)]|[a-z]\s*[.)])/.test(trimmed)
+
+            return (
+                <div
+                    key={i}
+                    style={{
+                        fontWeight: isTitle ? '900' : 'normal',
+                        color: isTitle ? '#ffffff' : 'inherit',
+                        paddingLeft: isList ? '1.5rem' : '0',
+                        marginBottom: isList ? '0.25rem' : '0',
+                        textIndent: isList ? '-1rem' : '0'
+                    }}
+                >
+                    {line}
+                </div>
+            )
+        })
+    }
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.1rem', paddingBottom: '1rem', width: '100%' }}>
@@ -128,149 +166,179 @@ function ProtocolsView({ environment }) {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
                     style={{
-                        display: 'grid',
-                        gridTemplateColumns: '1fr',
-                        gap: '0.75rem',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '1.5rem',
                         maxWidth: theme.styles.container.maxWidth,
                         margin: '0 auto',
                         width: '100%'
                     }}
                 >
-                    {type === 'game' ? (
-                        <div style={{
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: '0.5rem',
-                            ...theme.styles.glass,
-                            padding: '1.5rem',
-                            borderRadius: '2rem',
-                            border: '0.0625rem solid rgba(255, 255, 255, 0.05)',
-                        }}>
-                            {/* Header */}
-                            <div style={{
-                                display: 'grid',
-                                gridTemplateColumns: '8rem 2fr 1fr 1fr',
-                                gap: '1rem',
-                                padding: '0 1rem 1rem 1rem',
-                                borderBottom: '1px solid rgba(255,255,255,0.1)',
-                                marginBottom: '0.5rem',
-                                fontSize: '0.75rem',
-                                fontWeight: '900',
-                                letterSpacing: '0.1em',
-                                textTransform: 'uppercase',
-                                color: theme.colors.text.muted
-                            }}>
-                                <div>Time to Start</div>
-                                <div>Description</div>
-                                <div>Referees</div>
-                                <div>Teams</div>
-                            </div>
-
-                            {/* Rows */}
-                            {protocols.map((protocol, index) => (
-                                <div
-                                    key={protocol.id}
+                    {type === 'other' && protocols.length > 0 && (
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', justifyContent: 'center' }}>
+                            {['All', ...new Set(protocols.map(p => p.protocol_filter).filter(Boolean))].map(filter => (
+                                <button
+                                    key={filter}
+                                    onClick={() => setSubFilter(filter)}
                                     style={{
-                                        display: 'grid',
-                                        gridTemplateColumns: '8rem 2fr 1fr 1fr',
-                                        gap: '1rem',
-                                        padding: '1rem',
-                                        borderRadius: '1rem',
-                                        transition: 'background-color 0.2s',
-                                        fontSize: '0.9rem',
-                                        alignItems: 'start',
-                                        borderBottom: index !== protocols.length - 1 ? '1px solid rgba(255,255,255,0.03)' : 'none'
+                                        padding: '0.5rem 1rem',
+                                        borderRadius: '0.75rem',
+                                        fontSize: '0.8rem',
+                                        fontWeight: '800',
+                                        textTransform: 'uppercase',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.3s',
+                                        backgroundColor: subFilter === filter ? accentBg : 'rgba(255, 255, 255, 0.05)',
+                                        color: subFilter === filter ? '#ffffff' : theme.colors.text.secondary,
+                                        border: '1px solid',
+                                        borderColor: subFilter === filter ? 'transparent' : 'rgba(255, 255, 255, 0.1)'
                                     }}
-                                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.03)'}
-                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                                 >
-                                    <div style={{ fontWeight: '800', color: color }}>
-                                        {protocol.time_to_start || protocol.time || '-'}
-                                    </div>
-                                    <div style={{ color: theme.colors.text.primary, lineHeight: '1.5', textAlign: 'justify' }}>
-                                        {protocol.description || protocol.title || '-'}
-                                    </div>
-                                    <div style={{ color: theme.colors.text.secondary, fontSize: '0.85rem', textAlign: 'justify' }}>
-                                        {protocol.referees || '-'}
-                                    </div>
-                                    <div style={{ color: theme.colors.text.secondary, fontSize: '0.85rem', textAlign: 'justify' }}>
-                                        {protocol.teams || '-'}
-                                    </div>
-                                </div>
+                                    {filter}
+                                </button>
                             ))}
                         </div>
-                    ) : (
-                        protocols.map((protocol, index) => (
-                            <div
-                                key={protocol.id}
-                                style={{
-                                    ...theme.styles.glass,
-                                    padding: '1.5rem',
-                                    borderRadius: '2rem',
-                                    border: '0.0625rem solid rgba(255, 255, 255, 0.05)',
-                                    transition: 'all 0.5s ease',
-                                    boxShadow: '0 1.5rem 3rem -0.75rem rgba(0, 0, 0, 0.5)'
-                                }}
-                                onMouseEnter={(e) => e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)'}
-                                onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.05)'}
-                            >
-                                <div style={{ display: 'flex', flexDirection: 'row', gap: '1.25rem' }}>
-                                    <div style={{
-                                        flexShrink: 0,
-                                        width: '3.5rem',
-                                        height: '3.5rem',
-                                        borderRadius: '1rem',
-                                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                                        border: '0.0625rem solid rgba(255, 255, 255, 0.1)',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        color: color,
-                                        transition: 'transform 0.5s ease'
-                                    }} onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-                                        onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}>
-                                        <ClipboardList size={24} />
-                                    </div>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', flex: 1 }}>
-                                        <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
-                                            <h3 style={{ fontSize: '1.25rem', fontWeight: '900', letterSpacing: '-0.02em', textTransform: 'uppercase' }}>{protocol.title}</h3>
-                                            <span style={{
-                                                padding: '0.3rem 0.75rem',
-                                                borderRadius: '0.625rem',
-                                                backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                                                border: '0.0625rem solid rgba(255, 255, 255, 0.1)',
-                                                fontWeight: '900',
-                                                fontSize: '0.65rem',
-                                                letterSpacing: '0.05em',
-                                                textTransform: 'uppercase',
-                                                color: color
-                                            }}>
-                                                STEP {index + 1}
-                                            </span>
-                                        </div>
-                                        <p style={{ fontSize: '1.05rem', color: theme.colors.text.secondary, fontWeight: '500', lineHeight: '1.5', textAlign: 'justify' }}>
-                                            {protocol.protocolText}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        ))
                     )}
 
-                    {protocols.length === 0 && (
-                        <div style={{
-                            textAlign: 'center',
-                            padding: '4rem 1.5rem',
-                            ...theme.styles.glass,
-                            borderRadius: '2rem',
-                            border: '0.0625rem dashed rgba(255, 255, 255, 0.1)'
-                        }}>
-                            <p style={{ color: theme.colors.text.muted, fontWeight: '900', letterSpacing: '0.1em', textTransform: 'uppercase', fontSize: '0.8rem' }}>No protocols recorded for this category yet.</p>
-                        </div>
-                    )}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0.75rem' }}>
+                        {type === 'game' ? (
+                            <div style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '0.5rem',
+                                ...theme.styles.glass,
+                                padding: '1.5rem',
+                                borderRadius: '2rem',
+                                border: '0.0625rem solid rgba(255, 255, 255, 0.05)',
+                            }}>
+                                {/* Header */}
+                                <div style={{
+                                    display: 'grid',
+                                    gridTemplateColumns: '1fr 3fr 4fr 4fr',
+                                    gap: '1rem',
+                                    padding: '0 1rem 1rem 1rem',
+                                    borderBottom: '1px solid rgba(255,255,255,0.1)',
+                                    marginBottom: '0.5rem',
+                                    fontSize: '0.75rem',
+                                    fontWeight: '900',
+                                    letterSpacing: '0.1em',
+                                    textTransform: 'uppercase',
+                                    color: theme.colors.text.muted
+                                }}>
+                                    <div>Time to Start</div>
+                                    <div>Description</div>
+                                    <div>Referees</div>
+                                    <div>Teams</div>
+                                </div>
+
+                                {/* Rows */}
+                                {protocols.map((protocol, index) => (
+                                    <div
+                                        key={protocol.id}
+                                        style={{
+                                            display: 'grid',
+                                            gridTemplateColumns: '1fr 3fr 4fr 4fr',
+                                            gap: '1rem',
+                                            padding: '1rem',
+                                            borderRadius: '1rem',
+                                            transition: 'background-color 0.2s',
+                                            fontSize: '0.9rem',
+                                            alignItems: 'start',
+                                            borderBottom: index !== protocols.length - 1 ? '1px solid rgba(255,255,255,0.03)' : 'none'
+                                        }}
+                                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.03)'}
+                                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                    >
+                                        <div style={{ fontWeight: '800', color: color }}>
+                                            {protocol.time_to_start || protocol.time || '-'}
+                                        </div>
+                                        <div style={{ color: theme.colors.text.primary, lineHeight: '1.5', textAlign: 'justify' }}>
+                                            {renderText(protocol.description || protocol.title || '-')}
+                                        </div>
+                                        <div style={{ color: theme.colors.text.secondary, fontSize: '0.85rem', textAlign: 'justify' }}>
+                                            {renderText(protocol.referees || '-')}
+                                        </div>
+                                        <div style={{ color: theme.colors.text.secondary, fontSize: '0.85rem', textAlign: 'justify' }}>
+                                            {renderText(protocol.teams || '-')}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            protocols
+                                .filter(p => subFilter === 'All' || p.protocol_filter === subFilter)
+                                .map((protocol, index) => (
+                                    <div
+                                        key={protocol.id}
+                                        style={{
+                                            ...theme.styles.glass,
+                                            padding: '1.5rem',
+                                            borderRadius: '2rem',
+                                            border: '0.0625rem solid rgba(255, 255, 255, 0.05)',
+                                            transition: 'all 0.5s ease',
+                                            boxShadow: '0 1.5rem 3rem -0.75rem rgba(0, 0, 0, 0.5)'
+                                        }}
+                                        onMouseEnter={(e) => e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)'}
+                                        onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.05)'}
+                                    >
+                                        <div style={{ display: 'flex', flexDirection: 'row', gap: '1.25rem' }}>
+                                            <div style={{
+                                                flexShrink: 0,
+                                                width: '3.5rem',
+                                                height: '3.5rem',
+                                                borderRadius: '1rem',
+                                                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                                border: '0.0625rem solid rgba(255, 255, 255, 0.1)',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                color: color,
+                                                transition: 'transform 0.5s ease'
+                                            }} onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+                                                onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}>
+                                                <ClipboardList size={24} />
+                                            </div>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', flex: 1 }}>
+                                                <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
+                                                    <h3 style={{ fontSize: '1.25rem', fontWeight: '900', letterSpacing: '-0.02em', textTransform: 'uppercase' }}>{protocol.title}</h3>
+                                                    <span style={{
+                                                        padding: '0.3rem 0.75rem',
+                                                        borderRadius: '0.625rem',
+                                                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                                        border: '0.0625rem solid rgba(255, 255, 255, 0.1)',
+                                                        fontWeight: '900',
+                                                        fontSize: '0.65rem',
+                                                        letterSpacing: '0.05em',
+                                                        textTransform: 'uppercase',
+                                                        color: color
+                                                    }}>
+                                                        {protocol.protocol_filter || 'PROTOCOL'}
+                                                    </span>
+                                                </div>
+                                                <div style={{ fontSize: '1.05rem', color: theme.colors.text.secondary, fontWeight: '500', lineHeight: '1.5', textAlign: 'justify' }}>
+                                                    <div>{renderText(protocol.content || protocol.protocolText)}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))
+                        )}
+
+                        {protocols.length === 0 && (
+                            <div style={{
+                                textAlign: 'center',
+                                padding: '4rem 1.5rem',
+                                ...theme.styles.glass,
+                                borderRadius: '2rem',
+                                border: '0.0625rem dashed rgba(255, 255, 255, 0.1)'
+                            }}>
+                                <p style={{ color: theme.colors.text.muted, fontWeight: '900', letterSpacing: '0.1em', textTransform: 'uppercase', fontSize: '0.8rem' }}>No protocols recorded for this category yet.</p>
+                            </div>
+                        )}
+                    </div>
                 </motion.div>
             </AnimatePresence>
-        </div>
+        </div >
     )
 }
 

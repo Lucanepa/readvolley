@@ -250,7 +250,7 @@ export const api = {
         const { data: otherProtocols, error: e2 } = await supabase
             .from('other_protocols')
             .select('*')
-            .eq('protocol_filter', rulesType) // Assuming protocol_filter matches rules_type
+        //.eq('protocol_filter', rulesType) // Removed filter to show all "Other" protocols
 
         if (e2) throw e2
 

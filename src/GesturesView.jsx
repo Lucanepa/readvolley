@@ -29,6 +29,16 @@ function GesturesView({ environment }) {
         }
     }
 
+    const renderText = (text) => {
+        if (!text) return null
+        return text.toString().replace(/\\n/g, '\n').split('\n').map((line, i, arr) => (
+            <React.Fragment key={i}>
+                {line}
+                {i !== arr.length - 1 && <br />}
+            </React.Fragment>
+        ))
+    }
+
     if (loading) return (
         <div style={{
             display: 'flex',
@@ -163,12 +173,12 @@ function GesturesView({ environment }) {
                                 lineHeight: '1.2',
                                 wordBreak: 'break-word'
                             }}>
-                                {gesture.title}
+                                {renderText(gesture.title)}
                             </h3>
 
                             {gesture.text && (
                                 <p style={{ fontSize: '1rem', color: theme.colors.text.primary, fontWeight: '500', lineHeight: '1.4', margin: 0, wordBreak: 'break-word' }}>
-                                    {gesture.text}
+                                    {renderText(gesture.text)}
                                 </p>
                             )}
 
@@ -320,11 +330,11 @@ function GesturesView({ environment }) {
                                 letterSpacing: '-0.02em',
                                 lineHeight: '1.2'
                             }}>
-                                {selectedGesture.title}
+                                {renderText(selectedGesture.title)}
                             </h2>
                             {selectedGesture.text && (
                                 <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: '1rem', fontWeight: '500', margin: 0, marginTop: '0.5rem', maxWidth: '40rem' }}>
-                                    {selectedGesture.text}
+                                    {renderText(selectedGesture.text)}
                                 </p>
                             )}
                             {selectedGesture.notes && (
