@@ -108,7 +108,7 @@ function App() {
                                     letterSpacing: '-0.05em',
                                     fontFamily: 'Outfit, sans-serif'
                                 }}>
-                                    VOLLEY<span style={{ color: theme.colors.beach.primary, fontStyle: 'italic' }}>RULES</span>
+                                    READ<span style={{ color: theme.colors.beach.primary, fontStyle: 'italic' }}>VOLLEY</span>
                                 </h1>
                             </motion.div>
 

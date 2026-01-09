@@ -13,7 +13,7 @@ export default defineConfig({
             includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
             manifest: {
                 name: 'Volleyball Rules PWA',
-                short_name: 'VolleyRules',
+                short_name: 'ReadVolley',
                 description: 'Voleyball rules and casebook for Beach and Indoor',
                 theme_color: '#000000',
                 icons: [
