@@ -1,10 +1,12 @@
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowLeft, Globe, ArrowUpRight } from 'lucide-react'
+import SSKNewsView from './SSKNewsView'
+import { MultimediaView } from './MultimediaView'
+import { ArrowLeft, Globe, ArrowUpRight, FileText, PlaySquare } from 'lucide-react'
 import { theme } from './styles/theme'
 
-function SwissVolleyView({ onClose }) {
-    const [activeView, setActiveView] = useState('menu') // 'menu' | 'resources'
+function SwissVolleyView({ onClose, user, onLogin }) {
+    const [activeView, setActiveView] = useState('menu') // 'menu' | 'resources' | 'ssk'
 
     return (
         <div style={{
@@ -30,7 +32,7 @@ function SwissVolleyView({ onClose }) {
             }}>
                 <button
                     onClick={() => {
-                        if (activeView === 'resources') setActiveView('menu')
+                        if (activeView !== 'menu') setActiveView('menu')
                         else onClose()
                     }}
                     style={{
@@ -59,6 +61,9 @@ function SwissVolleyView({ onClose }) {
                     }}>SWISS VOLLEY</h1>
                     {activeView === 'resources' && (
                         <span style={{ fontSize: '0.8rem', color: theme.colors.text.secondary, fontWeight: '500' }}> / Resource Hub</span>
+                    )}
+                    {activeView === 'ssk' && (
+                        <span style={{ fontSize: '0.8rem', color: theme.colors.text.secondary, fontWeight: '500' }}> / SSK News</span>
                     )}
                 </div>
             </div>
@@ -92,6 +97,51 @@ function SwissVolleyView({ onClose }) {
                         </div>
 
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem', width: '100%', maxWidth: '800px' }}>
+                            {/* SSK News Button */}
+                            <button
+                                onClick={() => setActiveView('ssk')}
+                                style={{
+                                    ...theme.styles.glass,
+                                    padding: '1.5rem',
+                                    borderRadius: '1.5rem',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '1rem',
+                                    textAlign: 'left',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.3s ease',
+                                    border: '1px solid rgba(255,255,255,0.1)'
+                                }}
+                                onMouseEnter={(e) => {
+                                    e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)'
+                                    e.currentTarget.style.transform = 'translateY(-2px)'
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'
+                                    e.currentTarget.style.transform = 'translateY(0)'
+                                }}
+                            >
+                                <div style={{
+                                    width: '3rem',
+                                    height: '3rem',
+                                    borderRadius: '1rem',
+                                    backgroundColor: 'rgba(239, 68, 68, 0.2)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    color: '#ef4444'
+                                }}>
+                                    <FileText size={24} />
+                                </div>
+                                <div style={{ flex: 1 }}>
+                                    <h3 style={{ fontSize: '1.1rem', fontWeight: '800', marginBottom: '0.25rem' }}>SSK News</h3>
+                                    <p style={{ fontSize: '0.85rem', color: theme.colors.text.secondary }}>Latest updates and PDF documents from SSK.</p>
+                                </div>
+                                <ArrowUpRight size={20} color={theme.colors.text.muted} />
+                            </button>
+
+
+                            {/* Resource Hub Button */}
                             <button
                                 onClick={() => setActiveView('resources')}
                                 style={{
@@ -135,7 +185,7 @@ function SwissVolleyView({ onClose }) {
                             </button>
                         </div>
                     </motion.div>
-                ) : (
+                ) : activeView === 'resources' ? (
                     <motion.div
                         key="resources"
                         initial={{ opacity: 0, x: 20 }}
@@ -152,6 +202,26 @@ function SwissVolleyView({ onClose }) {
                                 border: 'none'
                             }}
                         />
+                    </motion.div>
+                ) : activeView === 'multimedia' ? (
+                    <motion.div
+                        key="multimedia"
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 20 }}
+                        style={{ flex: 1, width: '100%', height: '100%' }}
+                    >
+                        <MultimediaView user={user} onLogin={onLogin} />
+                    </motion.div>
+                ) : (
+                    <motion.div
+                        key="ssk"
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 20 }}
+                        style={{ flex: 1, width: '100%', height: '100%' }}
+                    >
+                        <SSKNewsView user={user} onLogin={onLogin} />
                     </motion.div>
                 )}
             </AnimatePresence>

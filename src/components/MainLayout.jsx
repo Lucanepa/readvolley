@@ -10,14 +10,13 @@ import DefinitionsView from '../DefinitionsView'
 import ProtocolsView from '../ProtocolsView'
 import GesturesView from '../GesturesView'
 import ExtraView from '../ExtraView'
-import LoginView from '../LoginView'
 import { theme } from '../styles/theme'
 import { supabase } from '../lib/supabase'
+import ErrorBoundary from './ErrorBoundary'
 
-function MainLayout({ environment, onBack, onOpenSearch, user }) {
+function MainLayout({ environment, onBack, onOpenSearch, user, onLogin }) {
     const [activeTab, setActiveTab] = useState('rules')
     const [isMenuOpen, setIsMenuOpen] = useState(false)
-    const [showLogin, setShowLogin] = useState(false)
 
     const isBeach = environment === 'beach'
     const color = isBeach ? theme.colors.beach.primary : theme.colors.indoor.primary
@@ -41,7 +40,7 @@ function MainLayout({ environment, onBack, onOpenSearch, user }) {
             case 'definitions': return <DefinitionsView environment={environment} />
             case 'protocols': return <ProtocolsView environment={environment} />
             case 'gestures': return <GesturesView environment={environment} />
-            case 'extra': return <ExtraView environment={environment} user={user} onLogin={() => setShowLogin(true)} />
+            case 'extra': return <ExtraView environment={environment} user={user} onLogin={onLogin} />
             default: return <RulesView environment={environment} />
         }
     }
@@ -267,7 +266,9 @@ function MainLayout({ environment, onBack, onOpenSearch, user }) {
                     transition={{ duration: 0.4, ease: "easeOut" }}
                     style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}
                 >
-                    {renderContent()}
+                    <ErrorBoundary onReset={() => setActiveTab(activeTab)}>
+                        {renderContent()}
+                    </ErrorBoundary>
                 </motion.div>
             </main>
 
@@ -308,7 +309,7 @@ function MainLayout({ environment, onBack, onOpenSearch, user }) {
                     {/* Auth Trigger */}
 
                     <button
-                        onClick={() => user ? handleLogout() : setShowLogin(true)}
+                        onClick={() => user ? handleLogout() : onLogin()}
                         style={{
                             background: 'none',
                             border: 'none',
@@ -344,11 +345,6 @@ function MainLayout({ environment, onBack, onOpenSearch, user }) {
                 </div>
             </footer>
 
-            <AnimatePresence>
-                {showLogin && (
-                    <LoginView onClose={() => setShowLogin(false)} />
-                )}
-            </AnimatePresence>
         </div>
     )
 }

@@ -8,6 +8,14 @@ export const theme = {
             primary: '#3b82f6',
             secondary: '#2563eb',
         },
+        ssk: {
+            primary: '#ef4444',
+            secondary: '#dc2626',
+        },
+        multimedia: {
+            primary: '#3b82f6',
+            secondary: '#2563eb',
+        },
         bg: {
             darker: '#050505',
             dark: '#0a0a0a',

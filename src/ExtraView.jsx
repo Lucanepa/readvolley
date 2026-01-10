@@ -119,7 +119,6 @@ function ExtraView({ environment, user, onLogin }) { // Props explicitly destruc
                 <h1 style={{ fontSize: '3rem', fontWeight: '900', marginBottom: '0.5rem', letterSpacing: '-0.025em', fontFamily: 'Outfit, sans-serif' }}>
                     Extra <span style={{ color: color }}>Resources</span>
                 </h1>
-                <p style={{ color: theme.colors.text.secondary }}>Additional materials and tools</p>
             </div>
 
             {/* Filter Toggle Button (Mobile/Desktop) */}
@@ -253,7 +252,7 @@ function ExtraView({ environment, user, onLogin }) { // Props explicitly destruc
                     {extras.length > 0 && <button onClick={() => { setSelectedSeason('All'); setSelectedTags([]); }} style={{ marginTop: '1rem', background: 'none', border: 'none', color: color, textDecoration: 'underline', cursor: 'pointer' }}>Clear filters</button>}
                 </div>
             ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '1.5rem' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
                     {filteredExtras.map((item, index) => {
                         const isExpanded = expandedItems[item.id]
                         // Simple heuristic: If content is long/HTML, we might want to collapse it initially

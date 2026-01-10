@@ -4,6 +4,7 @@ import ReactQuill from 'react-quill'
 import 'react-quill/dist/quill.snow.css'
 import { theme } from './styles/theme'
 import { api } from './services/api'
+import ErrorBoundary from './components/ErrorBoundary'
 import { ChevronLeft, Save, Upload, Link as LinkIcon, FileText, Tag, CalendarClock } from 'lucide-react'
 
 function AddExtraView({ onClose, initialData = null }) {
@@ -17,8 +18,9 @@ function AddExtraView({ onClose, initialData = null }) {
         link_url: initialData?.link_url || '',
         type: initialData?.type || 'post',
         rules_type: initialData?.rules_type || 'indoor',
-        season: initialData?.season || '2024/2025',
+        season: initialData?.season || '2025/2026',
         tags: Array.isArray(initialData?.tags) ? initialData.tags : [], // Strictly ensure array
+        ssk_name: initialData?.ssk_name || '',
     })
     const [tagInput, setTagInput] = useState('')
     const [status, setStatus] = useState('idle') // idle, submitting, success, error
@@ -86,7 +88,7 @@ function AddExtraView({ onClose, initialData = null }) {
         toolbar: [
             [{ 'header': [1, 2, false] }],
             ['bold', 'italic', 'underline', 'strike', 'blockquote'],
-            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+            [{ 'list': 'ordered' }, { 'list': 'bullet' }, { 'indent': '-1' }, { 'indent': '+1' }],
             [{ 'align': [] }],
             ['link'],
             ['clean']
@@ -131,8 +133,8 @@ function AddExtraView({ onClose, initialData = null }) {
 
                 <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', flex: 1, overflowY: 'auto', paddingRight: '0.5rem' }}>
                     {/* Environment Selector */}
-                    <div style={{ display: 'flex', gap: '1rem' }}>
-                        {['indoor', 'beach'].map(type => (
+                    <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                        {['indoor', 'beach', 'ssk', 'multimedia'].map(type => (
                             <button
                                 key={type}
                                 type="button"
@@ -142,12 +144,13 @@ function AddExtraView({ onClose, initialData = null }) {
                                     padding: '0.75rem',
                                     borderRadius: '0.5rem',
                                     border: '1px solid',
-                                    borderColor: formData.rules_type === type ? theme.colors[type].primary : 'rgba(255,255,255,0.1)',
-                                    backgroundColor: formData.rules_type === type ? `${theme.colors[type].primary}22` : 'transparent',
-                                    color: formData.rules_type === type ? theme.colors[type].primary : theme.colors.text.secondary,
+                                    borderColor: formData.rules_type === type ? (theme.colors[type]?.primary || '#3b82f6') : 'rgba(255,255,255,0.1)',
+                                    backgroundColor: formData.rules_type === type ? `${theme.colors[type]?.primary || '#3b82f6'}22` : 'transparent',
+                                    color: formData.rules_type === type ? (theme.colors[type]?.primary || '#3b82f6') : theme.colors.text.secondary,
                                     textTransform: 'capitalize',
                                     fontWeight: 'bold',
-                                    cursor: 'pointer'
+                                    cursor: 'pointer',
+                                    minWidth: '100px'
                                 }}
                             >
                                 {type}
@@ -186,39 +189,26 @@ function AddExtraView({ onClose, initialData = null }) {
                         {/* Type Selector condensed */}
                         <div style={{ flex: 1 }}>
                             <label style={{ display: 'block', marginBottom: '0.5rem', color: theme.colors.text.secondary, fontSize: '0.9rem' }}>Content Type</label>
-                            <div style={{ display: 'flex', backgroundColor: 'rgba(0,0,0,0.3)', borderRadius: '0.5rem', padding: '0.25rem', border: '1px solid rgba(255,255,255,0.1)' }}>
-                                <button
-                                    type="button"
-                                    onClick={() => setFormData(prev => ({ ...prev, type: 'post' }))}
-                                    style={{
-                                        flex: 1,
-                                        padding: '0.5rem',
-                                        borderRadius: '0.3rem',
-                                        backgroundColor: formData.type === 'post' ? 'rgba(255,255,255,0.1)' : 'transparent',
-                                        color: formData.type === 'post' ? 'white' : 'rgba(255,255,255,0.5)',
-                                        border: 'none',
-                                        cursor: 'pointer',
-                                        fontSize: '0.9rem'
-                                    }}
-                                >
-                                    Blog Post
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setFormData(prev => ({ ...prev, type: 'link' }))}
-                                    style={{
-                                        flex: 1,
-                                        padding: '0.5rem',
-                                        borderRadius: '0.3rem',
-                                        backgroundColor: formData.type === 'link' ? 'rgba(255,255,255,0.1)' : 'transparent',
-                                        color: formData.type === 'link' ? 'white' : 'rgba(255,255,255,0.5)',
-                                        border: 'none',
-                                        cursor: 'pointer',
-                                        fontSize: '0.9rem'
-                                    }}
-                                >
-                                    External Link
-                                </button>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.5rem', backgroundColor: 'rgba(0,0,0,0.3)', borderRadius: '0.5rem', padding: '0.5rem', border: '1px solid rgba(255,255,255,0.1)' }}>
+                                {['post', 'link', 'pdf', 'image', 'video'].map(t => (
+                                    <button
+                                        key={t}
+                                        type="button"
+                                        onClick={() => setFormData(prev => ({ ...prev, type: t }))}
+                                        style={{
+                                            padding: '0.5rem',
+                                            borderRadius: '0.3rem',
+                                            backgroundColor: formData.type === t ? 'rgba(255,255,255,0.1)' : 'transparent',
+                                            color: formData.type === t ? 'white' : 'rgba(255,255,255,0.5)',
+                                            border: 'none',
+                                            cursor: 'pointer',
+                                            fontSize: '0.8rem',
+                                            textTransform: 'capitalize'
+                                        }}
+                                    >
+                                        {t}
+                                    </button>
+                                ))}
                             </div>
                         </div>
                     </div>
@@ -231,6 +221,27 @@ function AddExtraView({ onClose, initialData = null }) {
                             value={formData.title}
                             onChange={handleChange}
                             required
+                            style={{
+                                width: '100%',
+                                padding: '0.75rem',
+                                backgroundColor: 'rgba(0,0,0,0.3)',
+                                border: '1px solid rgba(255,255,255,0.1)',
+                                borderRadius: '0.5rem',
+                                color: 'white',
+                                fontSize: '1rem'
+                            }}
+                        />
+                    </div>
+
+                    {/* SSK Name - Only relevant if environment is ssk, but safe to show/store generally */}
+                    <div>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', color: theme.colors.text.secondary }}>SSK Name</label>
+                        <input
+                            type="text"
+                            name="ssk_name"
+                            value={formData.ssk_name}
+                            onChange={handleChange}
+                            placeholder="Optional name/author"
                             style={{
                                 width: '100%',
                                 padding: '0.75rem',
@@ -326,12 +337,18 @@ function AddExtraView({ onClose, initialData = null }) {
                                         }
                                     `}
                                 </style>
-                                <ReactQuill
-                                    theme="snow"
-                                    value={formData.content}
-                                    onChange={handleContentChange}
-                                    modules={modules}
-                                />
+                                <ErrorBoundary fallback={
+                                    <div style={{ padding: '2rem', textAlign: 'center', color: 'black' }}>
+                                        <p>Text editor failed to load. Please try refreshing.</p>
+                                    </div>
+                                }>
+                                    <ReactQuill
+                                        theme="snow"
+                                        value={formData.content}
+                                        onChange={handleContentChange}
+                                        modules={modules}
+                                    />
+                                </ErrorBoundary>
                             </div>
                         </div>
                     )}
@@ -360,7 +377,7 @@ function AddExtraView({ onClose, initialData = null }) {
                         </div>
                     </div>
 
-                    {(formData.type === 'link' || formData.link_url) && (
+                    {(formData.type === 'link' || formData.type === 'pdf' || formData.link_url) && (
                         <div>
                             <label style={{ display: 'block', marginBottom: '0.5rem', color: theme.colors.text.secondary }}>URL</label>
                             <input
@@ -369,7 +386,7 @@ function AddExtraView({ onClose, initialData = null }) {
                                 value={formData.link_url}
                                 onChange={handleChange}
                                 placeholder="https://..."
-                                required={formData.type === 'link'}
+                                required={formData.type === 'link' || formData.type === 'pdf'}
                                 style={{
                                     width: '100%',
                                     padding: '0.75rem',

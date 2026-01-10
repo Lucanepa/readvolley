@@ -28,7 +28,7 @@ body {
   line-height: 1.5;
   font-weight: 400;
   color-scheme: dark;
-  font-synthesis: none;
+  /* Removed font-synthesis: none to allow browser to synthesize italics if missing */
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -98,4 +98,124 @@ button {
     grid-template-columns: 1fr;
     gap: 1.5rem;
   }
+}
+
+/* Rich Text Content Styling (for Quill output) */
+.rich-text-content ul,
+.rich-text-content ol,
+.news-content ul,
+.news-content ol {
+  margin: 1rem 0;
+  padding-left: 1.5rem;
+}
+
+.rich-text-content li,
+.news-content li {
+  margin-bottom: 0.5rem;
+  display: list-item;
+}
+
+.rich-text-content ul li,
+.news-content ul li {
+  list-style-type: disc;
+}
+
+.rich-text-content ol li,
+.news-content ol li {
+  list-style-type: decimal;
+}
+
+/* Force Italic Rendering */
+.rich-text-content em,
+.rich-text-content i,
+.news-content em,
+.news-content i {
+  font-style: italic !important;
+  display: inline;
+}
+
+.rich-text-content strong,
+.rich-text-content b,
+.news-content strong,
+.news-content b {
+  font-weight: bold;
+}
+
+.rich-text-content blockquote,
+.news-content blockquote {
+  border-left: 4px solid #ef4444;
+  padding-left: 1rem;
+  margin: 1rem 0;
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.rich-text-content h1,
+.rich-text-content h2,
+.news-content h1,
+.news-content h2 {
+  margin: 1.5rem 0 1rem 0;
+  color: white;
+  font-family: var(--font-family-heading);
+}
+
+.rich-text-content h1,
+.news-content h1 {
+  font-size: 1.5rem;
+}
+
+.rich-text-content h2,
+.news-content h2 {
+  font-size: 1.25rem;
+}
+
+.rich-text-content a,
+.news-content a {
+  color: #ef4444;
+  text-decoration: underline;
+}
+
+/* Rich Text Alignment & Indentation (Quill) */
+.ql-align-center {
+  text-align: center;
+}
+
+.ql-align-right {
+  text-align: right;
+}
+
+.ql-align-justify {
+  text-align: justify;
+}
+
+.ql-indent-1 {
+  padding-left: 2rem !important;
+}
+
+.ql-indent-2 {
+  padding-left: 4rem !important;
+}
+
+.ql-indent-3 {
+  padding-left: 6rem !important;
+}
+
+.ql-indent-4 {
+  padding-left: 8rem !important;
+}
+
+.ql-indent-5 {
+  padding-left: 10rem !important;
+}
+
+.ql-indent-6 {
+  padding-left: 12rem !important;
+}
+
+.ql-indent-7 {
+  padding-left: 14rem !important;
+}
+
+.ql-indent-8 {
+  padding-left: 16rem !important;
 }

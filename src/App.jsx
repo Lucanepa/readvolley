@@ -4,6 +4,7 @@ import { Sun, Home, ChevronRight, Search, Trophy } from 'lucide-react'
 import MainLayout from './components/MainLayout'
 import SearchView from './SearchView'
 import SwissVolleyView from './SwissVolleyView'
+import LoginView from './LoginView'
 import { theme } from './styles/theme'
 import { supabase } from './lib/supabase'
 
@@ -12,6 +13,7 @@ function App() {
     const [hoveredEnv, setHoveredEnv] = useState(null)
     const [isSearchOpen, setIsSearchOpen] = useState(false)
     const [isSwissVolleyOpen, setIsSwissVolleyOpen] = useState(false)
+    const [showLogin, setShowLogin] = useState(false)
     const [user, setUser] = useState(null)
 
     useEffect(() => {
@@ -105,7 +107,7 @@ function App() {
                             padding: '0 1.5rem',
                             display: 'flex',
                             flexDirection: 'column',
-                            itemsCenter: 'center',
+                            alignItems: 'center',
                             justifyContent: 'center',
                             minHeight: '100vh',
                             paddingTop: '5rem',
@@ -235,6 +237,7 @@ function App() {
                         user={user}
                         onBack={() => setEnvironment(null)}
                         onOpenSearch={() => setIsSearchOpen(true)}
+                        onLogin={() => setShowLogin(true)}
                     />
                 )}
             </AnimatePresence>
@@ -266,9 +269,16 @@ function App() {
                         style={{ position: 'fixed', inset: 0, zIndex: 1000 }}
                     >
                         <SwissVolleyView
+                            user={user}
+                            onLogin={() => setShowLogin(true)}
                             onClose={() => setIsSwissVolleyOpen(false)}
                         />
                     </motion.div>
+                )}
+            </AnimatePresence>
+            <AnimatePresence>
+                {showLogin && (
+                    <LoginView onClose={() => setShowLogin(false)} />
                 )}
             </AnimatePresence>
         </div>
