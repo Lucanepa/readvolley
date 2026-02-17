@@ -214,7 +214,7 @@ function App() {
                                     <img
                                         src="/swissvolley.png"
                                         alt="Swiss Volley"
-                                        style={{ width: '250px', objectFit: 'contain', borderRadius: '2rem' }}
+                                        style={{ width: '250px', objectFit: 'contain', borderRadius: '0.75rem' }}
                                     />
                                 </button>
                             </motion.div>

@@ -62,7 +62,7 @@ export const api = {
         const data = await fetchJson(`/api/diagrams?rulesType=${encodeURIComponent(rulesType)}`)
         return data.map(diagram => ({
             ...diagram,
-            url: diagram.diagram_image || `/diagrams_images/diagram_${safeToken(diagram.diagram_n)}_${safeToken(diagram.rules_type)}.png`
+            url: `/diagrams_images/diagram_${safeToken(diagram.diagram_n)}_${safeToken(diagram.rules_type)}.png`
         }))
     },
 
