@@ -6,7 +6,21 @@ import SearchView from './SearchView'
 import SwissVolleyView from './SwissVolleyView'
 import LoginView from './LoginView'
 import { theme } from './styles/theme'
-import { supabase } from './lib/supabase'
+
+function checkToken() {
+    const token = localStorage.getItem('admin_token')
+    if (!token) return null
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]))
+        if (payload.exp * 1000 > Date.now()) {
+            return { role: payload.role }
+        }
+        localStorage.removeItem('admin_token')
+    } catch {
+        localStorage.removeItem('admin_token')
+    }
+    return null
+}
 
 function App() {
     const [environment, setEnvironment] = useState(null)
@@ -14,20 +28,12 @@ function App() {
     const [isSearchOpen, setIsSearchOpen] = useState(false)
     const [isSwissVolleyOpen, setIsSwissVolleyOpen] = useState(false)
     const [showLogin, setShowLogin] = useState(false)
-    const [user, setUser] = useState(null)
+    const [user, setUser] = useState(checkToken)
 
     useEffect(() => {
-        // Check active session
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            setUser(session?.user ?? null)
-        })
-
-        // Listen for changes
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-            setUser(session?.user ?? null)
-        })
-
-        return () => subscription.unsubscribe()
+        const onAuthChange = () => setUser(checkToken())
+        window.addEventListener('auth-change', onAuthChange)
+        return () => window.removeEventListener('auth-change', onAuthChange)
     }, [])
 
     return (

@@ -78,7 +78,6 @@ function RulesView({ environment }) {
             if (articleHasGuidelines[articleId] === undefined) {
                 try {
                     const ruleIds = currentRules.map(r => r.id)
-                    console.log("RulesView: Checking guidelines for article:", articleId, "rules:", ruleIds)
                     const exists = await api.getGuidelinesExistence(articleId, ruleIds)
                     setArticleHasGuidelines(prev => ({ ...prev, [articleId]: exists }))
                 } catch (e) {
@@ -105,7 +104,6 @@ function RulesView({ environment }) {
     }
 
     const toggleArticleGuidelines = async (articleId) => {
-        console.log("RulesView: Toggling guidelines for article:", articleId)
         if (expandedArticleGuidelines === articleId) {
             setExpandedArticleGuidelines(null)
             return
@@ -114,7 +112,6 @@ function RulesView({ environment }) {
         if (!articleGuidelines[articleId]) {
             try {
                 const ruleIds = rules[articleId]?.map(r => r.id) || []
-                console.log("RulesView: Fetching full guidelines for article:", articleId, "rules:", ruleIds)
                 const data = await api.getGuidelinesForArticle(articleId, ruleIds)
                 setArticleGuidelines(prev => ({ ...prev, [articleId]: data }))
             } catch (e) {

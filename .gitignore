@@ -5,6 +5,9 @@
 .env.test.local
 .env.production.local
 
+# Build output
+dist/
+
 # Dependency directories
 node_modules/
 jspm_packages/
@@ -21,6 +24,10 @@ ENV/
 .supabase/
 firebase-debug.log
 *firebase-adminsdk*.json
+
+# Cloudflare
+.dev.vars
+.wrangler/
 
 # OS files
 .DS_Store

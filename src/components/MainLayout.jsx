@@ -11,7 +11,6 @@ import ProtocolsView from '../ProtocolsView'
 import GesturesView from '../GesturesView'
 import ExtraView from '../ExtraView'
 import { theme } from '../styles/theme'
-import { supabase } from '../lib/supabase'
 import ErrorBoundary from './ErrorBoundary'
 
 function MainLayout({ environment, onBack, onOpenSearch, user, onLogin }) {
@@ -45,8 +44,9 @@ function MainLayout({ environment, onBack, onOpenSearch, user, onLogin }) {
         }
     }
 
-    const handleLogout = async () => {
-        await supabase.auth.signOut()
+    const handleLogout = () => {
+        localStorage.removeItem('admin_token')
+        window.dispatchEvent(new Event('auth-change'))
     }
 
     return (

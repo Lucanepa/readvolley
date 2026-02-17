@@ -1,33 +1,35 @@
 import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import { theme } from './styles/theme'
-import { supabase } from './lib/supabase'
 import { X, Lock, LogIn } from 'lucide-react'
 
 function LoginView({ onClose }) {
-    const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState(null)
+
+    const API_BASE = import.meta.env.VITE_API_URL || ''
 
     const handleLogin = async (e) => {
         e.preventDefault()
         setLoading(true)
         setError(null)
 
-        const { error } = await supabase.auth.signInWithPassword({
-            email,
-            password,
-        })
-
-        if (error) {
-            console.error('Supabase Login Error:', error)
-            setError(error.message)
-            setLoading(false)
-        } else {
-            // Login successful
-            setLoading(false)
+        try {
+            const res = await fetch(`${API_BASE}/api/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password }),
+            })
+            const data = await res.json()
+            if (!res.ok) throw new Error(data.error || 'Login failed')
+            localStorage.setItem('admin_token', data.token)
+            window.dispatchEvent(new Event('auth-change'))
             onClose()
+        } catch (err) {
+            setError(err.message)
+        } finally {
+            setLoading(false)
         }
     }
 
@@ -92,24 +94,6 @@ function LoginView({ onClose }) {
                 </div>
 
                 <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                    <div>
-                        <input
-                            type="email"
-                            placeholder="Email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                            style={{
-                                width: '100%',
-                                padding: '1rem',
-                                borderRadius: '0.75rem',
-                                backgroundColor: 'rgba(0,0,0,0.3)',
-                                border: '1px solid rgba(255,255,255,0.1)',
-                                color: 'white',
-                                outline: 'none'
-                            }}
-                        />
-                    </div>
                     <div>
                         <input
                             type="password"

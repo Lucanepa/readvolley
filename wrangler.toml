@@ -1,0 +1,8 @@
+name = "readvolley"
+compatibility_date = "2024-12-01"
+pages_build_output_dir = "dist"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "readvolley-db"
+database_id = "79d3ce48-ba35-47c7-88b4-b1d9ed017f83"
