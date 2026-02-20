@@ -178,8 +178,8 @@ function SwissVolleyView({ onClose, user, onLogin }) {
                                     <Globe size={24} />
                                 </div>
                                 <div style={{ flex: 1 }}>
-                                    <h3 style={{ fontSize: '1.1rem', fontWeight: '800', marginBottom: '0.25rem' }}>Resource Hub</h3>
-                                    <p style={{ fontSize: '0.85rem', color: theme.colors.text.secondary }}>Access external documentation and refereeing resources.</p>
+                                    <h3 style={{ fontSize: '1.1rem', fontWeight: '800', marginBottom: '0.25rem' }}>Resource Hub (NL Referees)</h3>
+                                    <p style={{ fontSize: '0.85rem', color: theme.colors.text.secondary }}>Access external documentation and refereeing resources. For Referees in NLA and NLB.</p>
                                 </div>
                                 <ArrowUpRight size={20} color={theme.colors.text.muted} />
                             </button>
