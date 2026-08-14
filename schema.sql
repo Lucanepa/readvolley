@@ -155,3 +155,15 @@ CREATE INDEX IF NOT EXISTS idx_game_protocol_rules_type ON game_protocol(rules_t
 CREATE INDEX IF NOT EXISTS idx_guidelines_article_id ON guidelines(article_id);
 CREATE INDEX IF NOT EXISTS idx_guidelines_rule_id ON guidelines(rule_id);
 CREATE INDEX IF NOT EXISTS idx_extras_rules_type ON extras(rules_type);
+
+-- Login throttling (security hardening 2026-08-13).
+-- Backs the per-IP lockout in functions/api/login.js. Without this table the
+-- login endpoint still works but degrades to unthrottled — apply it with:
+--   wrangler d1 execute readvolley-db --remote --file=schema.sql
+CREATE TABLE IF NOT EXISTS login_attempts (
+    ip           TEXT PRIMARY KEY,
+    fails        INTEGER NOT NULL DEFAULT 0,
+    window_start INTEGER NOT NULL DEFAULT 0,
+    locked_until INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS idx_login_attempts_locked_until ON login_attempts(locked_until);
