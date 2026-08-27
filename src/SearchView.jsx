@@ -1,8 +1,18 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useMemo, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, X, Filter, Book, AlertCircle, Info, ShieldCheck, Image as ImageIcon, List, ChevronRight } from 'lucide-react'
+import { Search, X, Book, AlertCircle, Info, ShieldCheck, Image as ImageIcon, List, ChevronRight, ChevronDown, SlidersHorizontal } from 'lucide-react'
 import { api } from './services/api'
 import { theme } from './styles/theme'
+
+const CATEGORIES = [
+    { id: 'all', label: 'All', icon: <Search size={14} /> },
+    { id: 'rulebook', label: 'Rulebook', icon: <Book size={14} /> },
+    { id: 'casebook', label: 'Casebook', icon: <AlertCircle size={14} /> },
+    { id: 'guidelines', label: 'Guidelines', icon: <Info size={14} /> },
+    { id: 'protocol', label: 'Protocol', icon: <ShieldCheck size={14} /> },
+    { id: 'diagrams', label: 'Diagrams', icon: <ImageIcon size={14} /> },
+    { id: 'gestures', label: 'Signals', icon: <List size={14} /> }
+]
 
 function SearchView({ onClose, initialEnvironment }) {
     const [allData, setAllData] = useState(null)
@@ -12,10 +22,39 @@ function SearchView({ onClose, initialEnvironment }) {
     // Filters
     const [envFilter, setEnvFilter] = useState(initialEnvironment || 'indoor') // 'indoor' | 'beach'
     const [category, setCategory] = useState('all')
+    const [filtersOpen, setFiltersOpen] = useState(false)
+
+    const filtersRef = useRef(null)
+    const filtersToggleRef = useRef(null)
+
+    const accentColor = envFilter === 'beach' ? theme.colors.beach.primary : theme.colors.indoor.primary
+    const activeCategory = CATEGORIES.find(c => c.id === category) || CATEGORIES[0]
 
     useEffect(() => {
         loadData()
     }, [])
+
+    // Collapse the filter panel on any tap/click outside of it (or Escape) so the
+    // results list keeps the full screen height on small devices.
+    useEffect(() => {
+        if (!filtersOpen) return
+
+        const handlePointerDown = (e) => {
+            if (filtersRef.current && filtersRef.current.contains(e.target)) return
+            if (filtersToggleRef.current && filtersToggleRef.current.contains(e.target)) return
+            setFiltersOpen(false)
+        }
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape') setFiltersOpen(false)
+        }
+
+        document.addEventListener('pointerdown', handlePointerDown)
+        document.addEventListener('keydown', handleKeyDown)
+        return () => {
+            document.removeEventListener('pointerdown', handlePointerDown)
+            document.removeEventListener('keydown', handleKeyDown)
+        }
+    }, [filtersOpen])
 
     const loadData = async () => {
         setLoading(true)
@@ -212,7 +251,7 @@ function SearchView({ onClose, initialEnvironment }) {
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            paddingTop: '2rem'
+            paddingTop: '1.25rem'
         }}>
             {/* Header / Search Bar Area */}
             <div style={{
@@ -221,7 +260,7 @@ function SearchView({ onClose, initialEnvironment }) {
                 padding: '0 1.5rem',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '1.5rem'
+                gap: '1rem'
             }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                     <div style={{ position: 'relative', flex: 1 }}>
@@ -245,9 +284,9 @@ function SearchView({ onClose, initialEnvironment }) {
                                 backgroundColor: 'rgba(255, 255, 255, 0.05)',
                                 border: '1px solid rgba(255, 255, 255, 0.1)',
                                 borderRadius: '2rem',
-                                padding: '1.25rem 1.5rem',
+                                padding: '1rem 1.5rem',
                                 paddingLeft: '3.5rem',
-                                fontSize: '1.25rem',
+                                fontSize: '1.15rem',
                                 color: '#ffffff',
                                 outline: 'none',
                                 transition: 'all 0.3s',
@@ -278,84 +317,118 @@ function SearchView({ onClose, initialEnvironment }) {
                     </button>
                 </div>
 
-                {/* Filters Row */}
-                <div style={{
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                    gap: '2rem',
-                    padding: '1.5rem',
-                    ...theme.styles.glass,
-                    borderRadius: '2rem',
-                    border: '1px solid rgba(255,255,255,0.05)'
-                }}>
-                    {/* Env Filter */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                        <span style={{ fontSize: '0.7rem', fontWeight: '900', letterSpacing: '0.1em', textTransform: 'uppercase', color: theme.colors.text.muted }}>Environment</span>
-                        <div style={{ display: 'flex', gap: '0.5rem', backgroundColor: 'rgba(0,0,0,0.3)', padding: '0.3rem', borderRadius: '1rem' }}>
-                            {['indoor', 'beach'].map(env => (
-                                <button
-                                    key={env}
-                                    onClick={() => setEnvFilter(env)}
-                                    style={{
-                                        padding: '0.5rem 1.25rem',
-                                        borderRadius: '0.75rem',
-                                        fontSize: '0.8rem',
-                                        fontWeight: '800',
-                                        textTransform: 'uppercase',
-                                        cursor: 'pointer',
-                                        transition: 'all 0.3s',
-                                        backgroundColor: envFilter === env ? (env === 'beach' ? theme.colors.beach.primary : theme.colors.indoor.primary) : 'transparent',
-                                        color: envFilter === env ? '#ffffff' : theme.colors.text.muted,
-                                        border: 'none'
-                                    }}
-                                >
-                                    {env}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
+                {/* Filters — collapsed by default, so the results keep the screen height */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    <button
+                        ref={filtersToggleRef}
+                        onClick={() => setFiltersOpen(open => !open)}
+                        style={{
+                            alignSelf: 'flex-start',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.6rem',
+                            padding: '0.55rem 1rem',
+                            borderRadius: '1rem',
+                            backgroundColor: filtersOpen ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.05)',
+                            border: '1px solid rgba(255,255,255,0.1)',
+                            color: theme.colors.text.secondary,
+                            cursor: 'pointer',
+                            fontSize: '0.7rem',
+                            fontWeight: '900',
+                            letterSpacing: '0.1em',
+                            textTransform: 'uppercase',
+                            transition: 'all 0.2s'
+                        }}
+                    >
+                        <SlidersHorizontal size={14} style={{ color: accentColor }} />
+                        <span>{envFilter} &middot; {activeCategory.label}</span>
+                        <ChevronDown size={14} style={{ transform: filtersOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.25s' }} />
+                    </button>
 
-                    {/* Category Filter */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', flex: 1 }}>
-                        <span style={{ fontSize: '0.7rem', fontWeight: '900', letterSpacing: '0.1em', textTransform: 'uppercase', color: theme.colors.text.muted }}>Categories</span>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                            {[
-                                { id: 'all', label: 'All', icon: <Search size={14} /> },
-                                { id: 'rulebook', label: 'Rulebook', icon: <Book size={14} /> },
-                                { id: 'casebook', label: 'Casebook', icon: <AlertCircle size={14} /> },
-                                { id: 'guidelines', label: 'Guidelines', icon: <Info size={14} /> },
-                                { id: 'protocol', label: 'Protocol', icon: <ShieldCheck size={14} /> },
-                                { id: 'diagrams', label: 'Diagrams', icon: <ImageIcon size={14} /> },
-                                { id: 'gestures', label: 'Signals', icon: <List size={14} /> }
-                            ].map(cat => {
-                                const active = category === cat.id
-                                return (
-                                    <button
-                                        key={cat.id}
-                                        onClick={() => setCategory(cat.id)}
-                                        style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '0.5rem',
-                                            padding: '0.5rem 1rem',
-                                            borderRadius: '1rem',
-                                            fontSize: '0.8rem',
-                                            fontWeight: '800',
-                                            cursor: 'pointer',
-                                            transition: 'all 0.3s',
-                                            backgroundColor: active ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.03)',
-                                            color: active ? '#ffffff' : theme.colors.text.muted,
-                                            border: '1px solid',
-                                            borderColor: active ? 'rgba(255,255,255,0.2)' : 'transparent'
-                                        }}
-                                    >
-                                        {cat.icon}
-                                        {cat.label}
-                                    </button>
-                                )
-                            })}
-                        </div>
-                    </div>
+                    <AnimatePresence initial={false}>
+                        {filtersOpen && (
+                            <motion.div
+                                key="filters"
+                                ref={filtersRef}
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                exit={{ opacity: 0, height: 0 }}
+                                transition={{ duration: 0.22, ease: 'easeOut' }}
+                                style={{ overflow: 'hidden' }}
+                            >
+                                <div style={{
+                                    display: 'flex',
+                                    flexWrap: 'wrap',
+                                    gap: '1.25rem 2rem',
+                                    padding: '1.25rem',
+                                    ...theme.styles.glass,
+                                    borderRadius: '2rem',
+                                    border: '1px solid rgba(255,255,255,0.05)'
+                                }}>
+                                    {/* Env Filter */}
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                        <span style={{ fontSize: '0.7rem', fontWeight: '900', letterSpacing: '0.1em', textTransform: 'uppercase', color: theme.colors.text.muted }}>Environment</span>
+                                        <div style={{ display: 'flex', gap: '0.5rem', backgroundColor: 'rgba(0,0,0,0.3)', padding: '0.3rem', borderRadius: '1rem' }}>
+                                            {['indoor', 'beach'].map(env => (
+                                                <button
+                                                    key={env}
+                                                    onClick={() => setEnvFilter(env)}
+                                                    style={{
+                                                        padding: '0.5rem 1.25rem',
+                                                        borderRadius: '0.75rem',
+                                                        fontSize: '0.8rem',
+                                                        fontWeight: '800',
+                                                        textTransform: 'uppercase',
+                                                        cursor: 'pointer',
+                                                        transition: 'all 0.3s',
+                                                        backgroundColor: envFilter === env ? (env === 'beach' ? theme.colors.beach.primary : theme.colors.indoor.primary) : 'transparent',
+                                                        color: envFilter === env ? '#ffffff' : theme.colors.text.muted,
+                                                        border: 'none'
+                                                    }}
+                                                >
+                                                    {env}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Category Filter */}
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', flex: '1 1 20rem', minWidth: 0 }}>
+                                        <span style={{ fontSize: '0.7rem', fontWeight: '900', letterSpacing: '0.1em', textTransform: 'uppercase', color: theme.colors.text.muted }}>Categories</span>
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                                            {CATEGORIES.map(cat => {
+                                                const active = category === cat.id
+                                                return (
+                                                    <button
+                                                        key={cat.id}
+                                                        onClick={() => { setCategory(cat.id); setFiltersOpen(false) }}
+                                                        style={{
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            gap: '0.5rem',
+                                                            padding: '0.5rem 1rem',
+                                                            borderRadius: '1rem',
+                                                            fontSize: '0.8rem',
+                                                            fontWeight: '800',
+                                                            cursor: 'pointer',
+                                                            transition: 'all 0.3s',
+                                                            backgroundColor: active ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.03)',
+                                                            color: active ? '#ffffff' : theme.colors.text.muted,
+                                                            border: '1px solid',
+                                                            borderColor: active ? 'rgba(255,255,255,0.2)' : 'transparent'
+                                                        }}
+                                                    >
+                                                        {cat.icon}
+                                                        {cat.label}
+                                                    </button>
+                                                )
+                                            })}
+                                        </div>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </div>
             </div>
 
@@ -364,7 +437,7 @@ function SearchView({ onClose, initialEnvironment }) {
                 flex: 1,
                 width: '100%',
                 maxWidth: '60rem',
-                padding: '2rem 1.5rem',
+                padding: '1.25rem 1.5rem 2rem',
                 overflowY: 'auto',
                 display: 'flex',
                 flexDirection: 'column',
