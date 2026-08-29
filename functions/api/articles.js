@@ -7,7 +7,7 @@ export async function onRequestGet(context) {
     }
 
     const { results } = await context.env.DB.prepare(
-        'SELECT * FROM articles WHERE chapter_id = ? ORDER BY article_n ASC'
+        'SELECT * FROM articles WHERE chapter_id = ? ORDER BY CAST(article_n AS INTEGER) ASC, article_n ASC'
     ).bind(chapterId).all()
 
     return Response.json(results)

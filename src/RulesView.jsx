@@ -4,6 +4,33 @@ import { ChevronDown, ChevronRight, BookOpen, AlertCircle, Hash } from 'lucide-r
 import { api } from './services/api'
 import { theme } from './styles/theme'
 
+const articleNumber = (n) => {
+    const parsed = parseInt(n, 10)
+    return Number.isNaN(parsed) ? Number.MAX_SAFE_INTEGER : parsed
+}
+
+const sortArticles = (list) => [...list].sort((a, b) => articleNumber(a.article_n) - articleNumber(b.article_n))
+
+// "8,9,10,...,14" -> "8-14", non-contiguous sets stay explicit: "1-3, 7"
+const formatArticleRange = (numbers) => {
+    const nums = [...new Set(numbers.map(articleNumber))].filter(n => n !== Number.MAX_SAFE_INTEGER).sort((a, b) => a - b)
+    if (!nums.length) return null
+
+    const groups = []
+    let start = nums[0]
+    let prev = nums[0]
+    for (const n of nums.slice(1)) {
+        if (n !== prev + 1) {
+            groups.push([start, prev])
+            start = n
+        }
+        prev = n
+    }
+    groups.push([start, prev])
+
+    return groups.map(([from, to]) => (from === to ? `${from}` : `${from}\u2013${to}`)).join(', ')
+}
+
 function RulesView({ environment }) {
     const [chapters, setChapters] = useState([])
     const [loading, setLoading] = useState(true)
@@ -47,7 +74,7 @@ function RulesView({ environment }) {
         setExpandedChapter(chapterId)
         if (!articles[chapterId]) {
             const data = await api.getArticles(chapterId)
-            setArticles(prev => ({ ...prev, [chapterId]: data }))
+            setArticles(prev => ({ ...prev, [chapterId]: sortArticles(data) }))
         }
     }
 
@@ -156,6 +183,11 @@ function RulesView({ environment }) {
             <div style={{ display: 'flex', flexDirection: 'column', maxWidth: theme.styles.container.maxWidth, margin: '0 auto', width: '100%', gap: '0.5rem' }}>
                 {chapters.map((chapter, index) => {
                     const isExp = expandedChapter === chapter.id
+                    const chapterArticleNumbers = chapter.article_numbers
+                        ? chapter.article_numbers.split(',')
+                        : (articles[chapter.id]?.map(a => a.article_n) || [])
+                    const ruleRange = formatArticleRange(chapterArticleNumbers)
+                    const ruleLabel = ruleRange && /[\u2013,]/.test(ruleRange) ? 'Rules' : 'Rule'
                     return (
                         <div key={chapter.id} style={{
                             ...theme.styles.glass,
@@ -203,7 +235,18 @@ function RulesView({ environment }) {
                                     }}>
                                         {chapter.order || chapter.id.match(/\d+/)}
                                     </div>
-                                    <span style={{ fontWeight: '900', fontSize: '1.4rem', letterSpacing: '-0.025em' }}>{chapter.title}</span>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
+                                        <span style={{ fontWeight: '900', fontSize: '1.4rem', letterSpacing: '-0.025em' }}>{chapter.title}</span>
+                                        {ruleRange && (
+                                            <span style={{
+                                                fontSize: '0.7rem',
+                                                fontWeight: '800',
+                                                letterSpacing: '0.08em',
+                                                textTransform: 'uppercase',
+                                                color: theme.colors.text.muted
+                                            }}>{ruleLabel} {ruleRange}</span>
+                                        )}
+                                    </div>
                                 </div>
                                 <div style={{
                                     padding: '0.5rem',
