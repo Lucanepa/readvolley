@@ -7,6 +7,7 @@ import SwissVolleyView from './SwissVolleyView'
 import LoginView from './LoginView'
 import { theme } from './styles/theme'
 import { useRoute, navigate, routeTitle } from './services/router'
+import { api } from './services/api'
 
 function checkToken() {
     const token = localStorage.getItem('admin_token')
@@ -22,6 +23,10 @@ function checkToken() {
     }
     return null
 }
+
+// The search index is a single large download. Starting it when the pointer
+// reaches the button means it is usually in hand by the time the overlay opens.
+const warmSearchIndex = () => { api.getAllSearchData().catch(() => {}) }
 
 function App() {
     const route = useRoute()
@@ -177,6 +182,8 @@ function App() {
                             >
                                 <button
                                     onClick={() => setIsSearchOpen(true)}
+                                    onPointerEnter={warmSearchIndex}
+                                    onFocus={warmSearchIndex}
                                     style={{
                                         ...theme.styles.glass,
                                         display: 'flex',
@@ -258,10 +265,10 @@ function App() {
             <AnimatePresence>
                 {isSearchOpen && (
                     <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
+                        initial={{ opacity: 0, scale: 0.98 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
-                        transition={{ duration: 0.3 }}
+                        exit={{ opacity: 0, scale: 0.98 }}
+                        transition={{ duration: 0.18, ease: 'easeOut' }}
                         style={{ position: 'fixed', inset: 0, zIndex: 1000 }}
                     >
                         <SearchView

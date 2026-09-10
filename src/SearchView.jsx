@@ -1,8 +1,14 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react'
+import React, { useState, useEffect, useMemo, useRef, useDeferredValue } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Search, X, Book, AlertCircle, Info, ShieldCheck, Image as ImageIcon, List, ChevronRight, ChevronDown, SlidersHorizontal } from 'lucide-react'
 import { api } from './services/api'
 import { theme } from './styles/theme'
+import { accordionMotion, tabPanelMotion } from './styles/motion'
+
+// A broad term matches a few hundred entries. Rendering them all on every
+// keystroke cost ~90ms a frame, and nobody scrolls past the first screenful —
+// so the list grows as it is scrolled instead.
+const PAGE_SIZE = 40
 
 const CATEGORIES = [
     { id: 'all', label: 'All', icon: <Search size={14} /> },
@@ -18,11 +24,18 @@ function SearchView({ onClose, initialEnvironment }) {
     const [allData, setAllData] = useState(null)
     const [loading, setLoading] = useState(true)
     const [searchTerm, setSearchTerm] = useState('')
+    // Filtering the ~1.2 MB index and rendering the matches costs more than a
+    // frame, and doing it on every keystroke made typing stutter (worst frame
+    // 156ms). Deferring lets React keep the input responsive and drop
+    // intermediate renders it no longer needs.
+    const deferredTerm = useDeferredValue(searchTerm)
 
     // Filters
     const [envFilter, setEnvFilter] = useState(initialEnvironment || 'indoor') // 'indoor' | 'beach'
     const [category, setCategory] = useState('all')
     const [filtersOpen, setFiltersOpen] = useState(false)
+
+    const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
 
     const filtersRef = useRef(null)
     const filtersToggleRef = useRef(null)
@@ -68,10 +81,14 @@ function SearchView({ onClose, initialEnvironment }) {
         }
     }
 
-    const filteredResults = useMemo(() => {
-        if (!allData || !searchTerm.trim()) return []
+    useEffect(() => {
+        setVisibleCount(PAGE_SIZE)
+    }, [deferredTerm, category, envFilter])
 
-        const searchLower = searchTerm.toLowerCase()
+    const filteredResults = useMemo(() => {
+        if (!allData || !deferredTerm.trim()) return []
+
+        const searchLower = deferredTerm.toLowerCase()
         const results = []
 
         // 1. Rules (Rulebook)
@@ -240,7 +257,7 @@ function SearchView({ onClose, initialEnvironment }) {
         }
 
         return results
-    }, [allData, searchTerm, envFilter, category])
+    }, [allData, deferredTerm, envFilter, category])
 
     return (
         <div style={{
@@ -350,10 +367,7 @@ function SearchView({ onClose, initialEnvironment }) {
                             <motion.div
                                 key="filters"
                                 ref={filtersRef}
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: 'auto' }}
-                                exit={{ opacity: 0, height: 0 }}
-                                transition={{ duration: 0.22, ease: 'easeOut' }}
+                                {...accordionMotion}
                                 style={{ overflow: 'hidden' }}
                             >
                                 <div style={{
@@ -433,46 +447,68 @@ function SearchView({ onClose, initialEnvironment }) {
             </div>
 
             {/* Results Area */}
-            <div style={{
-                flex: 1,
-                width: '100%',
-                maxWidth: '60rem',
-                padding: '1.25rem 1.5rem 2rem',
-                overflowY: 'auto',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '1rem'
-            }}>
+            <div
+                onScroll={(e) => {
+                    const el = e.currentTarget
+                    if (el.scrollTop + el.clientHeight < el.scrollHeight - 600) return
+                    setVisibleCount(c => (c < filteredResults.length ? c + PAGE_SIZE : c))
+                }}
+                style={{
+                    flex: 1,
+                    width: '100%',
+                    maxWidth: '60rem',
+                    padding: '1.25rem 1.5rem 2rem',
+                    overflowY: 'auto',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '1rem'
+                }}>
                 {loading ? (
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', marginTop: '4rem' }}>
                         <div style={{ width: '2rem', height: '2rem', border: '2px solid rgba(255,255,255,0.1)', borderTopColor: '#ffffff', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
                         <span style={{ fontSize: '0.8rem', fontWeight: '700', letterSpacing: '0.1em', textTransform: 'uppercase', opacity: 0.5 }}>Preparing your search...</span>
                     </div>
-                ) : searchTerm.trim() === '' ? (
+                ) : deferredTerm.trim() === '' ? (
                     <div style={{ textAlign: 'center', marginTop: '4rem', opacity: 0.3 }}>
                         <Search size={48} style={{ marginBottom: '1rem' }} />
                         <p style={{ fontWeight: '700', letterSpacing: '0.05em' }}>Start typing to search all rules and documents</p>
                     </div>
                 ) : filteredResults.length === 0 ? (
                     <div style={{ textAlign: 'center', marginTop: '4rem', opacity: 0.5 }}>
-                        <p style={{ fontSize: '1.25rem', fontWeight: '800' }}>No matches found for "{searchTerm}"</p>
+                        <p style={{ fontSize: '1.25rem', fontWeight: '800' }}>No matches found for "{deferredTerm}"</p>
                         <p style={{ fontSize: '0.9rem', marginTop: '0.5rem' }}>Try adjusting your filters or search terms</p>
                     </div>
                 ) : (
-                    filteredResults.map((res, index) => (
-                        <SearchResultCard key={res.id} result={res} index={index} envFilter={envFilter} />
-                    ))
+                    <motion.div
+                        key={`${deferredTerm}|${category}|${envFilter}`}
+                        {...tabPanelMotion}
+                        style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}
+                    >
+                        {filteredResults.slice(0, visibleCount).map(res => (
+                            <SearchResultCard key={res.id} result={res} envFilter={envFilter} />
+                        ))}
+                        {visibleCount < filteredResults.length && (
+                            <p style={{
+                                textAlign: 'center',
+                                padding: '1rem',
+                                fontSize: '0.75rem',
+                                fontWeight: '700',
+                                letterSpacing: '0.1em',
+                                textTransform: 'uppercase',
+                                color: theme.colors.text.muted
+                            }}>
+                                Showing {visibleCount} of {filteredResults.length} — keep scrolling for more
+                            </p>
+                        )}
+                    </motion.div>
                 )}
             </div>
 
-            <style>{`
-                @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-            `}</style>
         </div>
     )
 }
 
-function SearchResultCard({ result, index, envFilter }) {
+function SearchResultCard({ result, envFilter }) {
     const isBeach = envFilter === 'beach'
     const color = isBeach ? theme.colors.beach.primary : theme.colors.indoor.primary
 
@@ -489,10 +525,7 @@ function SearchResultCard({ result, index, envFilter }) {
     }
 
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: Math.min(index * 0.05, 0.5) }}
+        <div
             style={{
                 ...theme.styles.glass,
                 padding: '1.5rem',
@@ -519,7 +552,7 @@ function SearchResultCard({ result, index, envFilter }) {
                     </p>
                 </div>
             )}
-        </motion.div>
+        </div>
     )
 }
 

@@ -21,6 +21,8 @@ async function fetchJson(url, options = {}) {
     return res.json()
 }
 
+let searchDataPromise = null
+
 const safeToken = (s) => (s || 'unknown').toString().trim().replace(/[^A-Za-z0-9_-]+/g, '_').replace(/^_+|_+$/g, '')
 
 export const api = {
@@ -79,7 +81,17 @@ export const api = {
     },
 
     async getAllSearchData() {
-        return fetchJson('/api/search')
+        // The index is ~1.2 MB of reference data that only changes on deploy,
+        // yet the search overlay remounts on every open. Holding the promise
+        // both caches it across opens and collapses concurrent callers into a
+        // single request. A failure clears it so the next open retries.
+        if (!searchDataPromise) {
+            searchDataPromise = fetchJson('/api/search').catch(err => {
+                searchDataPromise = null
+                throw err
+            })
+        }
+        return searchDataPromise
     },
 
     async updateExtra(id, updates) {
