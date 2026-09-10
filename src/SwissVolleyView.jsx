@@ -1,12 +1,12 @@
 import React from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import SSKNewsView from './SSKNewsView'
 import { MultimediaView } from './MultimediaView'
 import ResourceHubView from './ResourceHubView'
 import RuleChanges2027View from './RuleChanges2027View'
 import { ArrowLeft, Globe, ArrowUpRight, FileText, PlaySquare, Scale } from 'lucide-react'
 import { theme } from './styles/theme'
-import SubTabs from './components/SubTabs'
+import SubTabs, { tabPanelMotion } from './components/SubTabs'
 import { navigate } from './services/router'
 
 const ACCENT = theme.colors.ssk.primary
@@ -153,18 +153,14 @@ function SwissVolleyView({ onClose, user, onLogin, activeTab }) {
             </div>
 
             {/* Content */}
-            <AnimatePresence mode="wait">
-                <motion.div
-                    key={activeTab || 'overview'}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.25 }}
-                    style={{ flex: 1, width: '100%', minHeight: 0, display: 'flex', flexDirection: 'column' }}
-                >
-                    {renderContent()}
-                </motion.div>
-            </AnimatePresence>
+            <motion.div
+                key={activeTab || 'overview'}
+                role="tabpanel"
+                {...tabPanelMotion}
+                style={{ flex: 1, width: '100%', minHeight: 0, display: 'flex', flexDirection: 'column' }}
+            >
+                {renderContent()}
+            </motion.div>
         </div>
     )
 }

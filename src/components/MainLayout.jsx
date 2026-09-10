@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { motion } from 'framer-motion'
 import {
     Book, Image as ImageIcon, Info, ShieldCheck, List,
@@ -12,7 +12,7 @@ import GesturesView from '../GesturesView'
 import ExtraView from '../ExtraView'
 import { theme } from '../styles/theme'
 import ErrorBoundary from './ErrorBoundary'
-import SubTabs from './SubTabs'
+import SubTabs, { tabPanelMotion } from './SubTabs'
 import { navigate } from '../services/router'
 
 function MainLayout({ environment, activeTab, onBack, onOpenSearch, user, onLogin }) {
@@ -29,6 +29,12 @@ function MainLayout({ environment, activeTab, onBack, onOpenSearch, user, onLogi
     ]
 
     const setActiveTab = (id) => navigate(`/${environment}/${id}`)
+
+    // A tab is a fresh page, so it starts at the top. Without this you land
+    // half way down the new panel at whatever offset the previous one had.
+    useEffect(() => {
+        window.scrollTo({ top: 0 })
+    }, [activeTab])
 
     const renderContent = () => {
         switch (activeTab) {
@@ -186,9 +192,8 @@ function MainLayout({ environment, activeTab, onBack, onOpenSearch, user, onLogi
             }}>
                 <motion.div
                     key={activeTab}
-                    initial={{ opacity: 0, y: 15 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, ease: "easeOut" }}
+                    role="tabpanel"
+                    {...tabPanelMotion}
                     style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}
                 >
                     <ErrorBoundary onReset={() => setActiveTab(activeTab)}>
