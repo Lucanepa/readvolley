@@ -17,7 +17,7 @@ export default defineConfig({
             registerType: 'autoUpdate',
             includeAssets: ['favicon.ico'],
             manifest: {
-                name: 'Volleyball Rules PWA',
+                name: 'Volleyball Rules',
                 short_name: 'ReadVolley',
                 description: 'Voleyball rules and casebook for Beach and Indoor',
                 theme_color: '#000000',

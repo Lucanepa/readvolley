@@ -1,8 +1,8 @@
-import React, { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import React from 'react'
+import { motion } from 'framer-motion'
 import {
     Book, Image as ImageIcon, Info, ShieldCheck, List,
-    ChevronLeft, Search, ChevronDown, MoreHorizontal, Lock, LogOut
+    ChevronLeft, Search, MoreHorizontal, Lock, LogOut
 } from 'lucide-react'
 import RulesView from '../RulesView'
 import DiagramsView from '../DiagramsView'
@@ -12,25 +12,23 @@ import GesturesView from '../GesturesView'
 import ExtraView from '../ExtraView'
 import { theme } from '../styles/theme'
 import ErrorBoundary from './ErrorBoundary'
+import SubTabs from './SubTabs'
+import { navigate } from '../services/router'
 
-function MainLayout({ environment, onBack, onOpenSearch, user, onLogin }) {
-    const [activeTab, setActiveTab] = useState('rules')
-    const [isMenuOpen, setIsMenuOpen] = useState(false)
-
+function MainLayout({ environment, activeTab, onBack, onOpenSearch, user, onLogin }) {
     const isBeach = environment === 'beach'
     const color = isBeach ? theme.colors.beach.primary : theme.colors.indoor.primary
-    const accentBg = isBeach ? theme.colors.beach.primary : theme.colors.indoor.primary
 
     const navItems = [
-        { id: 'rules', label: 'RULES', icon: <Book size={18} /> },
-        { id: 'diagrams', label: 'DIAGRAMS', icon: <ImageIcon size={18} /> },
-        { id: 'definitions', label: 'DEFINITIONS', icon: <Info size={18} /> },
-        { id: 'protocols', label: 'PROTOCOLS', icon: <ShieldCheck size={18} /> },
-        { id: 'gestures', label: 'HAND SIGNALS', icon: <List size={18} /> },
-        { id: 'extra', label: 'EXTRA', icon: <MoreHorizontal size={18} /> },
+        { id: 'rules', label: 'RULES', icon: <Book size={14} /> },
+        { id: 'diagrams', label: 'DIAGRAMS', icon: <ImageIcon size={14} /> },
+        { id: 'definitions', label: 'DEFINITIONS', icon: <Info size={14} /> },
+        { id: 'protocols', label: 'PROTOCOLS', icon: <ShieldCheck size={14} /> },
+        { id: 'hand_signals', label: 'HAND SIGNALS', icon: <List size={14} /> },
+        { id: 'extra', label: 'EXTRA', icon: <MoreHorizontal size={14} /> },
     ]
 
-    const activeItem = navItems.find(item => item.id === activeTab)
+    const setActiveTab = (id) => navigate(`/${environment}/${id}`)
 
     const renderContent = () => {
         switch (activeTab) {
@@ -38,7 +36,7 @@ function MainLayout({ environment, onBack, onOpenSearch, user, onLogin }) {
             case 'diagrams': return <DiagramsView environment={environment} />
             case 'definitions': return <DefinitionsView environment={environment} />
             case 'protocols': return <ProtocolsView environment={environment} />
-            case 'gestures': return <GesturesView environment={environment} />
+            case 'hand_signals': return <GesturesView environment={environment} />
             case 'extra': return <ExtraView environment={environment} user={user} onLogin={onLogin} />
             default: return <RulesView environment={environment} />
         }
@@ -71,14 +69,14 @@ function MainLayout({ environment, onBack, onOpenSearch, user, onLogin }) {
                     ...theme.styles.glass,
                     width: '100%',
                     boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
-                    height: theme.spacing.headerHeight,
                     display: 'flex',
+                    flexDirection: 'column',
                     justifyContent: 'center',
                     alignItems: 'center'
                 }}
             >
                 <div style={{
-                    height: '100%',
+                    height: theme.spacing.headerHeight,
                     width: '100%',
                     maxWidth: theme.styles.container.maxWidth,
                     padding: '0 1rem',
@@ -117,109 +115,16 @@ function MainLayout({ environment, onBack, onOpenSearch, user, onLogin }) {
                         </div>
                     </div>
 
-                    {/* Middle: Menu Trigger (Main control) */}
-                    <div style={{ position: 'relative', justifySelf: 'center' }}>
-                        <button
-                            onClick={() => setIsMenuOpen(!isMenuOpen)}
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.75rem',
-                                padding: '0.2rem 0.2rem',
-                                borderRadius: '0.75rem',
-                                border: '1px solid',
-                                borderColor: isMenuOpen ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.05)',
-                                backgroundColor: isMenuOpen ? accentBg : 'rgba(255,255,255,0.05)',
-                                transition: 'all 0.3s ease',
-                                cursor: 'pointer',
-                                boxShadow: isMenuOpen ? '0 10px 15px -3px rgba(0,0,0,0.1)' : 'none'
-                            }}
-                        >
-                            <div style={{ color: isMenuOpen ? '#ffffff' : color }}>{activeItem.icon}</div>
-                            <span style={{ fontSize: '0.65rem', fontWeight: '900', letterSpacing: '0.05em' }}>{activeItem.label}</span>
-                            <ChevronDown size={14} style={{ opacity: 0.4, transition: 'transform 0.3s', transform: isMenuOpen ? 'rotate(180deg)' : 'none' }} />
-                        </button>
-
-                        <AnimatePresence>
-                            {isMenuOpen && (
-                                <>
-                                    <motion.div
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        exit={{ opacity: 0 }}
-                                        style={{
-                                            position: 'fixed',
-                                            inset: 0,
-                                            zIndex: 200,
-                                            backgroundColor: 'rgba(0,0,0,0.6)',
-                                            backdropFilter: 'blur(4px)'
-                                        }}
-                                        onClick={() => setIsMenuOpen(false)}
-                                    />
-                                    <motion.div
-                                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                        style={{
-                                            position: 'absolute',
-                                            top: '110%',
-                                            right: '0',
-                                            width: '14rem',
-                                            backgroundColor: '#000000',
-                                            borderRadius: '1.25rem',
-                                            border: '1px solid rgba(255,255,255,0.1)',
-                                            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.8)',
-                                            zIndex: 210,
-                                            overflow: 'hidden',
-                                            padding: '0.5rem',
-                                            display: 'flex',
-                                            flexDirection: 'column',
-                                            gap: '0.25rem'
-                                        }}
-                                    >
-                                        {navItems.map(item => (
-                                            <button
-                                                key={item.id}
-                                                onClick={() => {
-                                                    setActiveTab(item.id)
-                                                    setIsMenuOpen(false)
-                                                }}
-                                                style={{
-                                                    width: '100%',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    gap: '1rem',
-                                                    padding: '0.75rem 1rem',
-                                                    borderRadius: '0.75rem',
-                                                    textAlign: 'left',
-                                                    transition: 'all 0.2s',
-                                                    backgroundColor: activeTab === item.id ? accentBg : 'transparent',
-                                                    color: activeTab === item.id ? '#ffffff' : theme.colors.text.secondary,
-                                                    cursor: 'pointer'
-                                                }}
-                                                onMouseEnter={(e) => {
-                                                    if (activeTab !== item.id) {
-                                                        e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'
-                                                        e.currentTarget.style.color = '#ffffff'
-                                                    }
-                                                }}
-                                                onMouseLeave={(e) => {
-                                                    if (activeTab !== item.id) {
-                                                        e.currentTarget.style.backgroundColor = 'transparent'
-                                                        e.currentTarget.style.color = theme.colors.text.secondary
-                                                    }
-                                                }}
-                                            >
-                                                <div style={{ color: activeTab === item.id ? '#ffffff' : color }}>
-                                                    {item.icon}
-                                                </div>
-                                                <span style={{ fontSize: '0.75rem', fontWeight: '800', letterSpacing: '0.02em' }}>{item.label}</span>
-                                            </button>
-                                        ))}
-                                    </motion.div>
-                                </>
-                            )}
-                        </AnimatePresence>
+                    {/* Middle: current section (tabs live in the row below) */}
+                    <div style={{ justifySelf: 'center' }}>
+                        <span style={{
+                            fontSize: '0.6rem',
+                            fontWeight: '700',
+                            letterSpacing: '0.25em',
+                            textTransform: 'uppercase',
+                            color: theme.colors.text.muted,
+                            opacity: 0.7
+                        }}>ReadVolley</span>
                     </div>
 
                     {/* Right: Search (Compact) */}
@@ -244,10 +149,30 @@ function MainLayout({ environment, onBack, onOpenSearch, user, onLogin }) {
                         </button>
                     </div>
                 </div>
+
+                {/* Sub-tabs */}
+                <div style={{
+                    width: '100%',
+                    height: theme.spacing.tabsHeight,
+                    display: 'flex',
+                    alignItems: 'center',
+                    borderTop: '1px solid rgba(255,255,255,0.05)'
+                }}>
+                    <SubTabs
+                        items={navItems}
+                        activeId={activeTab}
+                        onSelect={setActiveTab}
+                        accentColor={color}
+                    />
+                </div>
             </header>
 
-            {/* Spacer for Fixed Header */}
-            <div style={{ height: theme.spacing.headerHeight, width: '100%', flexShrink: 0 }} />
+            {/* Spacer for Fixed Header + Tabs */}
+            <div style={{
+                height: `calc(${theme.spacing.headerHeight} + ${theme.spacing.tabsHeight})`,
+                width: '100%',
+                flexShrink: 0
+            }} />
 
             {/* Main Content Area */}
             <main style={{

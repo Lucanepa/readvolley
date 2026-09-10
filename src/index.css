@@ -219,3 +219,14 @@ button {
 .ql-indent-8 {
   padding-left: 16rem !important;
 }
+
+/* Sub-tab strip: scrolls sideways on narrow screens without showing a bar */
+.subtab-strip {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.subtab-strip::-webkit-scrollbar {
+  display: none;
+}

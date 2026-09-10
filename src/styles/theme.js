@@ -33,6 +33,7 @@ export const theme = {
     },
     spacing: {
         headerHeight: '2.5rem',
+        tabsHeight: '2.75rem',
         footerHeight: '3.5rem', // Slightly larger for mobile tap targets
     },
     styles: {

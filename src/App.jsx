@@ -6,6 +6,7 @@ import SearchView from './SearchView'
 import SwissVolleyView from './SwissVolleyView'
 import LoginView from './LoginView'
 import { theme } from './styles/theme'
+import { useRoute, navigate, routeTitle } from './services/router'
 
 function checkToken() {
     const token = localStorage.getItem('admin_token')
@@ -23,18 +24,23 @@ function checkToken() {
 }
 
 function App() {
-    const [environment, setEnvironment] = useState(null)
+    const route = useRoute()
     const [hoveredEnv, setHoveredEnv] = useState(null)
     const [isSearchOpen, setIsSearchOpen] = useState(false)
-    const [isSwissVolleyOpen, setIsSwissVolleyOpen] = useState(false)
     const [showLogin, setShowLogin] = useState(false)
     const [user, setUser] = useState(checkToken)
+
+    const environment = route.view === 'env' ? route.environment : null
 
     useEffect(() => {
         const onAuthChange = () => setUser(checkToken())
         window.addEventListener('auth-change', onAuthChange)
         return () => window.removeEventListener('auth-change', onAuthChange)
     }, [])
+
+    useEffect(() => {
+        document.title = routeTitle(route)
+    }, [route.view, route.environment, route.tab])
 
     return (
         <div style={{
@@ -49,7 +55,7 @@ function App() {
             overflow: 'hidden'
         }}>
             <AnimatePresence mode="wait">
-                {!environment ? (
+                {route.view !== 'env' ? (
                     <motion.div
                         key="selector"
                         initial={{ opacity: 0 }}
@@ -143,7 +149,7 @@ function App() {
                                     icon={<Home style={{ width: '2.5rem', height: '2.5rem' }} />}
                                     onHover={() => setHoveredEnv('indoor')}
                                     onBlur={() => setHoveredEnv(null)}
-                                    onClick={() => setEnvironment('indoor')}
+                                    onClick={() => navigate('/indoor/rules')}
                                     accentColor="indoor"
                                 />
                                 <EnvironmentCard
@@ -152,7 +158,7 @@ function App() {
                                     icon={<Sun style={{ width: '2.5rem', height: '2.5rem' }} />}
                                     onHover={() => setHoveredEnv('beach')}
                                     onBlur={() => setHoveredEnv(null)}
-                                    onClick={() => setEnvironment('beach')}
+                                    onClick={() => navigate('/beach/rules')}
                                     accentColor="beach"
                                 />
                             </div>
@@ -195,7 +201,7 @@ function App() {
                                 </button>
 
                                 <button
-                                    onClick={() => setIsSwissVolleyOpen(true)}
+                                    onClick={() => navigate('/swiss_volley')}
                                     style={{
                                         display: 'flex',
                                         alignItems: 'center',
@@ -240,8 +246,9 @@ function App() {
                     <MainLayout
                         key="main"
                         environment={environment}
+                        activeTab={route.tab}
                         user={user}
-                        onBack={() => setEnvironment(null)}
+                        onBack={() => navigate('/')}
                         onOpenSearch={() => setIsSearchOpen(true)}
                         onLogin={() => setShowLogin(true)}
                     />
@@ -266,7 +273,7 @@ function App() {
             </AnimatePresence>
 
             <AnimatePresence>
-                {isSwissVolleyOpen && (
+                {route.view === 'swiss' && (
                     <motion.div
                         initial={{ opacity: 0, x: '100%' }}
                         animate={{ opacity: 1, x: 0 }}
@@ -276,8 +283,9 @@ function App() {
                     >
                         <SwissVolleyView
                             user={user}
+                            activeTab={route.tab}
                             onLogin={() => setShowLogin(true)}
-                            onClose={() => setIsSwissVolleyOpen(false)}
+                            onClose={() => navigate('/')}
                         />
                     </motion.div>
                 )}
