@@ -2,19 +2,6 @@ import React, { useEffect, useRef } from 'react'
 import { theme } from '../styles/theme'
 
 /**
- * Motion for the panel behind a tab. Opacity only, and short: the panel
- * fetches its own data on mount, so a longer transition ends up animating an
- * empty box that then reflows as the content lands. No exit animation either —
- * waiting for one to finish before the next panel appears is what made
- * switching tabs feel sluggish.
- */
-export const tabPanelMotion = {
-    initial: { opacity: 0 },
-    animate: { opacity: 1 },
-    transition: { duration: 0.16, ease: 'easeOut' },
-}
-
-/**
  * Horizontal tab strip used for the sub-navigation of both the indoor/beach
  * sections and Swiss Volley. Scrolls sideways on narrow screens and keeps the
  * active tab in view.

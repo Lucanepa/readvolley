@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronDown, ChevronUp, ExternalLink } from 'lucide-react'
 import { theme } from './styles/theme'
+import { accordionMotion } from './styles/motion'
 
 const ACCENT = theme.colors.ssk.primary
 
@@ -244,10 +245,7 @@ function Chapter({ chapter, isOpen, onToggle }) {
             <AnimatePresence initial={false}>
                 {isOpen && (
                     <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.25 }}
+                        {...accordionMotion}
                         style={{ overflow: 'hidden' }}
                     >
                         <div style={{ padding: '0 1.35rem 1.35rem' }}>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { theme } from './styles/theme'
+import { accordionMotion } from './styles/motion'
 import { api } from './services/api'
 import {
     Plus, ExternalLink, Calendar, ChevronRight, Pencil, Trash2,
@@ -128,9 +129,7 @@ export function MultimediaView({ user, onLogin }) {
             <AnimatePresence>
                 {showFilters && (
                     <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
+                        {...accordionMotion}
                         style={{ overflow: 'hidden' }}
                     >
                         <div style={{ ...theme.styles.glass, padding: '1.5rem', borderRadius: '1.5rem', marginBottom: '2rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>

@@ -12,7 +12,8 @@ import GesturesView from '../GesturesView'
 import ExtraView from '../ExtraView'
 import { theme } from '../styles/theme'
 import ErrorBoundary from './ErrorBoundary'
-import SubTabs, { tabPanelMotion } from './SubTabs'
+import SubTabs from './SubTabs'
+import { tabPanelMotion } from '../styles/motion'
 import { navigate } from '../services/router'
 
 function MainLayout({ environment, activeTab, onBack, onOpenSearch, user, onLogin }) {

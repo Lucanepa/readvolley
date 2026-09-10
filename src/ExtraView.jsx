@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { theme } from './styles/theme'
+import { accordionMotion, expandTransition } from './styles/motion'
 import { api } from './services/api'
 import { Plus, ExternalLink, Calendar, ChevronRight, Pencil, Trash2, ChevronDown, ChevronUp, Filter, Tag, CalendarClock, X } from 'lucide-react'
 import AddExtraView from './AddExtraView'
@@ -147,9 +148,7 @@ function ExtraView({ environment, user, onLogin }) { // Props explicitly destruc
             <AnimatePresence>
                 {showFilters && (
                     <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
+                        {...accordionMotion}
                         style={{ overflow: 'hidden' }}
                     >
                         <div style={{
@@ -265,7 +264,7 @@ function ExtraView({ environment, user, onLogin }) { // Props explicitly destruc
                                 layout
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: index * 0.05 }}
+                                transition={{ ...expandTransition, delay: index * 0.05 }}
                                 style={{
                                     ...theme.styles.glass,
                                     borderRadius: '1.5rem',

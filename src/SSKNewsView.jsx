@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Calendar, Plus, Trash2, Pencil, Filter, Tag, CalendarClock, ChevronDown, ChevronUp } from 'lucide-react'
 import { theme } from './styles/theme'
+import { accordionMotion, expandTransition, revealMotion } from './styles/motion'
 import { api } from './services/api'
 import AddSSKNewsModal from './components/AddSSKNewsModal'
 
@@ -141,9 +142,7 @@ function SSKNewsView({ onClose, user, onLogin }) {
                 <AnimatePresence>
                     {showFilters && (
                         <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: 'auto', opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
+                            {...accordionMotion}
                             style={{ overflow: 'hidden' }}
                         >
                             <div style={{ ...theme.styles.glass, padding: '1.5rem', borderRadius: '1.5rem', marginBottom: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -236,6 +235,7 @@ function SSKNewsView({ onClose, user, onLogin }) {
                                             <motion.div
                                                 key={item.id}
                                                 layout
+                                                transition={expandTransition}
                                                 style={{
                                                     ...theme.styles.glass,
                                                     padding: isExpanded ? '2rem' : '0.75rem 1.25rem',
@@ -285,7 +285,7 @@ function SSKNewsView({ onClose, user, onLogin }) {
                                                 </div>
 
                                                 {isExpanded && (
-                                                    <>
+                                                    <motion.div {...revealMotion}>
                                                         <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
                                                             {item.season && <span style={{ fontSize: '0.7rem', backgroundColor: 'rgba(255,255,255,0.1)', padding: '2px 8px', borderRadius: '4px', color: theme.colors.text.secondary }}>{item.season}</span>}
                                                             {item.tags?.map(tag => (
@@ -309,7 +309,7 @@ function SSKNewsView({ onClose, user, onLogin }) {
                                                                 <Calendar size={12} /> {formatDate(item.created_at)}
                                                             </span>
                                                         </div>
-                                                    </>
+                                                    </motion.div>
                                                 )}
 
                                                 {!isExpanded && isCollapsible && (

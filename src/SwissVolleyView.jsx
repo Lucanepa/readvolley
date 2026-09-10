@@ -6,7 +6,8 @@ import ResourceHubView from './ResourceHubView'
 import RuleChanges2027View from './RuleChanges2027View'
 import { ArrowLeft, Globe, ArrowUpRight, FileText, PlaySquare, Scale } from 'lucide-react'
 import { theme } from './styles/theme'
-import SubTabs, { tabPanelMotion } from './components/SubTabs'
+import SubTabs from './components/SubTabs'
+import { tabPanelMotion } from './styles/motion'
 import { navigate } from './services/router'
 
 const ACCENT = theme.colors.ssk.primary

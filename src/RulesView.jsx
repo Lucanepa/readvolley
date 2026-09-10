@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronDown, ChevronRight, BookOpen, AlertCircle, Hash } from 'lucide-react'
 import { api } from './services/api'
 import { theme } from './styles/theme'
+import { accordionMotion } from './styles/motion'
 
 const articleNumber = (n) => {
     const parsed = parseInt(n, 10)
@@ -44,6 +45,8 @@ function RulesView({ environment }) {
     const [articleHasGuidelines, setArticleHasGuidelines] = useState({}) // articleId -> boolean
     const [articleGuidelines, setArticleGuidelines] = useState({}) // articleId -> [guidelineDetails]
     const [expandedArticleGuidelines, setExpandedArticleGuidelines] = useState(null) // ID of article whose guidelines are expanded
+    const [pendingId, setPendingId] = useState(null) // row waiting for its content before it opens
+    const openRequest = useRef(null) // guards against a slow fetch opening a row the user has moved on from
 
     const isBeach = environment === 'beach'
     const color = isBeach ? theme.colors.beach.primary : theme.colors.indoor.primary
@@ -66,16 +69,30 @@ function RulesView({ environment }) {
         }
     }
 
+    // Sections open only once their content is in hand. Opening first and
+    // fetching after animates an empty panel open a few pixels, then jumps
+    // again when the data lands — one click, two separate movements.
     const toggleChapter = async (chapterId) => {
         if (expandedChapter === chapterId) {
             setExpandedChapter(null)
             return
         }
-        setExpandedChapter(chapterId)
-        if (!articles[chapterId]) {
+        if (articles[chapterId]) {
+            setExpandedChapter(chapterId)
+            return
+        }
+
+        openRequest.current = chapterId
+        setPendingId(chapterId)
+        try {
             const data = await api.getArticles(chapterId)
             setArticles(prev => ({ ...prev, [chapterId]: sortArticles(data) }))
+        } catch (e) {
+            console.error(e)
         }
+        if (openRequest.current !== chapterId) return
+        setPendingId(null)
+        setExpandedChapter(chapterId)
     }
 
     const toggleArticle = async (articleId) => {
@@ -83,35 +100,54 @@ function RulesView({ environment }) {
             setExpandedArticle(null)
             return
         }
-        setExpandedArticle(articleId)
-
-        // Fetch rules if not already fetched
+        // Everything the open article renders is fetched before it opens.
         let currentRules = rules[articleId]
+        const cached = currentRules && articleHasGuidelines[articleId] !== undefined
+        if (cached) {
+            setExpandedArticle(articleId)
+            return
+        }
+
+        openRequest.current = articleId
+        setPendingId(articleId)
         if (!currentRules) {
-            currentRules = await api.getRules(articleId)
-            setRules(prev => ({ ...prev, [articleId]: currentRules }))
-        }
-
-        // Fetch casebook data for these rules if any
-        if (currentRules && currentRules.length > 0) {
             try {
-                const data = await api.getCasebookData(currentRules.map(r => r.id))
-                setCasebookData(prev => ({ ...prev, ...data }))
+                currentRules = await api.getRules(articleId)
+                setRules(prev => ({ ...prev, [articleId]: currentRules }))
             } catch (e) {
-                console.error("Error checking casebook existence:", e)
+                console.error(e)
+                currentRules = []
             }
-
-            // Check guidelines existence
-            if (articleHasGuidelines[articleId] === undefined) {
-                try {
-                    const ruleIds = currentRules.map(r => r.id)
-                    const exists = await api.getGuidelinesExistence(articleId, ruleIds)
-                    setArticleHasGuidelines(prev => ({ ...prev, [articleId]: exists }))
-                } catch (e) {
-                    console.error("RulesView: Error checking guidelines existence:", e)
-                }
-            }
+            if (openRequest.current !== articleId) return
         }
+        // The case badges and the guidelines button both add height, so they are
+        // resolved before opening too — otherwise the article settles and then
+        // jumps a few hundred pixels a moment later. They only depend on the
+        // rule ids, so they run together rather than one after the other.
+        if (currentRules && currentRules.length > 0) {
+            const ruleIds = currentRules.map(r => r.id)
+            const needsGuidelines = articleHasGuidelines[articleId] === undefined
+
+            const [cases, exists] = await Promise.all([
+                api.getCasebookData(ruleIds).catch(e => {
+                    console.error("Error checking casebook existence:", e)
+                    return null
+                }),
+                needsGuidelines
+                    ? api.getGuidelinesExistence(articleId, ruleIds).catch(e => {
+                        console.error("RulesView: Error checking guidelines existence:", e)
+                        return null
+                    })
+                    : Promise.resolve(null),
+            ])
+
+            if (openRequest.current !== null && openRequest.current !== articleId) return
+            if (cases) setCasebookData(prev => ({ ...prev, ...cases }))
+            if (exists !== null) setArticleHasGuidelines(prev => ({ ...prev, [articleId]: exists }))
+        }
+
+        setPendingId(null)
+        setExpandedArticle(articleId)
     }
 
     const toggleCaseAccordion = async (ruleId) => {
@@ -119,15 +155,22 @@ function RulesView({ environment }) {
             setExpandedRuleCases(null)
             return
         }
-        setExpandedRuleCases(ruleId)
-        if (!fullCases[ruleId]) {
-            try {
-                const data = await api.getCasebookForRules([ruleId])
-                setFullCases(prev => ({ ...prev, [ruleId]: data }))
-            } catch (e) {
-                console.error("Error loading case details:", e)
-            }
+        if (fullCases[ruleId]) {
+            setExpandedRuleCases(ruleId)
+            return
         }
+
+        openRequest.current = ruleId
+        setPendingId(ruleId)
+        try {
+            const data = await api.getCasebookForRules([ruleId])
+            setFullCases(prev => ({ ...prev, [ruleId]: data }))
+        } catch (e) {
+            console.error("Error loading case details:", e)
+        }
+        if (openRequest.current !== ruleId) return
+        setPendingId(null)
+        setExpandedRuleCases(ruleId)
     }
 
     const toggleArticleGuidelines = async (articleId) => {
@@ -135,17 +178,39 @@ function RulesView({ environment }) {
             setExpandedArticleGuidelines(null)
             return
         }
-        setExpandedArticleGuidelines(articleId)
-        if (!articleGuidelines[articleId]) {
-            try {
-                const ruleIds = rules[articleId]?.map(r => r.id) || []
-                const data = await api.getGuidelinesForArticle(articleId, ruleIds)
-                setArticleGuidelines(prev => ({ ...prev, [articleId]: data }))
-            } catch (e) {
-                console.error("RulesView: Error loading guidelines:", e)
-            }
+        if (articleGuidelines[articleId]) {
+            setExpandedArticleGuidelines(articleId)
+            return
         }
+
+        const key = `guidelines:${articleId}`
+        openRequest.current = key
+        setPendingId(key)
+        try {
+            const ruleIds = rules[articleId]?.map(r => r.id) || []
+            const data = await api.getGuidelinesForArticle(articleId, ruleIds)
+            setArticleGuidelines(prev => ({ ...prev, [articleId]: data }))
+        } catch (e) {
+            console.error("RulesView: Error loading guidelines:", e)
+        }
+        if (openRequest.current !== key) return
+        setPendingId(null)
+        setExpandedArticleGuidelines(articleId)
     }
+
+    // Stands in for the chevron while a section is fetching, so a click is
+    // acknowledged even when the content takes a moment to arrive.
+    const Spinner = ({ size = 20, tint = theme.colors.text.muted }) => (
+        <div style={{
+            width: size,
+            height: size,
+            border: `0.125rem solid ${tint}33`,
+            borderTopColor: tint,
+            borderRadius: '50%',
+            animation: 'spin 0.7s linear infinite',
+            flexShrink: 0
+        }} />
+    )
 
     if (loading) return (
         <div style={{
@@ -254,16 +319,16 @@ function RulesView({ environment }) {
                                     transition: 'transform 0.3s',
                                     transform: isExp ? 'rotate(180deg)' : 'none'
                                 }}>
-                                    <ChevronDown size={24} style={{ color: theme.colors.text.muted }} />
+                                    {pendingId === chapter.id
+                                        ? <Spinner size={24} tint={color} />
+                                        : <ChevronDown size={24} style={{ color: theme.colors.text.muted }} />}
                                 </div>
                             </button>
 
                             <AnimatePresence>
                                 {isExp && (
                                     <motion.div
-                                        initial={{ height: 0, opacity: 0 }}
-                                        animate={{ height: 'auto', opacity: 1 }}
-                                        exit={{ height: 0, opacity: 0 }}
+                                        {...accordionMotion}
                                         style={{ overflow: 'hidden', borderTop: '0.0625rem solid rgba(255,255,255,0.05)', backgroundColor: 'rgba(0,0,0,0.2)' }}
                                     >
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', padding: '1rem' }}>
@@ -309,19 +374,19 @@ function RulesView({ environment }) {
                                                             </div>
                                                             <span style={{ fontWeight: '800', fontSize: '1.1rem', letterSpacing: '-0.02em' }}>{article.title}</span>
                                                         </div>
-                                                        <ChevronRight size={20} style={{
-                                                            color: theme.colors.text.muted,
-                                                            transition: 'transform 0.3s',
-                                                            transform: expandedArticle === article.id ? 'rotate(90deg)' : 'none'
-                                                        }} />
+                                                        {pendingId === article.id
+                                                            ? <Spinner size={20} tint={color} />
+                                                            : <ChevronRight size={20} style={{
+                                                                color: theme.colors.text.muted,
+                                                                transition: 'transform 0.3s',
+                                                                transform: expandedArticle === article.id ? 'rotate(90deg)' : 'none'
+                                                            }} />}
                                                     </button>
 
                                                     <AnimatePresence>
                                                         {expandedArticle === article.id && (
                                                             <motion.div
-                                                                initial={{ height: 0 }}
-                                                                animate={{ height: 'auto' }}
-                                                                exit={{ height: 0 }}
+                                                                {...accordionMotion}
                                                                 style={{ overflow: 'hidden', borderTop: '0.0625rem solid rgba(255,255,255,0.05)', backgroundColor: 'rgba(0,0,0,0.4)' }}
                                                             >
                                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', padding: '1rem' }}>
@@ -359,9 +424,7 @@ function RulesView({ environment }) {
                                                                             <AnimatePresence>
                                                                                 {expandedArticleGuidelines === article.id && (
                                                                                     <motion.div
-                                                                                        initial={{ height: 0, opacity: 0 }}
-                                                                                        animate={{ height: 'auto', opacity: 1 }}
-                                                                                        exit={{ height: 0, opacity: 0 }}
+                                                                                        {...accordionMotion}
                                                                                         style={{ overflow: 'hidden' }}
                                                                                     >
                                                                                         <div style={{
@@ -500,9 +563,7 @@ function RulesView({ environment }) {
                                                                                     <AnimatePresence>
                                                                                         {expandedRuleCases === rule.id && (
                                                                                             <motion.div
-                                                                                                initial={{ height: 0, opacity: 0 }}
-                                                                                                animate={{ height: 'auto', opacity: 1 }}
-                                                                                                exit={{ height: 0, opacity: 0 }}
+                                                                                                {...accordionMotion}
                                                                                                 style={{ overflow: 'hidden' }}
                                                                                             >
                                                                                                 <div style={{ marginTop: '1rem', marginBottom: '1rem', display: 'flex', flexDirection: 'column', gap: '2rem', paddingBottom: '1rem' }}>

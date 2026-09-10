@@ -230,3 +230,11 @@ button {
 .subtab-strip::-webkit-scrollbar {
   display: none;
 }
+
+/* Used by the inline loading spinners in the rule views. Previously this was
+   declared inside the full-page loader, so every spinner that outlived it sat
+   frozen. */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
