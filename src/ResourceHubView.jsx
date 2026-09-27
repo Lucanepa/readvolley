@@ -465,7 +465,7 @@ function LeagueSection({ league }) {
     const fillReport = async (event) => {
         setBusyEvent(event.summary + event.start.toISOString())
         try {
-            const { PDFDocument } = await import('pdf-lib')
+            const { PDFDocument, StandardFonts } = await import('pdf-lib')
             const bytes = await fetch(config.reportPdf).then(r => r.arrayBuffer())
             const pdf = await PDFDocument.load(bytes)
 
@@ -479,10 +479,18 @@ function LeagueSection({ league }) {
 
             const data = parseEventDescription(event.description || '')
             const f = config.fields
+            // The forms default to 12pt, which crowds the header boxes. Fill at
+            // 10pt, shrinking further only when a value would not fit its box.
+            const font = await pdf.embedFont(StandardFonts.Helvetica)
             const setText = (name, value) => {
                 if (!value) return
                 try {
-                    form.getTextField(name).setText(value)
+                    const field = form.getTextField(name)
+                    const width = field.acroField.getWidgets()[0].getRectangle().width - 4
+                    let size = 10
+                    while (size > 6 && font.widthOfTextAtSize(value, size) > width) size -= 0.5
+                    field.setFontSize(size)
+                    field.setText(value)
                 } catch {
                     // Field missing in this revision of the form — skip it.
                 }
