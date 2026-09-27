@@ -7,6 +7,7 @@ import RuleChanges2027View from './RuleChanges2027View'
 import { ArrowLeft, Globe, ArrowUpRight, FileText, PlaySquare, Scale } from 'lucide-react'
 import { theme } from './styles/theme'
 import SubTabs from './components/SubTabs'
+import SwissVolleyMark from './components/SwissVolleyMark'
 import { tabPanelMotion } from './styles/motion'
 import { navigate } from './services/router'
 
@@ -178,12 +179,7 @@ function OverviewMenu({ onSelect }) {
             gap: '2rem'
         }}>
             <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
-                <img
-                    src="/swissvolley.png"
-                    alt="Swiss Volley Logo"
-                    style={{ width: '100px', height: '100px', objectFit: 'contain', marginBottom: '1rem' }}
-                />
-                <h2 style={{ fontSize: '2rem', fontWeight: '900', fontFamily: 'Outfit, sans-serif' }}>Swiss Volley</h2>
+                <h2 style={{ margin: '0 0 0.5rem' }}><SwissVolleyMark fontSize="2rem" /></h2>
                 <p style={{ color: theme.colors.text.secondary }}>Official Resources &amp; Guidelines</p>
             </div>
 

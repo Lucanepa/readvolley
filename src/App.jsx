@@ -4,6 +4,7 @@ import { Sun, Home, ChevronRight, Search, Trophy } from 'lucide-react'
 import MainLayout from './components/MainLayout'
 import SearchView from './SearchView'
 import SwissVolleyView from './SwissVolleyView'
+import SwissVolleyMark from './components/SwissVolleyMark'
 import LoginView from './LoginView'
 import { theme } from './styles/theme'
 import { useRoute, navigate, routeTitle } from './services/router'
@@ -218,17 +219,14 @@ function App() {
                                         transition: 'all 0.3s ease',
                                         backgroundColor: 'transparent',
                                         border: 'none',
+                                        color: theme.colors.text.primary,
                                         width: 'fit-content',
                                         opacity: 0.8
                                     }}
                                     onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.1)'; e.currentTarget.style.opacity = '1' }}
                                     onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.opacity = '0.8' }}
                                 >
-                                    <img
-                                        src="/swissvolley.png"
-                                        alt="Swiss Volley"
-                                        style={{ width: '250px', objectFit: 'contain', borderRadius: '0.75rem' }}
-                                    />
+                                    <SwissVolleyMark fontSize="1.75rem" />
                                 </button>
                             </motion.div>
 
