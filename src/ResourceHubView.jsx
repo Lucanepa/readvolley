@@ -9,6 +9,8 @@ const LR_FEEDBACK_URL = 'https://de.surveymonkey.com/r/Feedback_LR_25_26'
 const LEAGUES = {
     nla: {
         label: 'NLA',
+        // Only NLA games have a line referee to give feedback on.
+        hasLrFeedback: true,
         storageKey: 'nla-ical-url',
         // A game belongs to this league if the entry mentions either marker.
         markers: ['(NLA)', '(LNA)'],
@@ -174,6 +176,9 @@ function parseICalendar(text) {
     const events = []
     const lines = text.split(/\r?\n/)
     let current = null
+    // Nested components (e.g. a VALARM reminder) carry their own DESCRIPTION,
+    // which must not overwrite the event's.
+    let nested = 0
 
     for (let i = 0; i < lines.length; i++) {
         let line = lines[i].trim()
@@ -185,10 +190,15 @@ function parseICalendar(text) {
 
         if (line === 'BEGIN:VEVENT') {
             current = {}
+            nested = 0
         } else if (line === 'END:VEVENT') {
             if (current && current.start && current.summary) events.push(current)
             current = null
-        } else if (current) {
+        } else if (current && line.startsWith('BEGIN:')) {
+            nested++
+        } else if (current && line.startsWith('END:')) {
+            nested = Math.max(0, nested - 1)
+        } else if (current && nested === 0) {
             const colon = line.indexOf(':')
             if (colon <= 0) continue
             const key = line.substring(0, colon)
@@ -663,7 +673,7 @@ function LeagueSection({ league }) {
                                             <FileDown size={14} />
                                             {busyEvent === key ? 'Preparing…' : 'Fill in report'}
                                         </button>
-                                        <a
+                                        {config.hasLrFeedback && <a
                                             href={getLrFeedbackLink(event)}
                                             target="_blank"
                                             rel="noopener noreferrer"
@@ -684,7 +694,7 @@ function LeagueSection({ league }) {
                                         >
                                             <ExternalLink size={14} />
                                             LR Feedback
-                                        </a>
+                                        </a>}
                                     </div>
                                 </div>
                             )
