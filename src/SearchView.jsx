@@ -31,7 +31,7 @@ function SearchView({ onClose, initialEnvironment }) {
     const deferredTerm = useDeferredValue(searchTerm)
 
     // Filters
-    const [envFilter, setEnvFilter] = useState(initialEnvironment || 'indoor') // 'indoor' | 'beach'
+    const [envFilter, setEnvFilter] = useState(initialEnvironment || 'all') // 'all' | 'indoor' | 'beach'
     const [category, setCategory] = useState('all')
     const [filtersOpen, setFiltersOpen] = useState(false)
 
@@ -40,7 +40,7 @@ function SearchView({ onClose, initialEnvironment }) {
     const filtersRef = useRef(null)
     const filtersToggleRef = useRef(null)
 
-    const accentColor = envFilter === 'beach' ? theme.colors.beach.primary : theme.colors.indoor.primary
+    const accentColor = envColor(envFilter)
     const activeCategory = CATEGORIES.find(c => c.id === category) || CATEGORIES[0]
 
     useEffect(() => {
@@ -90,11 +90,13 @@ function SearchView({ onClose, initialEnvironment }) {
 
         const searchLower = deferredTerm.toLowerCase()
         const results = []
+        // Opened from the home screen, the search spans both disciplines.
+        const inEnv = (value) => envFilter === 'all' || value === envFilter
 
         // 1. Rules (Rulebook)
         if (category === 'all' || category === 'rulebook') {
             allData.rules.forEach(rule => {
-                if (rule.rules_type === envFilter) {
+                if (inEnv(rule.rules_type)) {
                     const titleMatch = rule.title?.toLowerCase().includes(searchLower)
                     const textMatch = rule.text?.toLowerCase().includes(searchLower)
                     const nMatch = rule.rule_n?.toLowerCase().includes(searchLower)
@@ -105,7 +107,8 @@ function SearchView({ onClose, initialEnvironment }) {
                             id: `rule-${rule.id}`,
                             title: `Rule ${rule.rule_n}: ${rule.title}`,
                             content: rule.text,
-                            raw: rule
+                            raw: rule,
+                            env: rule.rules_type
                         })
                     }
                 }
@@ -115,9 +118,11 @@ function SearchView({ onClose, initialEnvironment }) {
         // 2. Casebook
         if (category === 'all' || category === 'casebook') {
             // Find rules for current environment
-            const envRules = new Set(allData.rules.filter(r => r.rules_type === envFilter).map(r => r.id))
+            const envRules = new Set(allData.rules.filter(r => inEnv(r.rules_type)).map(r => r.id))
             // Find case IDs linked to these rules
             const envCaseIds = new Set(allData.casebookRules.filter(cr => envRules.has(cr.rule_id)).map(cr => cr.casebook_id))
+            const ruleEnv = new Map(allData.rules.map(r => [r.id, r.rules_type]))
+            const caseEnv = new Map(allData.casebookRules.map(cr => [cr.casebook_id, ruleEnv.get(cr.rule_id)]))
 
             allData.cases.forEach(c => {
                 if (envCaseIds.has(c.id)) {
@@ -132,7 +137,8 @@ function SearchView({ onClose, initialEnvironment }) {
                             title: `Case ${c.case_number}`,
                             content: c.case_text,
                             subContent: c.case_ruling,
-                            raw: c
+                            raw: c,
+                            env: caseEnv.get(c.id)
                         })
                     }
                 }
@@ -143,7 +149,7 @@ function SearchView({ onClose, initialEnvironment }) {
         if (category === 'all' || category === 'guidelines') {
             // Check definitions (legacy guidelines)
             allData.definitions.forEach(def => {
-                if (def.rules_type === envFilter) {
+                if (inEnv(def.rules_type)) {
                     const termMatch = def.term?.toLowerCase().includes(searchLower)
                     const defMatch = def.definition?.toLowerCase().includes(searchLower)
 
@@ -153,7 +159,8 @@ function SearchView({ onClose, initialEnvironment }) {
                             id: `def-${def.id}`,
                             title: def.term,
                             content: def.definition,
-                            raw: def
+                            raw: def,
+                            env: def.rules_type
                         })
                     }
                 }
@@ -161,7 +168,7 @@ function SearchView({ onClose, initialEnvironment }) {
 
             // Check new guidelines table
             allData.guidelines.forEach(gl => {
-                if (gl.rules_type === envFilter) {
+                if (inEnv(gl.rules_type)) {
                     const titleMatch = gl.title?.toLowerCase().includes(searchLower)
                     const textMatch = gl.text?.toLowerCase().includes(searchLower)
                     const notesMatch = gl.notes?.toLowerCase().includes(searchLower)
@@ -173,7 +180,8 @@ function SearchView({ onClose, initialEnvironment }) {
                             title: gl.title || 'Guideline',
                             content: gl.text,
                             subContent: gl.notes,
-                            raw: gl
+                            raw: gl,
+                            env: gl.rules_type
                         })
                     }
                 }
@@ -183,7 +191,7 @@ function SearchView({ onClose, initialEnvironment }) {
         // 4. Protocols
         if (category === 'all' || category === 'protocol') {
             allData.gameProtocols.forEach(p => {
-                if (p.rules_type === envFilter) {
+                if (inEnv(p.rules_type)) {
                     const titleMatch = p.title?.toLowerCase().includes(searchLower)
                     const textMatch = p.protocolText?.toLowerCase().includes(searchLower)
 
@@ -193,25 +201,26 @@ function SearchView({ onClose, initialEnvironment }) {
                             id: `gp-${p.id}`,
                             title: p.title,
                             content: p.protocolText,
-                            raw: p
+                            raw: p,
+                            env: p.rules_type
                         })
                     }
                 }
             })
             allData.otherProtocols.forEach(p => {
-                if (p.protocol_filter === envFilter) {
-                    const titleMatch = p.title?.toLowerCase().includes(searchLower)
-                    const textMatch = p.protocolText?.toLowerCase().includes(searchLower)
+                // Not tied to a discipline — protocol_filter holds the protocol's name.
+                const titleMatch = p.title?.toLowerCase().includes(searchLower)
+                const textMatch = p.protocolText?.toLowerCase().includes(searchLower)
 
-                    if (titleMatch || textMatch) {
-                        results.push({
-                            type: 'protocol',
-                            id: `op-${p.id}`,
-                            title: p.title,
-                            content: p.protocolText,
-                            raw: p
-                        })
-                    }
+                if (titleMatch || textMatch) {
+                    results.push({
+                        type: 'protocol',
+                        id: `op-${p.id}`,
+                        title: p.title,
+                        content: p.protocolText,
+                        raw: p,
+                        env: null
+                    })
                 }
             })
         }
@@ -219,7 +228,7 @@ function SearchView({ onClose, initialEnvironment }) {
         // 5. Diagrams
         if (category === 'all' || category === 'diagrams') {
             allData.diagrams.forEach(d => {
-                if (d.rules_type === envFilter) {
+                if (inEnv(d.rules_type)) {
                     const titleMatch = d.diagram_name?.toLowerCase().includes(searchLower)
                     const nMatch = d.diagram_n?.toLowerCase().includes(searchLower)
 
@@ -229,7 +238,8 @@ function SearchView({ onClose, initialEnvironment }) {
                             id: `diag-${d.id}`,
                             title: `Diagram ${d.diagram_n}: ${d.diagram_name}`,
                             content: '',
-                            raw: d
+                            raw: d,
+                            env: d.rules_type
                         })
                     }
                 }
@@ -239,7 +249,7 @@ function SearchView({ onClose, initialEnvironment }) {
         // 6. Gestures (Hand Signals)
         if (category === 'all' || category === 'gestures') {
             allData.gestures.forEach(g => {
-                if (g.rules_type === envFilter) {
+                if (inEnv(g.rules_type)) {
                     const titleMatch = g.gesture_name?.toLowerCase().includes(searchLower)
                     const nMatch = g.gesture_n?.toLowerCase().includes(searchLower)
 
@@ -249,7 +259,8 @@ function SearchView({ onClose, initialEnvironment }) {
                             id: `gest-${g.id}`,
                             title: `Signal ${g.gesture_n}: ${g.gesture_name}`,
                             content: '',
-                            raw: g
+                            raw: g,
+                            env: g.rules_type
                         })
                     }
                 }
@@ -309,7 +320,7 @@ function SearchView({ onClose, initialEnvironment }) {
                                 transition: 'all 0.3s',
                                 boxShadow: '0 1rem 3rem -1rem rgba(0,0,0,0.5)'
                             }}
-                            onFocus={(e) => e.currentTarget.style.borderColor = (envFilter === 'beach' ? theme.colors.beach.primary : theme.colors.indoor.primary) + '80'}
+                            onFocus={(e) => e.currentTarget.style.borderColor = accentColor + '80'}
                             onBlur={(e) => e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)'}
                         />
                     </div>
@@ -358,7 +369,7 @@ function SearchView({ onClose, initialEnvironment }) {
                         }}
                     >
                         <SlidersHorizontal size={14} style={{ color: accentColor }} />
-                        <span>{envFilter} &middot; {activeCategory.label}</span>
+                        <span>{envFilter === 'all' ? 'Indoor + Beach' : envFilter} &middot; {activeCategory.label}</span>
                         <ChevronDown size={14} style={{ transform: filtersOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.25s' }} />
                     </button>
 
@@ -383,7 +394,7 @@ function SearchView({ onClose, initialEnvironment }) {
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                                         <span style={{ fontSize: '0.7rem', fontWeight: '900', letterSpacing: '0.1em', textTransform: 'uppercase', color: theme.colors.text.muted }}>Environment</span>
                                         <div style={{ display: 'flex', gap: '0.5rem', backgroundColor: 'rgba(0,0,0,0.3)', padding: '0.3rem', borderRadius: '1rem' }}>
-                                            {['indoor', 'beach'].map(env => (
+                                            {['all', 'indoor', 'beach'].map(env => (
                                                 <button
                                                     key={env}
                                                     onClick={() => setEnvFilter(env)}
@@ -395,12 +406,12 @@ function SearchView({ onClose, initialEnvironment }) {
                                                         textTransform: 'uppercase',
                                                         cursor: 'pointer',
                                                         transition: 'all 0.3s',
-                                                        backgroundColor: envFilter === env ? (env === 'beach' ? theme.colors.beach.primary : theme.colors.indoor.primary) : 'transparent',
+                                                        backgroundColor: envFilter === env ? (env === 'all' ? 'rgba(255,255,255,0.18)' : envColor(env)) : 'transparent',
                                                         color: envFilter === env ? '#ffffff' : theme.colors.text.muted,
                                                         border: 'none'
                                                     }}
                                                 >
-                                                    {env}
+                                                    {env === 'all' ? 'Both' : env}
                                                 </button>
                                             ))}
                                         </div>
@@ -485,7 +496,7 @@ function SearchView({ onClose, initialEnvironment }) {
                         style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}
                     >
                         {filteredResults.slice(0, visibleCount).map(res => (
-                            <SearchResultCard key={res.id} result={res} envFilter={envFilter} />
+                            <SearchResultCard key={res.id} result={res} showEnv={envFilter === 'all'} />
                         ))}
                         {visibleCount < filteredResults.length && (
                             <p style={{
@@ -508,9 +519,14 @@ function SearchView({ onClose, initialEnvironment }) {
     )
 }
 
-function SearchResultCard({ result, envFilter }) {
-    const isBeach = envFilter === 'beach'
-    const color = isBeach ? theme.colors.beach.primary : theme.colors.indoor.primary
+function envColor(env) {
+    if (env === 'beach') return theme.colors.beach.primary
+    if (env === 'indoor') return theme.colors.indoor.primary
+    return theme.colors.text.secondary
+}
+
+function SearchResultCard({ result, showEnv }) {
+    const color = envColor(result.env)
 
     const getIcon = (type) => {
         switch (type) {
@@ -539,7 +555,7 @@ function SearchResultCard({ result, envFilter }) {
         >
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
                 <div style={{ color: color }}>{getIcon(result.type)}</div>
-                <span style={{ fontSize: '0.65rem', fontWeight: '900', letterSpacing: '0.1em', textTransform: 'uppercase', color: color }}>{result.type}</span>
+                <span style={{ fontSize: '0.65rem', fontWeight: '900', letterSpacing: '0.1em', textTransform: 'uppercase', color: color }}>{result.type}{showEnv && result.env ? ` · ${result.env}` : ''}</span>
             </div>
             <h3 style={{ fontSize: '1.1rem', fontWeight: '900', marginBottom: '0.5rem', letterSpacing: '-0.01em' }}>{result.title}</h3>
             <p style={{ fontSize: '0.95rem', color: theme.colors.text.secondary, lineHeight: '1.5', fontWeight: '500' }}>
