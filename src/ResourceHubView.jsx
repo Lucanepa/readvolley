@@ -6,14 +6,6 @@ import { theme } from './styles/theme'
 const ACCENT = theme.colors.ssk.primary
 const LR_FEEDBACK_URL = 'https://de.surveymonkey.com/r/Feedback_LR_25_26'
 
-// Public CORS proxies, tried in order. Volleymanager's iCal endpoint sends no
-// CORS header, so the calendar cannot be fetched by the browser directly.
-const CORS_PROXIES = [
-    'https://corsproxy.io/?',
-    'https://api.allorigins.win/raw?url=',
-    'https://api.codetabs.com/v1/proxy?quest=',
-]
-
 const LEAGUES = {
     nla: {
         label: 'NLA',
@@ -431,34 +423,33 @@ function LeagueSection({ league }) {
         from.setDate(now.getDate() - mondayOffset - 7)
         from.setHours(0, 0, 0, 0)
 
-        for (const proxy of CORS_PROXIES) {
-            try {
-                const response = await fetch(proxy + encodeURIComponent(icalUrl))
-                if (!response.ok) continue
-                const text = await response.text()
-                const parsed = parseICalendar(text)
-
-                const filtered = parsed.filter(event => {
-                    if (event.start.getTime() < from.getTime()) return false
-                    const isFirstReferee = event.summary?.includes('ARB 1')
-                        || event.summary?.includes('1. SR')
-                        || event.summary?.includes('1. Arbitro')
-                    if (!isFirstReferee) return false
-                    const haystack = `${event.summary || ''} ${event.description || ''}`
-                    return haystack.includes('Mobiliar') || config.markers.some(m => haystack.includes(m))
-                })
-
-                setEvents(filtered)
-                setIsLoading(false)
-                if (filtered.length === 0) setErrorMessage('No games found for this calendar.')
-                return
-            } catch {
-                // Try the next proxy.
+        // Volleymanager's iCal endpoint sends no CORS header, so the calendar is
+        // fetched through our own function (functions/api/ical.js).
+        try {
+            const response = await fetch(`/api/ical?url=${encodeURIComponent(icalUrl.trim())}`)
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}))
+                throw new Error(err.error || response.statusText)
             }
-        }
+            const parsed = parseICalendar(await response.text())
 
-        setIsLoading(false)
-        setErrorMessage('Could not load the calendar — all proxy servers are unreachable.')
+            const filtered = parsed.filter(event => {
+                if (event.start.getTime() < from.getTime()) return false
+                const isFirstReferee = event.summary?.includes('ARB 1')
+                    || event.summary?.includes('1. SR')
+                    || event.summary?.includes('1. Arbitro')
+                if (!isFirstReferee) return false
+                const haystack = `${event.summary || ''} ${event.description || ''}`
+                return haystack.includes('Mobiliar') || config.markers.some(m => haystack.includes(m))
+            })
+
+            setEvents(filtered)
+            if (filtered.length === 0) setErrorMessage('No games found for this calendar.')
+        } catch (err) {
+            setErrorMessage(`Could not load the calendar — ${err.message}`)
+        } finally {
+            setIsLoading(false)
+        }
     }
 
     const fillReport = async (event) => {
