@@ -1,9 +1,12 @@
-import React, { useState, useEffect, useMemo, useRef, useDeferredValue } from 'react'
+import React, { useState, useEffect, useMemo, useRef, useDeferredValue, memo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, X, Book, AlertCircle, Info, ShieldCheck, Image as ImageIcon, List, ChevronRight, ChevronDown, SlidersHorizontal } from 'lucide-react'
+import { Search, X, Book, AlertCircle, Info, ShieldCheck, Image as ImageIcon, List, ChevronDown, SlidersHorizontal, Loader2, RotateCw } from 'lucide-react'
 import { api } from './services/api'
-import { theme } from './styles/theme'
 import { accordionMotion, tabPanelMotion } from './styles/motion'
+import {
+    SearchInput, IconButton, Button, SegmentedControl, FilterPill, RowList, Row, SectionHeader,
+    Chip, EmptyState, SkeletonRows, FormError, FOCUS_RING, cn,
+} from './ui/volleyui'
 
 // A broad term matches a few hundred entries. Rendering them all on every
 // keystroke cost ~90ms a frame, and nobody scrolls past the first screenful —
@@ -11,18 +14,27 @@ import { accordionMotion, tabPanelMotion } from './styles/motion'
 const PAGE_SIZE = 40
 
 const CATEGORIES = [
-    { id: 'all', label: 'All', icon: <Search size={14} /> },
-    { id: 'rulebook', label: 'Rulebook', icon: <Book size={14} /> },
-    { id: 'casebook', label: 'Casebook', icon: <AlertCircle size={14} /> },
-    { id: 'guidelines', label: 'Guidelines', icon: <Info size={14} /> },
-    { id: 'protocol', label: 'Protocol', icon: <ShieldCheck size={14} /> },
-    { id: 'diagrams', label: 'Diagrams', icon: <ImageIcon size={14} /> },
-    { id: 'gestures', label: 'Signals', icon: <List size={14} /> }
+    { id: 'all', label: 'All', icon: Search },
+    { id: 'rulebook', label: 'Rulebook', icon: Book },
+    { id: 'casebook', label: 'Casebook', icon: AlertCircle },
+    { id: 'guidelines', label: 'Guidelines', icon: Info },
+    { id: 'protocol', label: 'Protocol', icon: ShieldCheck },
+    { id: 'diagrams', label: 'Diagrams', icon: ImageIcon },
+    { id: 'gestures', label: 'Signals', icon: List }
 ]
+
+const DISCIPLINES = [
+    { value: 'all', label: 'Both' },
+    { value: 'indoor', label: 'Indoor' },
+    { value: 'beach', label: 'Beach' },
+]
+
+const ENV_LABEL = { indoor: 'Indoor', beach: 'Beach' }
 
 function SearchView({ onClose, initialEnvironment }) {
     const [allData, setAllData] = useState(null)
     const [loading, setLoading] = useState(true)
+    const [loadError, setLoadError] = useState(false)
     const [searchTerm, setSearchTerm] = useState('')
     // Filtering the ~1.2 MB index and rendering the matches costs more than a
     // frame, and doing it on every keystroke made typing stutter (worst frame
@@ -40,15 +52,22 @@ function SearchView({ onClose, initialEnvironment }) {
     const filtersRef = useRef(null)
     const filtersToggleRef = useRef(null)
 
-    const accentColor = envColor(envFilter)
     const activeCategory = CATEGORIES.find(c => c.id === category) || CATEGORIES[0]
 
     useEffect(() => {
         loadData()
     }, [])
 
-    // Collapse the filter panel on any tap/click outside of it (or Escape) so the
-    // results list keeps the full screen height on small devices.
+    // The overlay covers the page; keep the page underneath from scrolling
+    // along when the results list hits its end.
+    useEffect(() => {
+        const previous = document.body.style.overflow
+        document.body.style.overflow = 'hidden'
+        return () => { document.body.style.overflow = previous }
+    }, [])
+
+    // Collapse the filter panel on any tap/click outside of it so the results
+    // list keeps the full screen height on small devices.
     useEffect(() => {
         if (!filtersOpen) return
 
@@ -57,25 +76,34 @@ function SearchView({ onClose, initialEnvironment }) {
             if (filtersToggleRef.current && filtersToggleRef.current.contains(e.target)) return
             setFiltersOpen(false)
         }
-        const handleKeyDown = (e) => {
-            if (e.key === 'Escape') setFiltersOpen(false)
-        }
 
         document.addEventListener('pointerdown', handlePointerDown)
-        document.addEventListener('keydown', handleKeyDown)
-        return () => {
-            document.removeEventListener('pointerdown', handlePointerDown)
-            document.removeEventListener('keydown', handleKeyDown)
-        }
+        return () => document.removeEventListener('pointerdown', handlePointerDown)
     }, [filtersOpen])
+
+    // Escape peels one layer at a time: the open filter panel first, then the
+    // typed query, then the search overlay itself.
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key !== 'Escape') return
+            e.preventDefault()
+            if (filtersOpen) setFiltersOpen(false)
+            else if (searchTerm) setSearchTerm('')
+            else onClose()
+        }
+        document.addEventListener('keydown', handleKeyDown)
+        return () => document.removeEventListener('keydown', handleKeyDown)
+    }, [filtersOpen, searchTerm, onClose])
 
     const loadData = async () => {
         setLoading(true)
+        setLoadError(false)
         try {
             const data = await api.getAllSearchData()
             setAllData(data)
         } catch (e) {
             console.error("Failed to load search data:", e)
+            setLoadError(true)
         } finally {
             setLoading(false)
         }
@@ -270,184 +298,114 @@ function SearchView({ onClose, initialEnvironment }) {
         return results
     }, [allData, deferredTerm, envFilter, category])
 
+    // Per-type totals for the section heads (the list itself is paged).
+    const typeCounts = useMemo(() => {
+        const counts = {}
+        filteredResults.forEach(r => { counts[r.type] = (counts[r.type] || 0) + 1 })
+        return counts
+    }, [filteredResults])
+
+    // Results arrive already ordered by type, so grouping the visible page
+    // is one pass over consecutive runs.
+    const sections = useMemo(() => {
+        const out = []
+        filteredResults.slice(0, visibleCount).forEach(r => {
+            const last = out[out.length - 1]
+            if (last && last.type === r.type) last.items.push(r)
+            else out.push({ type: r.type, items: [r] })
+        })
+        return out
+    }, [filteredResults, visibleCount])
+
+    const showEnv = envFilter === 'all'
+    const filterSummary = `${envFilter === 'all' ? 'Indoor and beach' : ENV_LABEL[envFilter]} · ${activeCategory.label}`
+
     return (
-        <div style={{
-            position: 'fixed',
-            inset: 0,
-            zIndex: 1000,
-            backgroundColor: theme.colors.bg.dark,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            paddingTop: '1.25rem'
-        }}>
-            {/* Header / Search Bar Area */}
-            <div style={{
-                width: '100%',
-                maxWidth: '60rem',
-                padding: '0 1.5rem',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '1rem'
-            }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <div style={{ position: 'relative', flex: 1 }}>
-                        <Search style={{
-                            position: 'absolute',
-                            left: '1.25rem',
-                            top: '50%',
-                            transform: 'translateY(-50%)',
-                            color: theme.colors.text.muted,
-                            width: '1.5rem',
-                            height: '1.5rem'
-                        }} />
-                        <input
+        <div className="flex h-full flex-col bg-gradient-to-b from-stone-50 to-stone-100">
+            {/* Top bar: search field, close, filters */}
+            <div className="shrink-0 border-b border-stone-200 bg-white pt-[max(0.75rem,env(safe-area-inset-top,0px))]">
+                <div className="mx-auto max-w-3xl px-4 pb-3">
+                    <div className="flex items-center gap-2">
+                        <SearchInput
                             autoFocus
-                            type="text"
-                            placeholder="Search everything..."
+                            aria-label="Search everything"
+                            placeholder="Search everything…"
+                            enterKeyHint="search"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            style={{
-                                width: '100%',
-                                backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                                border: '1px solid rgba(255, 255, 255, 0.1)',
-                                borderRadius: '2rem',
-                                padding: '1rem 1.5rem',
-                                paddingLeft: '3.5rem',
-                                fontSize: '1.15rem',
-                                color: '#ffffff',
-                                outline: 'none',
-                                transition: 'all 0.3s',
-                                boxShadow: '0 1rem 3rem -1rem rgba(0,0,0,0.5)'
-                            }}
-                            onFocus={(e) => e.currentTarget.style.borderColor = accentColor + '80'}
-                            onBlur={(e) => e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)'}
+                            wrapperClassName="min-w-0 flex-1"
+                            // Chrome's own clear glyph is blue; draw a stone one instead.
+                            className="[&::-webkit-search-cancel-button]:appearance-none"
+                            trailing={searchTerm ? (
+                                <button
+                                    type="button"
+                                    aria-label="Clear search"
+                                    title="Clear search"
+                                    onClick={(e) => {
+                                        setSearchTerm('')
+                                        e.currentTarget.closest('.relative')?.querySelector('input')?.focus()
+                                    }}
+                                    className={cn('-mr-2 flex h-9 w-9 items-center justify-center rounded-lg hover:bg-stone-100', FOCUS_RING)}
+                                >
+                                    <X size={16} aria-hidden />
+                                </button>
+                            ) : null}
                         />
+                        <IconButton variant="close" icon={X} label="Close search" onClick={onClose} className="shrink-0" />
                     </div>
-                    <button
-                        onClick={onClose}
-                        style={{
-                            padding: '1rem',
-                            borderRadius: '50%',
-                            backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                            border: '1px solid rgba(255, 255, 255, 0.1)',
-                            color: theme.colors.text.muted,
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            transition: 'all 0.2s'
-                        }}
-                        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = '#ffffff' }}
-                        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = theme.colors.text.muted }}
-                    >
-                        <X size={24} />
-                    </button>
-                </div>
 
-                {/* Filters — collapsed by default, so the results keep the screen height */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    {/* Filters — collapsed by default, so the results keep the screen height */}
                     <button
                         ref={filtersToggleRef}
+                        type="button"
+                        aria-expanded={filtersOpen}
+                        aria-controls="search-filters"
                         onClick={() => setFiltersOpen(open => !open)}
-                        style={{
-                            alignSelf: 'flex-start',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.6rem',
-                            padding: '0.55rem 1rem',
-                            borderRadius: '1rem',
-                            backgroundColor: filtersOpen ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.05)',
-                            border: '1px solid rgba(255,255,255,0.1)',
-                            color: theme.colors.text.secondary,
-                            cursor: 'pointer',
-                            fontSize: '0.7rem',
-                            fontWeight: '900',
-                            letterSpacing: '0.1em',
-                            textTransform: 'uppercase',
-                            transition: 'all 0.2s'
-                        }}
+                        className={cn(
+                            'mt-2 inline-flex h-11 max-w-full items-center gap-1.5 rounded-lg border px-3 text-xs font-medium transition-colors sm:h-9',
+                            filtersOpen ? 'border-stone-300 bg-stone-100 text-stone-800' : 'border-stone-200 bg-white text-stone-600 hover:bg-stone-100',
+                            FOCUS_RING
+                        )}
                     >
-                        <SlidersHorizontal size={14} style={{ color: accentColor }} />
-                        <span>{envFilter === 'all' ? 'Indoor + Beach' : envFilter} &middot; {activeCategory.label}</span>
-                        <ChevronDown size={14} style={{ transform: filtersOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.25s' }} />
+                        <SlidersHorizontal size={13} aria-hidden className="shrink-0 text-stone-400" />
+                        <span className="truncate">{filterSummary}</span>
+                        <ChevronDown size={13} aria-hidden className={cn('shrink-0 text-stone-400 transition-transform', filtersOpen && 'rotate-180')} />
                     </button>
 
                     <AnimatePresence initial={false}>
                         {filtersOpen && (
                             <motion.div
                                 key="filters"
+                                id="search-filters"
                                 ref={filtersRef}
                                 {...accordionMotion}
-                                style={{ overflow: 'hidden' }}
+                                className="overflow-hidden"
                             >
-                                <div style={{
-                                    display: 'flex',
-                                    flexWrap: 'wrap',
-                                    gap: '1.25rem 2rem',
-                                    padding: '1.25rem',
-                                    ...theme.styles.glass,
-                                    borderRadius: '2rem',
-                                    border: '1px solid rgba(255,255,255,0.05)'
-                                }}>
-                                    {/* Env Filter */}
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                                        <span style={{ fontSize: '0.7rem', fontWeight: '900', letterSpacing: '0.1em', textTransform: 'uppercase', color: theme.colors.text.muted }}>Environment</span>
-                                        <div style={{ display: 'flex', gap: '0.5rem', backgroundColor: 'rgba(0,0,0,0.3)', padding: '0.3rem', borderRadius: '1rem' }}>
-                                            {['all', 'indoor', 'beach'].map(env => (
-                                                <button
-                                                    key={env}
-                                                    onClick={() => setEnvFilter(env)}
-                                                    style={{
-                                                        padding: '0.5rem 1.25rem',
-                                                        borderRadius: '0.75rem',
-                                                        fontSize: '0.8rem',
-                                                        fontWeight: '800',
-                                                        textTransform: 'uppercase',
-                                                        cursor: 'pointer',
-                                                        transition: 'all 0.3s',
-                                                        backgroundColor: envFilter === env ? (env === 'all' ? 'rgba(255,255,255,0.18)' : envColor(env)) : 'transparent',
-                                                        color: envFilter === env ? '#ffffff' : theme.colors.text.muted,
-                                                        border: 'none'
-                                                    }}
-                                                >
-                                                    {env === 'all' ? 'Both' : env}
-                                                </button>
-                                            ))}
-                                        </div>
+                                <div className="space-y-3 pt-3">
+                                    <div>
+                                        <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-stone-500">Discipline</p>
+                                        <SegmentedControl
+                                            ariaLabel="Discipline"
+                                            options={DISCIPLINES}
+                                            value={envFilter}
+                                            onChange={setEnvFilter}
+                                            className="sm:max-w-xs"
+                                        />
                                     </div>
-
-                                    {/* Category Filter */}
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', flex: '1 1 20rem', minWidth: 0 }}>
-                                        <span style={{ fontSize: '0.7rem', fontWeight: '900', letterSpacing: '0.1em', textTransform: 'uppercase', color: theme.colors.text.muted }}>Categories</span>
-                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                                            {CATEGORIES.map(cat => {
-                                                const active = category === cat.id
-                                                return (
-                                                    <button
-                                                        key={cat.id}
-                                                        onClick={() => { setCategory(cat.id); setFiltersOpen(false) }}
-                                                        style={{
-                                                            display: 'flex',
-                                                            alignItems: 'center',
-                                                            gap: '0.5rem',
-                                                            padding: '0.5rem 1rem',
-                                                            borderRadius: '1rem',
-                                                            fontSize: '0.8rem',
-                                                            fontWeight: '800',
-                                                            cursor: 'pointer',
-                                                            transition: 'all 0.3s',
-                                                            backgroundColor: active ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.03)',
-                                                            color: active ? '#ffffff' : theme.colors.text.muted,
-                                                            border: '1px solid',
-                                                            borderColor: active ? 'rgba(255,255,255,0.2)' : 'transparent'
-                                                        }}
-                                                    >
-                                                        {cat.icon}
-                                                        {cat.label}
-                                                    </button>
-                                                )
-                                            })}
+                                    <div>
+                                        <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-stone-500">Content</p>
+                                        <div role="group" aria-label="Content type" className="scroll-strip -mx-4 flex gap-1.5 overflow-x-auto px-4">
+                                            {CATEGORIES.map(cat => (
+                                                <FilterPill
+                                                    key={cat.id}
+                                                    active={category === cat.id}
+                                                    icon={cat.icon}
+                                                    onClick={() => { setCategory(cat.id); setFiltersOpen(false) }}
+                                                    className="h-11 sm:h-9"
+                                                >
+                                                    {cat.label}
+                                                </FilterPill>
+                                            ))}
                                         </div>
                                     </div>
                                 </div>
@@ -457,119 +415,120 @@ function SearchView({ onClose, initialEnvironment }) {
                 </div>
             </div>
 
-            {/* Results Area */}
+            {/* Results area */}
             <div
                 onScroll={(e) => {
                     const el = e.currentTarget
                     if (el.scrollTop + el.clientHeight < el.scrollHeight - 600) return
                     setVisibleCount(c => (c < filteredResults.length ? c + PAGE_SIZE : c))
                 }}
-                style={{
-                    flex: 1,
-                    width: '100%',
-                    maxWidth: '60rem',
-                    padding: '1.25rem 1.5rem 2rem',
-                    overflowY: 'auto',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '1rem'
-                }}>
-                {loading ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', marginTop: '4rem' }}>
-                        <div style={{ width: '2rem', height: '2rem', border: '2px solid rgba(255,255,255,0.1)', borderTopColor: '#ffffff', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-                        <span style={{ fontSize: '0.8rem', fontWeight: '700', letterSpacing: '0.1em', textTransform: 'uppercase', opacity: 0.5 }}>Preparing your search...</span>
-                    </div>
-                ) : deferredTerm.trim() === '' ? (
-                    <div style={{ textAlign: 'center', marginTop: '4rem', opacity: 0.3 }}>
-                        <Search size={48} style={{ marginBottom: '1rem' }} />
-                        <p style={{ fontWeight: '700', letterSpacing: '0.05em' }}>Start typing to search all rules and documents</p>
-                    </div>
-                ) : filteredResults.length === 0 ? (
-                    <div style={{ textAlign: 'center', marginTop: '4rem', opacity: 0.5 }}>
-                        <p style={{ fontSize: '1.25rem', fontWeight: '800' }}>No matches found for "{deferredTerm}"</p>
-                        <p style={{ fontSize: '0.9rem', marginTop: '0.5rem' }}>Try adjusting your filters or search terms</p>
-                    </div>
-                ) : (
-                    <motion.div
-                        key={`${deferredTerm}|${category}|${envFilter}`}
-                        {...tabPanelMotion}
-                        style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}
-                    >
-                        {filteredResults.slice(0, visibleCount).map(res => (
-                            <SearchResultCard key={res.id} result={res} showEnv={envFilter === 'all'} />
-                        ))}
-                        {visibleCount < filteredResults.length && (
-                            <p style={{
-                                textAlign: 'center',
-                                padding: '1rem',
-                                fontSize: '0.75rem',
-                                fontWeight: '700',
-                                letterSpacing: '0.1em',
-                                textTransform: 'uppercase',
-                                color: theme.colors.text.muted
-                            }}>
-                                Showing {visibleCount} of {filteredResults.length} — keep scrolling for more
+                className="min-h-0 flex-1 overflow-y-auto overscroll-contain"
+            >
+                <div className="mx-auto max-w-3xl px-4 pt-4 pb-[max(2rem,env(safe-area-inset-bottom,0px))]">
+                    {loading ? (
+                        <div>
+                            <p role="status" className="mb-2 flex items-center gap-1.5 text-xs text-stone-500">
+                                <Loader2 size={14} className="animate-spin" aria-hidden />
+                                Loading the search index…
                             </p>
-                        )}
-                    </motion.div>
-                )}
+                            <SkeletonRows rows={6} pill={false} />
+                        </div>
+                    ) : loadError ? (
+                        <div className="space-y-3 py-6">
+                            <FormError size="md">The search index could not be loaded – please check your connection and try again.</FormError>
+                            <Button variant="secondary" icon={RotateCw} onClick={loadData}>Try again</Button>
+                        </div>
+                    ) : deferredTerm.trim() === '' ? (
+                        <EmptyState icon={Search} title="Start typing to search">
+                            Rules, cases, guidelines, protocols, diagrams and signals.
+                        </EmptyState>
+                    ) : filteredResults.length === 0 ? (
+                        <EmptyState icon={Search} title={`No matches for “${deferredTerm.trim()}”`}>
+                            Try other words or adjust the filters.
+                        </EmptyState>
+                    ) : (
+                        <motion.div
+                            key={`${deferredTerm}|${category}|${envFilter}`}
+                            {...tabPanelMotion}
+                            className="space-y-6"
+                        >
+                            <p className="text-xs text-stone-500 tabular-nums">
+                                {filteredResults.length} {filteredResults.length === 1 ? 'result' : 'results'}
+                            </p>
+                            {sections.map(section => {
+                                const cat = CATEGORIES.find(c => c.id === section.type)
+                                const Icon = cat?.icon
+                                return (
+                                    <section key={section.type}>
+                                        <SectionHeader
+                                            icon={Icon ? <Icon size={13} aria-hidden /> : null}
+                                            title={cat?.label ?? section.type}
+                                            count={typeCounts[section.type]}
+                                        />
+                                        <RowList>
+                                            {section.items.map(res => (
+                                                <SearchResultRow key={res.id} result={res} term={deferredTerm} showEnv={showEnv} />
+                                            ))}
+                                        </RowList>
+                                    </section>
+                                )
+                            })}
+                            {visibleCount < filteredResults.length && (
+                                <p className="py-2 text-center text-xs text-stone-500 tabular-nums">
+                                    Showing {visibleCount} of {filteredResults.length} – keep scrolling for more
+                                </p>
+                            )}
+                        </motion.div>
+                    )}
+                </div>
             </div>
-
         </div>
     )
 }
 
-function envColor(env) {
-    if (env === 'beach') return theme.colors.beach.primary
-    if (env === 'indoor') return theme.colors.indoor.primary
-    return theme.colors.text.secondary
+function escapeRegExp(s) {
+    return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
-function SearchResultCard({ result, showEnv }) {
-    const color = envColor(result.env)
+/** Wraps every case-insensitive occurrence of `term` in a <mark>. */
+function Highlight({ text, term }) {
+    if (!text) return null
+    if (!term) return text
+    const parts = String(text).split(new RegExp(`(${escapeRegExp(term)})`, 'gi'))
+    return parts.map((part, i) => (i % 2 === 1
+        ? <mark key={i} className="rounded-sm bg-amber-100 text-stone-900">{part}</mark>
+        : part))
+}
 
-    const getIcon = (type) => {
-        switch (type) {
-            case 'rulebook': return <Book size={18} />
-            case 'casebook': return <AlertCircle size={18} />
-            case 'guidelines': return <Info size={18} />
-            case 'protocol': return <ShieldCheck size={18} />
-            case 'diagrams': return <ImageIcon size={18} />
-            case 'gestures': return <List size={18} />
-            default: return <ChevronRight size={18} />
-        }
-    }
+const SUB_LABEL = { casebook: 'Ruling' }
 
+// Memoised: paging in the next 40 rows must not re-render the ones already shown.
+const SearchResultRow = memo(function SearchResultRow({ result, term, showEnv }) {
     return (
-        <div
-            style={{
-                ...theme.styles.glass,
-                padding: '1.5rem',
-                borderRadius: '1.5rem',
-                border: '1px solid rgba(255,255,255,0.05)',
-                cursor: 'pointer',
-                transition: 'all 0.3s ease'
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'; e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.03)' }}
-            onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.05)'; e.currentTarget.style.backgroundColor = 'rgba(26, 26, 26, 0.8)' }}
+        <Row
+            stripe={false}
+            title={
+                <p className="text-sm font-semibold leading-snug break-words text-stone-900 sm:text-[15px]">
+                    <Highlight text={result.title} term={term} />
+                </p>
+            }
+            chips={showEnv && result.env ? <Chip>{ENV_LABEL[result.env] ?? result.env}</Chip> : null}
         >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
-                <div style={{ color: color }}>{getIcon(result.type)}</div>
-                <span style={{ fontSize: '0.65rem', fontWeight: '900', letterSpacing: '0.1em', textTransform: 'uppercase', color: color }}>{result.type}{showEnv && result.env ? ` · ${result.env}` : ''}</span>
-            </div>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: '900', marginBottom: '0.5rem', letterSpacing: '-0.01em' }}>{result.title}</h3>
-            <p style={{ fontSize: '0.95rem', color: theme.colors.text.secondary, lineHeight: '1.5', fontWeight: '500' }}>
-                {result.content}
-            </p>
+            {result.content && (
+                <p className="mt-1 text-sm leading-relaxed break-words text-stone-600">
+                    <Highlight text={result.content} term={term} />
+                </p>
+            )}
             {result.subContent && (
-                <div style={{ marginTop: '0.75rem', padding: '0.75rem', borderRadius: '1rem', backgroundColor: 'rgba(255,255,255,0.03)', borderLeft: `2px solid ${color}` }}>
-                    <p style={{ fontSize: '0.9rem', color: theme.colors.text.primary, fontWeight: '600', fontStyle: 'italic' }}>
-                        {result.subContent}
+                <div className="mt-2 border-l-2 border-stone-300 pl-3">
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-stone-400">{SUB_LABEL[result.type] ?? 'Notes'}</p>
+                    <p className="mt-0.5 text-sm leading-relaxed break-words text-stone-800">
+                        <Highlight text={result.subContent} term={term} />
                     </p>
                 </div>
             )}
-        </div>
+        </Row>
     )
-}
+})
 
 export default SearchView

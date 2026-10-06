@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
-import { motion } from 'framer-motion'
-import { theme } from './styles/theme'
-import { X, Lock, LogIn } from 'lucide-react'
+import { Lock, LogIn } from 'lucide-react'
+import { Modal, Field, Input, Button, FormError } from './ui/volleyui'
 
 function LoginView({ onClose }) {
     const [password, setPassword] = useState('')
@@ -16,13 +15,20 @@ function LoginView({ onClose }) {
         setError(null)
 
         try {
-            const res = await fetch(`${API_BASE}/api/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ password }),
-            })
-            const data = await res.json()
-            if (!res.ok) throw new Error(data.error || 'Login failed')
+            let res
+            try {
+                res = await fetch(`${API_BASE}/api/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password }),
+                })
+            } catch {
+                // fetch only rejects when the request never got an answer.
+                throw new Error('No connection to the server – please check your connection and try again.')
+            }
+            const data = await res.json().catch(() => ({}))
+            // The server's message (wrong password, too many attempts) is shown as is.
+            if (!res.ok) throw new Error(data.error || 'Sign-in failed.')
             localStorage.setItem('admin_token', data.token)
             window.dispatchEvent(new Event('auth-change'))
             onClose()
@@ -34,116 +40,46 @@ function LoginView({ onClose }) {
     }
 
     return (
-        <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            style={{
-                position: 'fixed',
-                inset: 0,
-                zIndex: 3000,
-                backgroundColor: 'rgba(0,0,0,0.8)',
-                backdropFilter: 'blur(4px)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '1rem'
-            }}
+        // A form dialog: the darker decision scrim, and a stray backdrop click
+        // doesn't throw away what was typed (Escape and × still close).
+        <Modal
+            open
+            onClose={onClose}
+            title="Admin sign-in"
+            icon={Lock}
+            size="sm"
+            decision
+            dismissible={false}
+            closeLabel="Close"
         >
-            <motion.div
-                initial={{ scale: 0.9, y: 20 }}
-                animate={{ scale: 1, y: 0 }}
-                exit={{ scale: 0.9, y: 20 }}
-                style={{
-                    backgroundColor: '#1a1a1a',
-                    padding: '2rem',
-                    borderRadius: '1.5rem',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    width: '100%',
-                    maxWidth: '400px',
-                    position: 'relative'
-                }}
-            >
-                <button
-                    onClick={onClose}
-                    style={{
-                        position: 'absolute',
-                        top: '1rem',
-                        right: '1rem',
-                        background: 'none',
-                        border: 'none',
-                        color: theme.colors.text.secondary,
-                        cursor: 'pointer'
-                    }}
+            <form onSubmit={handleLogin} className="space-y-3">
+                <Field label="Password">
+                    <Input
+                        type="password"
+                        size="lg"
+                        autoComplete="current-password"
+                        data-autofocus
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        invalid={!!error}
+                        required
+                    />
+                </Field>
+
+                <FormError size="md">{error}</FormError>
+
+                <Button
+                    type="submit"
+                    size="xl"
+                    block
+                    icon={LogIn}
+                    loading={loading}
+                    disabled={!password}
                 >
-                    <X size={24} />
-                </button>
-
-                <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-                    <div style={{
-                        display: 'inline-flex',
-                        padding: '1rem',
-                        borderRadius: '50%',
-                        backgroundColor: 'rgba(255,255,255,0.05)',
-                        marginBottom: '1rem',
-                        color: 'white'
-                    }}>
-                        <Lock size={32} />
-                    </div>
-                    <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 'bold' }}>Admin Access</h2>
-                </div>
-
-                <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                    <div>
-                        <input
-                            type="password"
-                            placeholder="Password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                            style={{
-                                width: '100%',
-                                padding: '1rem',
-                                borderRadius: '0.75rem',
-                                backgroundColor: 'rgba(0,0,0,0.3)',
-                                border: '1px solid rgba(255,255,255,0.1)',
-                                color: 'white',
-                                outline: 'none'
-                            }}
-                        />
-                    </div>
-
-                    {error && (
-                        <p style={{ color: '#ef4444', fontSize: '0.9rem', textAlign: 'center', margin: 0 }}>
-                            {error}
-                        </p>
-                    )}
-
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        style={{
-                            marginTop: '0.5rem',
-                            padding: '1rem',
-                            borderRadius: '0.75rem',
-                            border: 'none',
-                            backgroundColor: 'white',
-                            color: 'black',
-                            fontSize: '1rem',
-                            fontWeight: 'bold',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '0.5rem',
-                            opacity: loading ? 0.7 : 1
-                        }}
-                    >
-                        {loading ? 'Signing in...' : <><LogIn size={20} /> Sign In</>}
-                    </button>
-                </form>
-            </motion.div>
-        </motion.div>
+                    Sign in
+                </Button>
+            </form>
+        </Modal>
     )
 }
 
