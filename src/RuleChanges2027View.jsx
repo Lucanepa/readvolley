@@ -1,10 +1,8 @@
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronDown, ChevronUp, ExternalLink } from 'lucide-react'
-import { theme } from './styles/theme'
+import { ChevronDown, ExternalLink } from 'lucide-react'
 import { accordionMotion } from './styles/motion'
-
-const ACCENT = theme.colors.ssk.primary
+import { Card, BUTTON_SIZES, BUTTON_VARIANTS, FOCUS_RING, FOCUS_RING_INSET, cn } from './ui/volleyui'
 
 const SOURCE_URL = 'https://www.volleyball.ch/_Resources/Persistent/c/b/3/f/cb3f0be3e71e90986627eb3a02716135646b33e3/26.08.24_%C3%84nderungen-Regeln-2027-d.pdf'
 
@@ -175,101 +173,73 @@ const CHAPTERS = [
     },
 ]
 
-function Block({ block }) {
+// A link styled as the kit's secondary button: 44px tall on a phone, h-9 from sm.
+const LINK_BUTTON = cn(
+    'inline-flex items-center justify-center font-medium transition-colors',
+    FOCUS_RING,
+    BUTTON_SIZES.md,
+    BUTTON_VARIANTS.secondary,
+    'h-11 sm:h-9',
+)
+
+function TextBlock({ block }) {
     if (block.type === 'ul') {
         return (
-            <ul style={{
-                margin: '0 0 0.9rem',
-                paddingLeft: '1.25rem',
-                color: theme.colors.text.secondary,
-                fontSize: '0.95rem',
-                lineHeight: 1.7
-            }}>
-                {block.items.map((item, i) => (
-                    <li key={i} style={{ listStyleType: 'disc', marginBottom: '0.35rem' }}>{item}</li>
-                ))}
+            <ul className="mb-3 list-disc space-y-1 pl-5 text-sm leading-relaxed text-stone-700 marker:text-stone-400">
+                {block.items.map((item, i) => <li key={i}>{item}</li>)}
             </ul>
         )
     }
-    return (
-        <p style={{
-            margin: '0 0 0.9rem',
-            color: theme.colors.text.secondary,
-            fontSize: '0.95rem',
-            lineHeight: 1.7,
-            textAlign: 'justify',
-            hyphens: 'auto'
-        }}>{block.text}</p>
-    )
+    return <p className="mb-3 text-sm leading-relaxed text-stone-700 hyphens-auto">{block.text}</p>
 }
 
 function Chapter({ chapter, isOpen, onToggle }) {
+    const panelId = `rule-changes-chapter-${chapter.number}`
     return (
-        <div style={{
-            ...theme.styles.glass,
-            borderRadius: '1.25rem',
-            border: '1px solid rgba(255,255,255,0.08)',
-            overflow: 'hidden'
-        }}>
-            <button
-                onClick={onToggle}
-                aria-expanded={isOpen}
-                style={{
-                    width: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '1rem',
-                    padding: '1.1rem 1.35rem',
-                    textAlign: 'left',
-                    cursor: 'pointer',
-                    color: 'inherit'
-                }}
-            >
-                <span style={{
-                    fontSize: '1.4rem',
-                    fontWeight: '900',
-                    color: ACCENT,
-                    fontFamily: 'Outfit, sans-serif',
-                    lineHeight: 1,
-                    minWidth: '1.5rem'
-                }}>{chapter.number}</span>
-                <span style={{
-                    flex: 1,
-                    fontSize: '1.05rem',
-                    fontWeight: '800',
-                    fontFamily: 'Outfit, sans-serif'
-                }}>{chapter.title}</span>
-                {isOpen ? <ChevronUp size={18} color={ACCENT} /> : <ChevronDown size={18} color={ACCENT} />}
-            </button>
+        <section>
+            <h2>
+                <button
+                    type="button"
+                    onClick={onToggle}
+                    aria-expanded={isOpen}
+                    aria-controls={panelId}
+                    className={cn(
+                        'group flex min-h-12 w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-stone-50 sm:px-5',
+                        FOCUS_RING_INSET,
+                    )}
+                >
+                    <span className="w-6 shrink-0 text-sm font-bold tabular-nums text-stone-400">{chapter.number}</span>
+                    <span className="min-w-0 flex-1 text-sm font-semibold leading-snug text-stone-900 sm:text-[15px]">
+                        {chapter.title}
+                    </span>
+                    <ChevronDown
+                        size={16}
+                        aria-hidden="true"
+                        className={cn('shrink-0 text-stone-400 transition-transform group-hover:text-stone-600', isOpen && 'rotate-180')}
+                    />
+                </button>
+            </h2>
 
             <AnimatePresence initial={false}>
                 {isOpen && (
-                    <motion.div
-                        {...accordionMotion}
-                        style={{ overflow: 'hidden' }}
-                    >
-                        <div style={{ padding: '0 1.35rem 1.35rem' }}>
+                    <motion.div id={panelId} {...accordionMotion} className="overflow-hidden">
+                        <div className="max-w-3xl space-y-5 px-4 pb-5 pt-1 sm:pl-14 sm:pr-5">
                             {chapter.sections.map((section, index) => (
-                                <div key={section.number || `intro-${index}`} style={{ marginBottom: '1.25rem' }}>
+                                <div key={section.number || `intro-${index}`}>
                                     {section.title && (
-                                        <h4 style={{
-                                            fontSize: '0.95rem',
-                                            fontWeight: '800',
-                                            marginBottom: '0.6rem',
-                                            color: theme.colors.text.primary
-                                        }}>
-                                            <span style={{ color: ACCENT, marginRight: '0.5rem' }}>{section.number}</span>
+                                        <h3 className="mb-2 text-sm font-semibold leading-snug text-stone-900">
+                                            <span className="mr-2 tabular-nums text-stone-500">{section.number}</span>
                                             {section.title}
-                                        </h4>
+                                        </h3>
                                     )}
-                                    {section.blocks.map((block, i) => <Block key={i} block={block} />)}
+                                    {section.blocks.map((block, i) => <TextBlock key={i} block={block} />)}
                                 </div>
                             ))}
                         </div>
                     </motion.div>
                 )}
             </AnimatePresence>
-        </div>
+        </section>
     )
 }
 
@@ -277,74 +247,37 @@ function RuleChanges2027View() {
     const [openChapter, setOpenChapter] = useState('3')
 
     return (
-        <div style={{
-            flex: 1,
-            width: '100%',
-            overflowY: 'auto',
-            backgroundColor: theme.colors.bg.dark,
-            padding: '2rem 1.5rem 4rem'
-        }}>
-            <div style={{ maxWidth: '900px', margin: '0 auto' }}>
-                <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-                    <h2 style={{
-                        fontSize: '2.25rem',
-                        fontWeight: '900',
-                        letterSpacing: '-0.025em',
-                        fontFamily: 'Outfit, sans-serif'
-                    }}>
-                        Rule Changes <span style={{ color: ACCENT }}>2027</span>
-                    </h2>
-                    <p style={{ color: theme.colors.text.secondary, marginTop: '0.35rem' }}>
-                        Official Volleyball Rules 2025–2028 · Explanations for referees (SSK, 24.08.2026)
-                    </p>
-                </div>
+        <>
+            <Card>
+                <p className="text-sm font-semibold text-stone-800">
+                    Official Volleyball Rules 2025–2028 · Explanations for referees (SSK, 24.08.2026)
+                </p>
+                <p className="mt-1 text-xs leading-relaxed text-stone-500">
+                    English translation of chapters 3 to 5 of the SSK document. The German original is the
+                    binding text.
+                </p>
+                <a
+                    href={SOURCE_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={cn(LINK_BUTTON, 'mt-3 w-full sm:w-auto')}
+                >
+                    <ExternalLink size={15} aria-hidden="true" />
+                    Original PDF (DE) on volleyball.ch
+                </a>
+            </Card>
 
-                <div style={{
-                    ...theme.styles.glass,
-                    borderRadius: '1rem',
-                    border: '1px solid rgba(255,255,255,0.08)',
-                    padding: '1rem 1.25rem',
-                    marginBottom: '1.5rem',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '0.6rem'
-                }}>
-                    <p style={{ fontSize: '0.8rem', color: theme.colors.text.muted, lineHeight: 1.6 }}>
-                        English translation of chapters 3 to 5 of the SSK document. The German original is the
-                        binding text.
-                    </p>
-                    <a
-                        href={SOURCE_URL}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '0.4rem',
-                            fontSize: '0.8rem',
-                            fontWeight: '700',
-                            color: ACCENT,
-                            textDecoration: 'none',
-                            width: 'fit-content'
-                        }}
-                    >
-                        <ExternalLink size={14} />
-                        Original PDF (DE) on volleyball.ch
-                    </a>
-                </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-                    {CHAPTERS.map(chapter => (
-                        <Chapter
-                            key={chapter.number}
-                            chapter={chapter}
-                            isOpen={openChapter === chapter.number}
-                            onToggle={() => setOpenChapter(prev => prev === chapter.number ? null : chapter.number)}
-                        />
-                    ))}
-                </div>
-            </div>
-        </div>
+            <Card pad="flush" className="divide-y divide-stone-100 overflow-hidden">
+                {CHAPTERS.map(chapter => (
+                    <Chapter
+                        key={chapter.number}
+                        chapter={chapter}
+                        isOpen={openChapter === chapter.number}
+                        onToggle={() => setOpenChapter(prev => prev === chapter.number ? null : chapter.number)}
+                    />
+                ))}
+            </Card>
+        </>
     )
 }
 

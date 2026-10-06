@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
-import { Download, ExternalLink, Clock, MapPin, FileDown, CalendarDays } from 'lucide-react'
-import { theme } from './styles/theme'
+import { Download, ExternalLink, Clock, FileDown, CalendarDays, FileText, Link2 } from 'lucide-react'
+import {
+    Button, BUTTON_SIZES, BUTTON_VARIANTS, FOCUS_RING, Card, CardHeading, Input, Notice,
+    RowList, Row, DateRail, SegmentedControl, SkeletonRows, EmptyInCard, toast, cn,
+    weekdayLabel, dayLabel, timeLabel,
+} from './ui/volleyui'
 
-const ACCENT = theme.colors.ssk.primary
 const LR_FEEDBACK_URL = 'https://de.surveymonkey.com/r/Feedback_LR_25_26'
 
 const LEAGUES = {
@@ -125,14 +127,14 @@ const GENERAL_LINKS = [
         ],
     },
     {
-        title: 'eScoresheet Checklist',
-        subtitle: 'eScoresheet Checklist',
+        title: 'eScoresheet checklist',
+        subtitle: 'eScoresheet checklist',
         links: [{ label: 'SwissVolley', href: 'https://www.volleyball.ch/de/wissen/escoresheet-von-genius-sports' }],
     },
     {
         title: 'Volleymetrics',
         subtitle: 'Volleymetrics',
-        links: [{ label: 'Hudl Portal', href: 'https://portal.volleymetrics.hudl.com/' }],
+        links: [{ label: 'Hudl portal', href: 'https://portal.volleymetrics.hudl.com/' }],
     },
     {
         title: 'Volleyball Arena',
@@ -300,60 +302,43 @@ function getLrFeedbackLink(event) {
  * Shared UI pieces
  * ------------------------------------------------------------------ */
 
-function SectionTitle({ children }) {
-    return (
-        <h3 style={{
-            fontSize: '1.35rem',
-            fontWeight: '900',
-            textAlign: 'center',
-            marginBottom: '1.25rem',
-            fontFamily: 'Outfit, sans-serif'
-        }}>{children}</h3>
-    )
-}
+// A link that looks like a secondary button. 44px tall on a phone, the kit's
+// h-9 from sm up.
+const LINK_BUTTON = cn(
+    'inline-flex items-center justify-center font-medium transition-colors',
+    FOCUS_RING,
+    BUTTON_SIZES.md,
+    BUTTON_VARIANTS.secondary,
+    'h-11 sm:h-9',
+)
 
-function ResourceCard({ item, external = false }) {
+const NO_GAMES_MESSAGE = 'No games found for this calendar.'
+
+function ResourceRow({ item, external = false }) {
+    const Icon = external ? Link2 : FileText
     return (
-        <div style={{
-            ...theme.styles.glass,
-            padding: '1.25rem',
-            borderRadius: '1.25rem',
-            border: '1px solid rgba(255,255,255,0.08)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '0.75rem'
-        }}>
-            <div>
-                <h4 style={{ fontSize: '1rem', fontWeight: '800', marginBottom: '0.15rem' }}>{item.title}</h4>
-                <p style={{ fontSize: '0.8rem', color: theme.colors.text.muted }}>{item.subtitle}</p>
+        <div className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:gap-3">
+            <div className="flex min-w-0 flex-1 items-start gap-3">
+                <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-stone-100 text-stone-600">
+                    <Icon size={18} aria-hidden="true" />
+                </span>
+                <div className="min-w-0">
+                    <p className="text-sm font-semibold leading-snug break-words text-stone-900">{item.title}</p>
+                    <p className="mt-0.5 text-xs text-stone-500">{item.subtitle}</p>
+                </div>
             </div>
-            <div style={{ display: 'flex', gap: '0.5rem', marginTop: 'auto', flexWrap: 'wrap' }}>
+            <div className="flex gap-2 pl-12 sm:shrink-0 sm:pl-0">
                 {item.links.map(link => (
                     <a
                         key={link.href + link.label}
                         href={link.href}
                         target="_blank"
                         rel="noopener noreferrer"
-                        style={{
-                            flex: '1 1 0',
-                            minWidth: '7rem',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '0.4rem',
-                            padding: '0.5rem 0.75rem',
-                            borderRadius: '0.9rem',
-                            backgroundColor: ACCENT,
-                            color: '#ffffff',
-                            fontSize: '0.8rem',
-                            fontWeight: '700',
-                            textDecoration: 'none',
-                            transition: 'all 0.2s ease'
-                        }}
-                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = theme.colors.ssk.secondary}
-                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = ACCENT}
+                        className={cn(LINK_BUTTON, 'flex-1 sm:flex-none')}
                     >
-                        {external ? <ExternalLink size={14} /> : <Download size={14} />}
+                        {external
+                            ? <ExternalLink size={15} aria-hidden="true" />
+                            : <Download size={15} aria-hidden="true" />}
                         {link.label}
                     </a>
                 ))}
@@ -362,16 +347,14 @@ function ResourceCard({ item, external = false }) {
     )
 }
 
-function CardGrid({ children }) {
+function ResourceList({ title, hint, items, external = false }) {
     return (
-        <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-            gap: '1rem',
-            maxWidth: '1000px',
-            margin: '0 auto',
-            width: '100%'
-        }}>{children}</div>
+        <Card>
+            <CardHeading title={title} hint={hint} className="mb-1" />
+            <RowList soft>
+                {items.map(item => <ResourceRow key={item.title} item={item} external={external} />)}
+            </RowList>
+        </Card>
     )
 }
 
@@ -387,6 +370,8 @@ function LeagueSection({ league }) {
     const [errorMessage, setErrorMessage] = useState('')
     const [hasSearched, setHasSearched] = useState(false)
     const [busyEvent, setBusyEvent] = useState(null)
+    // The last report that could not be filled in, shown under its game.
+    const [reportError, setReportError] = useState(null)
 
     useEffect(() => {
         try {
@@ -454,7 +439,7 @@ function LeagueSection({ league }) {
             })
 
             setEvents(filtered)
-            if (filtered.length === 0) setErrorMessage('No games found for this calendar.')
+            if (filtered.length === 0) setErrorMessage(NO_GAMES_MESSAGE)
         } catch (err) {
             setErrorMessage(`Could not load the calendar — ${err.message}`)
         } finally {
@@ -462,8 +447,16 @@ function LeagueSection({ league }) {
         }
     }
 
+    // Shown inline under the game; the toast is extra.
+    const reportFailed = (key, message) => {
+        setReportError({ key, message })
+        toast.error(message)
+    }
+
     const fillReport = async (event) => {
-        setBusyEvent(event.summary + event.start.toISOString())
+        const eventKey = event.summary + event.start.toISOString()
+        setBusyEvent(eventKey)
+        setReportError(null)
         try {
             const { PDFDocument, StandardFonts } = await import('pdf-lib')
             const bytes = await fetch(config.reportPdf).then(r => r.arrayBuffer())
@@ -473,7 +466,7 @@ function LeagueSection({ league }) {
             try {
                 form = pdf.getForm()
             } catch {
-                window.alert('This PDF has no fillable fields.')
+                reportFailed(eventKey, 'This PDF has no fillable fields.')
                 return
             }
 
@@ -527,215 +520,153 @@ function LeagueSection({ league }) {
             document.body.removeChild(link)
             URL.revokeObjectURL(url)
         } catch (error) {
-            window.alert('Could not fill in the report: ' + error)
+            reportFailed(eventKey, 'Could not fill in the report: ' + error)
         } finally {
             setBusyEvent(null)
         }
     }
 
+    const noGames = errorMessage === NO_GAMES_MESSAGE
+    const nowMs = Date.now()
+
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
-            <section>
-                <SectionTitle>{config.label} Documents</SectionTitle>
-                <CardGrid>
-                    {config.documents.map(doc => <ResourceCard key={doc.title} item={doc} />)}
-                </CardGrid>
-            </section>
+        <>
+            <ResourceList
+                title={`${config.label} documents`}
+                hint="Each form in German (DE) and French (FR)."
+                items={config.documents}
+            />
 
-            <section>
-                <SectionTitle>Fill in hall report</SectionTitle>
-                <div style={{ maxWidth: '800px', margin: '0 auto', width: '100%' }}>
-                    <div style={{
-                        ...theme.styles.glass,
-                        padding: '1.25rem',
-                        borderRadius: '1.25rem',
-                        border: '1px solid rgba(255,255,255,0.08)',
-                        marginBottom: '1.25rem'
-                    }}>
-                        <label
-                            htmlFor={`ical-${league}`}
-                            style={{
-                                display: 'block',
-                                fontSize: '0.8rem',
-                                fontWeight: '700',
-                                color: theme.colors.text.secondary,
-                                marginBottom: '0.5rem'
-                            }}
-                        >
-                            iCal link
-                        </label>
-                        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                            <input
-                                id={`ical-${league}`}
-                                type="text"
-                                value={icalUrl}
-                                placeholder="https://volleymanager.volleyball.ch/indoor/iCal/referee/XXXXX"
-                                onChange={(e) => handleUrlChange(e.target.value)}
-                                onKeyUp={(e) => { if (e.key === 'Enter') loadCalendar() }}
-                                style={{
-                                    flex: '1 1 16rem',
-                                    minWidth: 0,
-                                    padding: '0.6rem 0.9rem',
-                                    borderRadius: '0.75rem',
-                                    border: '1px solid rgba(255,255,255,0.1)',
-                                    backgroundColor: 'rgba(0,0,0,0.4)',
-                                    color: theme.colors.text.primary,
-                                    fontSize: '0.85rem',
-                                    fontFamily: 'inherit'
-                                }}
-                            />
-                            <button
-                                onClick={loadCalendar}
-                                disabled={isLoading}
-                                style={{
-                                    padding: '0.6rem 1.25rem',
-                                    borderRadius: '0.75rem',
-                                    backgroundColor: isLoading ? theme.colors.bg.hover : ACCENT,
-                                    color: '#ffffff',
-                                    fontWeight: '700',
-                                    fontSize: '0.85rem',
-                                    cursor: isLoading ? 'default' : 'pointer',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '0.4rem'
-                                }}
-                            >
-                                <CalendarDays size={16} />
-                                {isLoading ? 'Loading…' : 'Load games'}
-                            </button>
-                        </div>
-                        <p style={{ marginTop: '0.6rem', fontSize: '0.75rem', color: theme.colors.text.muted }}>
-                            Your personal Volleymanager referee calendar. The link is kept on this device only.
-                        </p>
-                        {errorMessage && (
-                            <p style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: ACCENT }}>{errorMessage}</p>
-                        )}
+            <Card>
+                <CardHeading
+                    title="Fill in hall report"
+                    hint={`Lists your ${config.label} games as 1st referee from last week on and fills the hall report for the one you pick.`}
+                />
+
+                {/* Label, field + button, hint: written out because Field takes a single control. */}
+                <label htmlFor={`ical-${league}`} className="mb-1.5 block text-sm font-medium text-stone-700">
+                    iCal link
+                </label>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                    <Input
+                        id={`ical-${league}`}
+                        type="text"
+                        size="lg"
+                        value={icalUrl}
+                        placeholder="https://volleymanager.volleyball.ch/indoor/iCal/referee/XXXXX"
+                        aria-describedby={`ical-${league}-hint`}
+                        onChange={(e) => handleUrlChange(e.target.value)}
+                        onKeyUp={(e) => { if (e.key === 'Enter') loadCalendar() }}
+                        className="min-w-0 sm:flex-1"
+                    />
+                    <Button
+                        size="xl"
+                        icon={CalendarDays}
+                        loading={isLoading}
+                        onClick={loadCalendar}
+                        className="shrink-0"
+                    >
+                        Load games
+                    </Button>
+                </div>
+                <p id={`ical-${league}-hint`} className="mt-1.5 text-xs text-stone-500">
+                    Your personal Volleymanager referee calendar. The link is kept on this device only.
+                </p>
+
+                {errorMessage && !noGames && <Notice className="mt-3">{errorMessage}</Notice>}
+
+                {isLoading && (
+                    <div className="mt-4 border-t border-stone-100">
+                        <SkeletonRows rows={3} pill={false} />
                     </div>
+                )}
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                {!isLoading && events.length > 0 && (
+                    <RowList soft className="mt-4 border-t border-stone-100 pt-1">
                         {events.map(event => {
                             const key = event.summary + event.start.toISOString()
+                            const tone = event.start.getTime() >= nowMs ? 'red' : 'stone'
                             return (
-                                <div
+                                <Row
                                     key={key}
-                                    style={{
-                                        ...theme.styles.glass,
-                                        padding: '1.25rem',
-                                        borderRadius: '1.25rem',
-                                        border: '1px solid rgba(255,255,255,0.08)'
-                                    }}
-                                >
-                                    <div style={{
-                                        display: 'flex',
-                                        justifyContent: 'space-between',
-                                        alignItems: 'flex-start',
-                                        gap: '1rem',
-                                        marginBottom: '0.6rem'
-                                    }}>
-                                        <h4 style={{ fontSize: '1rem', fontWeight: '800' }}>{event.summary}</h4>
-                                        <span style={{
-                                            fontSize: '0.75rem',
-                                            color: theme.colors.text.muted,
-                                            whiteSpace: 'nowrap'
-                                        }}>{formatDate(event.start)}</span>
-                                    </div>
-
-                                    <div style={{
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        gap: '0.3rem',
-                                        fontSize: '0.8rem',
-                                        color: theme.colors.text.secondary
-                                    }}>
-                                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                                            <Clock size={14} />
-                                            {formatTime(event.start)}{event.end ? ` – ${formatTime(event.end)}` : ''}
+                                    tone={tone}
+                                    leading={(
+                                        <DateRail
+                                            tone={tone}
+                                            weekday={weekdayLabel(event.start, 'EN')}
+                                            date={dayLabel(event.start)}
+                                        />
+                                    )}
+                                    title={event.summary}
+                                    meta={(
+                                        <span className="inline-flex items-center gap-1.5 tabular-nums">
+                                            <Clock size={12} aria-hidden="true" />
+                                            {timeLabel(event.start)}{event.end ? ` – ${timeLabel(event.end)}` : ''}
                                         </span>
-                                        {event.location && (
-                                            <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                                                <MapPin size={14} />
-                                                {event.location}
-                                            </span>
-                                        )}
-                                    </div>
-
-                                    <div style={{ display: 'flex', gap: '0.6rem', paddingTop: '1rem', flexWrap: 'wrap' }}>
-                                        <button
-                                            onClick={() => fillReport(event)}
-                                            disabled={busyEvent === key}
-                                            style={{
-                                                flex: '1 1 10rem',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                gap: '0.4rem',
-                                                padding: '0.55rem 0.9rem',
-                                                borderRadius: '0.9rem',
-                                                backgroundColor: busyEvent === key ? theme.colors.bg.hover : ACCENT,
-                                                color: '#ffffff',
-                                                fontSize: '0.8rem',
-                                                fontWeight: '700',
-                                                cursor: busyEvent === key ? 'default' : 'pointer'
-                                            }}
-                                        >
-                                            <FileDown size={14} />
-                                            {busyEvent === key ? 'Preparing…' : 'Fill in report'}
-                                        </button>
-                                        {config.hasLrFeedback && <a
-                                            href={getLrFeedbackLink(event)}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            style={{
-                                                flex: '1 1 10rem',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                gap: '0.4rem',
-                                                padding: '0.55rem 0.9rem',
-                                                borderRadius: '0.9rem',
-                                                backgroundColor: 'rgba(255,255,255,0.08)',
-                                                color: theme.colors.text.primary,
-                                                fontSize: '0.8rem',
-                                                fontWeight: '700',
-                                                textDecoration: 'none'
-                                            }}
-                                        >
-                                            <ExternalLink size={14} />
-                                            LR Feedback
-                                        </a>}
-                                    </div>
-                                </div>
+                                    )}
+                                    location={event.location}
+                                    tools={(
+                                        <div className="flex w-full flex-col gap-1.5">
+                                            <div className="flex w-full gap-1.5 sm:gap-2">
+                                                <Button
+                                                    variant="dark"
+                                                    icon={FileDown}
+                                                    loading={busyEvent === key}
+                                                    onClick={() => fillReport(event)}
+                                                    className="h-11 flex-1 sm:h-9 sm:flex-none"
+                                                >
+                                                    Fill in report
+                                                </Button>
+                                                {config.hasLrFeedback && (
+                                                    <a
+                                                        href={getLrFeedbackLink(event)}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className={cn(LINK_BUTTON, 'flex-1 sm:flex-none')}
+                                                    >
+                                                        <ExternalLink size={15} aria-hidden="true" />
+                                                        LR feedback
+                                                    </a>
+                                                )}
+                                            </div>
+                                            {reportError?.key === key && <Notice>{reportError.message}</Notice>}
+                                        </div>
+                                    )}
+                                />
                             )
                         })}
+                    </RowList>
+                )}
 
-                        {!isLoading && !hasSearched && events.length === 0 && (
-                            <p style={{ textAlign: 'center', color: theme.colors.text.muted, padding: '1.5rem', fontSize: '0.85rem' }}>
-                                Paste your iCal URL above to list your games.
-                            </p>
-                        )}
-                    </div>
-                </div>
-            </section>
-        </div>
+                {!isLoading && noGames && (
+                    <EmptyInCard className="mt-4 border-t border-stone-100 pt-4">{NO_GAMES_MESSAGE}</EmptyInCard>
+                )}
+
+                {!isLoading && !hasSearched && events.length === 0 && (
+                    <EmptyInCard className="mt-4 border-t border-stone-100 pt-4">
+                        Paste your iCal URL above to list your games.
+                    </EmptyInCard>
+                )}
+            </Card>
+        </>
     )
 }
 
 function GeneralSection() {
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
-            <section>
-                <SectionTitle>General Documents</SectionTitle>
-                <CardGrid>
-                    {GENERAL_DOCUMENTS.map(doc => <ResourceCard key={doc.title} item={doc} />)}
-                </CardGrid>
-            </section>
-            <section>
-                <SectionTitle>Helpful Links</SectionTitle>
-                <CardGrid>
-                    {GENERAL_LINKS.map(link => <ResourceCard key={link.title} item={link} external />)}
-                </CardGrid>
-            </section>
-        </div>
+        <>
+            <ResourceList
+                title="General documents"
+                hint="Each document in German (DE) and French (FR)."
+                items={GENERAL_DOCUMENTS}
+            />
+            <ResourceList
+                title="Helpful links"
+                hint="Feedback forms and other services. Each opens in a new tab."
+                items={GENERAL_LINKS}
+                external
+            />
+        </>
     )
 }
 
@@ -743,77 +674,30 @@ function GeneralSection() {
  * View
  * ------------------------------------------------------------------ */
 
+const SECTIONS = [
+    { value: 'nla', label: 'NLA' },
+    { value: 'nlb', label: 'NLB' },
+    { value: 'general', label: 'General' },
+]
+
 function ResourceHubView() {
     const [section, setSection] = useState('nla')
 
     return (
-        <div style={{
-            flex: 1,
-            width: '100%',
-            overflowY: 'auto',
-            backgroundColor: theme.colors.bg.dark,
-            padding: '2rem 1.5rem 4rem'
-        }}>
-            <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
-                <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>
-                    <h2 style={{
-                        fontSize: '2.25rem',
-                        fontWeight: '900',
-                        letterSpacing: '-0.025em',
-                        fontFamily: 'Outfit, sans-serif'
-                    }}>
-                        Resource <span style={{ color: ACCENT }}>Hub</span>
-                    </h2>
-                    <p style={{ color: theme.colors.text.secondary, marginTop: '0.35rem' }}>
-                        Download helpful documents and explore curated links
-                    </p>
-                </div>
+        <>
+            <SegmentedControl
+                ariaLabel="Resources for"
+                options={SECTIONS}
+                value={section}
+                onChange={setSection}
+                className="mb-4 sm:max-w-sm"
+            />
 
-                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '2rem' }}>
-                    <div style={{
-                        display: 'flex',
-                        gap: '0.25rem',
-                        padding: '0.25rem',
-                        borderRadius: '2rem',
-                        backgroundColor: 'rgba(255,255,255,0.05)',
-                        border: '1px solid rgba(255,255,255,0.08)'
-                    }}>
-                        {[
-                            { id: 'nla', label: 'NLA' },
-                            { id: 'nlb', label: 'NLB' },
-                            { id: 'general', label: 'General' },
-                        ].map(item => {
-                            const isActive = section === item.id
-                            return (
-                                <button
-                                    key={item.id}
-                                    onClick={() => setSection(item.id)}
-                                    style={{
-                                        padding: '0.5rem 1.25rem',
-                                        borderRadius: '2rem',
-                                        backgroundColor: isActive ? ACCENT : 'transparent',
-                                        color: isActive ? '#ffffff' : theme.colors.text.secondary,
-                                        fontWeight: '800',
-                                        fontSize: '0.85rem',
-                                        transition: 'all 0.2s ease',
-                                        cursor: 'pointer'
-                                    }}
-                                >{item.label}</button>
-                            )
-                        })}
-                    </div>
-                </div>
-
-                <motion.div
-                    key={section}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.25 }}
-                >
-                    {section === 'general' ? <GeneralSection /> : <LeagueSection league={section} />}
-                </motion.div>
+            {/* Keyed so switching league starts the section afresh. */}
+            <div key={section}>
+                {section === 'general' ? <GeneralSection /> : <LeagueSection league={section} />}
             </div>
-        </div>
+        </>
     )
 }
 
