@@ -1,26 +1,31 @@
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { theme } from './styles/theme'
-import { accordionMotion, expandTransition } from './styles/motion'
+import { accordionMotion } from './styles/motion'
 import { api } from './services/api'
-import { Plus, ExternalLink, Calendar, ChevronRight, Pencil, Trash2, ChevronDown, ChevronUp, Filter, Tag, CalendarClock, X } from 'lucide-react'
+import { Plus, ExternalLink, Pencil, Trash2, ChevronDown, Filter, FileText, SearchX, CalendarClock } from 'lucide-react'
+import {
+    Button, IconButton, Card, Chip, EmptyState, FilterPill, SegmentedControl, Skeleton,
+    confirmDialog, toast, dayLabel, FOCUS_RING, cn,
+} from './ui/volleyui'
 import AddExtraView from './AddExtraView'
+
+// 11px micro label over a filter group; the uppercase comes from CSS only.
+const FILTER_LABEL = 'mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-stone-500'
 
 function ExtraView({ environment, user, onLogin }) { // Props explicitly destructured
     const [extras, setExtras] = useState([])
     const [filteredExtras, setFilteredExtras] = useState([])
     const [isLoading, setIsLoading] = useState(true)
+    const [loadError, setLoadError] = useState(null)
     const [showAddModal, setShowAddModal] = useState(false)
     const [editingExtra, setEditingExtra] = useState(null) // State for the item being edited
     const [expandedItems, setExpandedItems] = useState({}) // State for read more toggles: { id: boolean }
+    const [deleteError, setDeleteError] = useState(null) // { id, message } shown on the card it belongs to
 
     // Filter State
     const [selectedSeason, setSelectedSeason] = useState('All')
     const [selectedTags, setSelectedTags] = useState([])
     const [showFilters, setShowFilters] = useState(false)
-
-    const isBeach = environment === 'beach'
-    const color = isBeach ? theme.colors.beach.primary : theme.colors.indoor.primary
 
     useEffect(() => {
         loadExtras()
@@ -33,10 +38,12 @@ function ExtraView({ environment, user, onLogin }) { // Props explicitly destruc
     const loadExtras = async () => {
         try {
             setIsLoading(true)
+            setLoadError(null)
             const data = await api.getExtras(environment)
             setExtras(data || [])
         } catch (error) {
             console.error('Error loading extras:', error)
+            setLoadError(error)
         } finally {
             setIsLoading(false)
         }
@@ -63,13 +70,23 @@ function ExtraView({ environment, user, onLogin }) { // Props explicitly destruc
         setFilteredExtras(result)
     }
 
-    const deleteExtra = async (id) => {
-        if (!window.confirm("Are you sure you want to delete this resource?")) return
+    const deleteExtra = async (item) => {
+        const ok = await confirmDialog({
+            title: 'Delete this resource?',
+            message: `“${item.title}” will be removed for everyone. This cannot be undone.`,
+            confirmLabel: 'Delete',
+            cancelLabel: 'Cancel',
+            tone: 'danger',
+            lang: 'EN',
+        })
+        if (!ok) return
+        setDeleteError(null)
         try {
-            await api.deleteExtra(id)
-            setExtras(prev => prev.filter(item => item.id !== id))
+            await api.deleteExtra(item.id)
+            setExtras(prev => prev.filter(entry => entry.id !== item.id))
+            toast.success('Resource deleted.', { lang: 'EN' })
         } catch (error) {
-            alert('Error deleting item: ' + error.message)
+            setDeleteError({ id: item.id, message: error.message })
         }
     }
 
@@ -80,17 +97,12 @@ function ExtraView({ environment, user, onLogin }) { // Props explicitly destruc
         }))
     }
 
-    const formatDate = (dateString) => {
-        return new Date(dateString).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        })
-    }
+    const clearFilters = () => { setSelectedSeason('All'); setSelectedTags([]) }
 
     // Derived Data for Filter Options
     const distinctSeasons = ['All', ...new Set(extras.map(e => e.season).filter(Boolean))].sort().reverse() // Newest first
     const distinctTags = [...new Set(extras.flatMap(e => e.tags || []))].sort()
+    const activeFilterCount = selectedTags.length + (selectedSeason !== 'All' ? 1 : 0)
 
     const toggleTag = (tag) => {
         setSelectedTags(prev =>
@@ -100,369 +112,244 @@ function ExtraView({ environment, user, onLogin }) { // Props explicitly destruc
         )
     }
 
-    return (
-        <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '2rem',
-                maxWidth: theme.styles.container.maxWidth,
-                margin: '0 auto',
-                width: '100%',
-                paddingTop: '2rem',
-                paddingBottom: '6rem'
-            }}
-        >
-            <div style={{ textAlign: 'center' }}>
-                <h1 style={{ fontSize: '3rem', fontWeight: '900', marginBottom: '0.5rem', letterSpacing: '-0.025em', fontFamily: 'Outfit, sans-serif' }}>
-                    Extra <span style={{ color: color }}>Resources</span>
-                </h1>
-            </div>
+    // A refresh (after the editor closes) keeps the list on screen; only a
+    // first load with nothing to show yet gets the skeleton.
+    const showSkeleton = isLoading && extras.length === 0
 
-            {/* Filter Toggle Button (Mobile/Desktop) */}
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
-                <button
+    return (
+        <div>
+            {/* Toolbar: filter toggle, and the admin's add button */}
+            <div className="mb-4 flex flex-wrap items-center gap-2">
+                <Button
+                    variant="secondary"
+                    icon={Filter}
+                    aria-expanded={showFilters}
+                    aria-controls="extra-filters"
                     onClick={() => setShowFilters(!showFilters)}
-                    style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem',
-                        padding: '0.75rem 1.5rem',
-                        borderRadius: '2rem',
-                        backgroundColor: showFilters ? color : 'rgba(255,255,255,0.05)',
-                        border: `1px solid ${showFilters ? color : 'rgba(255,255,255,0.1)'}`,
-                        color: 'white',
-                        cursor: 'pointer',
-                        fontWeight: 'bold',
-                        transition: 'all 0.2s'
-                    }}
+                    className={cn(showFilters && 'border-slate-900 bg-slate-900 text-white hover:bg-slate-800')}
                 >
-                    <Filter size={18} /> Filters {(selectedTags.length > 0 || selectedSeason !== 'All') && <span style={{ backgroundColor: 'white', color: 'black', borderRadius: '50%', width: '1.2em', height: '1.2em', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8em' }}>{selectedTags.length + (selectedSeason !== 'All' ? 1 : 0)}</span>}
-                </button>
+                    Filters
+                    {activeFilterCount > 0 && (
+                        <span
+                            className={cn(
+                                'ml-0.5 min-w-5 rounded-full px-1.5 text-[11px] font-semibold tabular-nums leading-5',
+                                showFilters ? 'bg-white text-slate-900' : 'bg-slate-900 text-white',
+                            )}
+                        >
+                            <span className="sr-only">active: </span>{activeFilterCount}
+                        </span>
+                    )}
+                </Button>
+                {user && (
+                    <Button
+                        icon={Plus}
+                        className="ml-auto"
+                        onClick={() => {
+                            setEditingExtra(null) // Reset editing state for new item
+                            setShowAddModal(true)
+                        }}
+                    >
+                        Add resource
+                    </Button>
+                )}
             </div>
 
             {/* Filters Section */}
-            <AnimatePresence>
+            <AnimatePresence initial={false}>
                 {showFilters && (
-                    <motion.div
-                        {...accordionMotion}
-                        style={{ overflow: 'hidden' }}
-                    >
-                        <div style={{
-                            ...theme.styles.glass,
-                            padding: '1.5rem',
-                            borderRadius: '1.5rem',
-                            marginBottom: '2rem',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: '1.5rem',
-                            border: '1px solid rgba(255,255,255,0.05)'
-                        }}>
+                    <motion.div id="extra-filters" {...accordionMotion} className="overflow-hidden">
+                        <Card className="space-y-4">
                             {/* Season Filter */}
                             <div>
-                                <h4 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: theme.colors.text.secondary, marginBottom: '0.75rem', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                                    <CalendarClock size={16} /> Season
-                                </h4>
-                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                                    {distinctSeasons.map(season => (
-                                        <button
-                                            key={season}
-                                            onClick={() => setSelectedSeason(season)}
-                                            style={{
-                                                padding: '0.5rem 1rem',
-                                                borderRadius: '0.5rem',
-                                                border: '1px solid',
-                                                borderColor: selectedSeason === season ? color : 'rgba(255,255,255,0.1)',
-                                                backgroundColor: selectedSeason === season ? `${color}22` : 'transparent',
-                                                color: selectedSeason === season ? color : theme.colors.text.secondary,
-                                                cursor: 'pointer',
-                                                fontSize: '0.9rem'
-                                            }}
-                                        >
-                                            {season}
-                                        </button>
-                                    ))}
-                                </div>
+                                <p className={FILTER_LABEL}><CalendarClock size={13} aria-hidden="true" /> Season</p>
+                                <SegmentedControl
+                                    variant="joined"
+                                    ariaLabel="Season"
+                                    value={selectedSeason}
+                                    onChange={setSelectedSeason}
+                                    options={distinctSeasons.map(season => ({ value: season, label: season }))}
+                                />
                             </div>
 
                             {/* Tags Filter */}
                             {distinctTags.length > 0 && (
                                 <div>
-                                    <h4 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: theme.colors.text.secondary, marginBottom: '0.75rem', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                                        <Tag size={16} /> Tags
-                                    </h4>
-                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                                    <p className={FILTER_LABEL}>Tags</p>
+                                    <div className="flex flex-wrap gap-1.5">
                                         {distinctTags.map(tag => (
-                                            <button
-                                                key={tag}
-                                                onClick={() => toggleTag(tag)}
-                                                style={{
-                                                    padding: '0.5rem 1rem',
-                                                    borderRadius: '2rem',
-                                                    border: '1px solid',
-                                                    borderColor: selectedTags.includes(tag) ? color : 'rgba(255,255,255,0.1)',
-                                                    backgroundColor: selectedTags.includes(tag) ? color : 'transparent',
-                                                    color: selectedTags.includes(tag) ? 'white' : theme.colors.text.secondary,
-                                                    cursor: 'pointer',
-                                                    fontSize: '0.85rem'
-                                                }}
-                                            >
+                                            <FilterPill key={tag} active={selectedTags.includes(tag)} onClick={() => toggleTag(tag)}>
                                                 {tag}
-                                            </button>
+                                            </FilterPill>
                                         ))}
                                     </div>
                                 </div>
                             )}
 
                             {/* Clear Filters */}
-                            {(selectedSeason !== 'All' || selectedTags.length > 0) && (
-                                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                                    <button
-                                        onClick={() => { setSelectedSeason('All'); setSelectedTags([]); }}
-                                        style={{ background: 'none', border: 'none', color: theme.colors.text.secondary, fontSize: '0.9rem', cursor: 'pointer', textDecoration: 'underline' }}
-                                    >
-                                        Clear all filters
-                                    </button>
+                            {activeFilterCount > 0 && (
+                                <div className="flex justify-end">
+                                    <Button variant="text" onClick={clearFilters}>Clear all filters</Button>
                                 </div>
                             )}
-                        </div>
+                        </Card>
                     </motion.div>
                 )}
             </AnimatePresence>
 
-            {isLoading ? (
-                <div style={{ textAlign: 'center', padding: '2rem', color: theme.colors.text.secondary }}>
-                    Loading...
+            {loadError && (
+                <div role="alert" className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+                    <span>Could not load the resources{loadError.message ? ` – ${loadError.message}` : '.'}</span>
+                    <Button variant="ghost" size="sm" className="border-red-200 bg-white text-red-700 hover:bg-red-50" onClick={loadExtras}>
+                        Try again
+                    </Button>
+                </div>
+            )}
+
+            {showSkeleton ? (
+                <div role="status" aria-busy="true" className="space-y-4">
+                    <span className="sr-only">Loading resources…</span>
+                    {[0, 1].map(i => (
+                        <Card key={i} stack={false} className="space-y-3">
+                            <Skeleton className="h-3 w-32" />
+                            <Skeleton className="h-5 w-2/3" />
+                            <Skeleton className="h-3 w-full" />
+                            <Skeleton className="h-3 w-5/6" />
+                        </Card>
+                    ))}
                 </div>
             ) : filteredExtras.length === 0 ? (
-                <div style={{
-                    textAlign: 'center',
-                    padding: '4rem 1.5rem',
-                    ...theme.styles.glass,
-                    borderRadius: '2rem',
-                    border: '0.0625rem dashed rgba(255, 255, 255, 0.1)'
-                }}>
-                    <p style={{ color: theme.colors.text.muted, fontWeight: '900', letterSpacing: '0.1em', textTransform: 'uppercase', fontSize: '0.9rem' }}>
-                        {extras.length === 0 ? 'No content yet' : 'No matches found'}
-                    </p>
-                    {extras.length > 0 && <button onClick={() => { setSelectedSeason('All'); setSelectedTags([]); }} style={{ marginTop: '1rem', background: 'none', border: 'none', color: color, textDecoration: 'underline', cursor: 'pointer' }}>Clear filters</button>}
-                </div>
+                !loadError && (
+                    <Card>
+                        <EmptyState
+                            icon={extras.length === 0 ? FileText : SearchX}
+                            title={extras.length === 0 ? 'No content yet' : 'No matches found'}
+                            action={extras.length > 0 && (
+                                <Button variant="ghost" size="sm" onClick={clearFilters}>Clear filters</Button>
+                            )}
+                        >
+                            {extras.length > 0 ? 'No resource matches the selected season and tags.' : undefined}
+                        </EmptyState>
+                    </Card>
+                )
             ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-                    {filteredExtras.map((item, index) => {
+                <div className="space-y-4">
+                    {filteredExtras.map(item => {
                         const isExpanded = expandedItems[item.id]
                         // Simple heuristic: If content is long/HTML, we might want to collapse it initially
                         // For now, let's always collapsible if it's a post
                         const isCollapsible = item.type === 'post' && item.content && item.content.length > 300
+                        const collapsed = isCollapsible && !isExpanded
+                        const date = dayLabel(item.created_at, { year: true })
 
                         return (
-                            <motion.div
-                                key={item.id}
-                                layout
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ ...expandTransition, delay: index * 0.05 }}
-                                style={{
-                                    ...theme.styles.glass,
-                                    borderRadius: '1.5rem',
-                                    overflow: 'hidden',
-                                    border: '1px solid rgba(255, 255, 255, 0.05)',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    position: 'relative' // For absolute positioning of edit buttons
-                                }}
-                            >
-                                {/* Admin Actions */}
-                                {user && (
-                                    <div style={{ position: 'absolute', top: '1rem', right: '1rem', display: 'flex', gap: '0.5rem', zIndex: 10 }}>
-                                        <button
-                                            onClick={() => {
-                                                setEditingExtra(item) // Set item to edit
-                                                setShowAddModal(true)
-                                            }}
-                                            style={{
-                                                padding: '0.5rem',
-                                                borderRadius: '50%',
-                                                backgroundColor: 'rgba(0,0,0,0.6)',
-                                                border: '1px solid rgba(255,255,255,0.2)',
-                                                color: 'white',
-                                                cursor: 'pointer'
-                                            }}
-                                            title="Edit"
-                                        >
-                                            <Pencil size={14} />
-                                        </button>
-                                        <button
-                                            onClick={() => deleteExtra(item.id)}
-                                            style={{
-                                                padding: '0.5rem',
-                                                borderRadius: '50%',
-                                                backgroundColor: 'rgba(220, 38, 38, 0.8)',
-                                                border: '1px solid rgba(255,255,255,0.2)',
-                                                color: 'white',
-                                                cursor: 'pointer'
-                                            }}
-                                            title="Delete"
-                                        >
-                                            <Trash2 size={14} />
-                                        </button>
-                                    </div>
-                                )}
-
+                            <Card as="article" key={item.id} pad="flush" stack={false} className="overflow-hidden">
                                 {/* Image Header */}
                                 {item.image_path && (
-                                    <div style={{ height: '220px', overflow: 'hidden', position: 'relative' }}>
-                                        <img
-                                            src={`/extra_images/${item.image_path}`}
-                                            alt={item.title}
-                                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                        />
-                                        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)' }} />
-                                    </div>
+                                    <img
+                                        src={`/extra_images/${item.image_path}`}
+                                        alt={item.title}
+                                        className="h-48 w-full border-b border-stone-200/70 object-cover sm:h-56"
+                                    />
                                 )}
 
-                                <div style={{ padding: '1.75rem', display: 'flex', flexDirection: 'column', flex: 1 }}>
-                                    {/* Meta: Type • Date */}
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', fontSize: '0.75rem', color: theme.colors.text.secondary }}>
-                                        <span style={{
-                                            color: color,
-                                            fontWeight: '800',
-                                            textTransform: 'uppercase',
-                                            letterSpacing: '0.05em'
-                                        }}>
-                                            {item.type}
-                                        </span>
-                                        <span>•</span>
-                                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                                            <Calendar size={12} /> {formatDate(item.created_at)}
-                                        </span>
+                                <div className="p-4 sm:p-5">
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div className="min-w-0">
+                                            {/* Meta: Type · Date */}
+                                            <p className="flex flex-wrap items-center gap-x-1.5 text-[11px] text-stone-500">
+                                                <span className="font-semibold uppercase tracking-wide text-stone-400">{item.type}</span>
+                                                {date && (
+                                                    <>
+                                                        <span aria-hidden="true">·</span>
+                                                        <time dateTime={item.created_at} className="tabular-nums">{date}</time>
+                                                    </>
+                                                )}
+                                            </p>
+                                            <h3 className="mt-1 text-base font-semibold leading-snug text-stone-900 sm:text-lg">
+                                                {item.title}
+                                            </h3>
+                                        </div>
+
+                                        {/* Admin Actions */}
+                                        {user && (
+                                            <div className="flex shrink-0 gap-1.5">
+                                                <IconButton
+                                                    label="Edit"
+                                                    icon={Pencil}
+                                                    onClick={() => {
+                                                        setEditingExtra(item) // Set item to edit
+                                                        setShowAddModal(true)
+                                                    }}
+                                                />
+                                                <IconButton
+                                                    label="Delete"
+                                                    icon={Trash2}
+                                                    onClick={() => deleteExtra(item)}
+                                                />
+                                            </div>
+                                        )}
                                     </div>
+
+                                    {deleteError?.id === item.id && (
+                                        <p role="alert" className="mt-2 text-xs font-medium text-red-600">
+                                            Could not delete this resource{deleteError.message ? ` – ${deleteError.message}` : '.'}
+                                        </p>
+                                    )}
 
                                     {/* Meta: Season & Tags */}
-                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
-                                        {item.season && (
-                                            <span style={{ fontSize: '0.7rem', backgroundColor: 'rgba(255,255,255,0.1)', padding: '2px 8px', borderRadius: '4px', color: theme.colors.text.secondary }}>
-                                                {item.season}
-                                            </span>
-                                        )}
-                                        {item.tags?.slice().sort().map(tag => (
-                                            <span key={tag} style={{ fontSize: '0.7rem', backgroundColor: `${color}33`, padding: '2px 8px', borderRadius: '10px', color: color }}>
-                                                #{tag}
-                                            </span>
-                                        ))}
-                                    </div>
-
-                                    <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem', lineHeight: 1.2 }}>
-                                        {item.title}
-                                    </h3>
+                                    {(item.season || item.tags?.length > 0) && (
+                                        <div className="mt-2 flex flex-wrap gap-1">
+                                            {item.season && <Chip tone="stone" title="Season"><span className="tabular-nums">{item.season}</span></Chip>}
+                                            {item.tags?.slice().sort().map(tag => (
+                                                <Chip key={tag} tone="ghost" className="text-stone-500">#{tag}</Chip>
+                                            ))}
+                                        </div>
+                                    )}
 
                                     {item.content && (
-                                        <div style={{
-                                            flex: 1,
-                                            marginBottom: '1.5rem',
-                                            position: 'relative'
-                                        }}>
+                                        <div className="mt-3">
                                             <div
-                                                className="rich-text-content"
-                                                style={{
-                                                    color: theme.colors.text.secondary,
-                                                    fontSize: '0.95rem',
-                                                    lineHeight: 1.7,
-                                                    textAlign: 'justify', // Justify text
-                                                    overflow: 'hidden',
-                                                    maxHeight: isExpanded || !isCollapsible ? 'none' : '150px', // Truncate
-                                                    maskImage: isExpanded || !isCollapsible ? 'none' : 'linear-gradient(to bottom, black 50%, transparent 100%)',
-                                                    transition: 'max-height 0.3s ease'
-                                                }}
+                                                id={`extra-content-${item.id}`}
+                                                className={cn(
+                                                    'rich-text-content overflow-hidden',
+                                                    // Truncate long posts, fading the last lines out
+                                                    collapsed && 'max-h-[150px] [mask-image:linear-gradient(to_bottom,black_50%,transparent)]',
+                                                )}
                                                 dangerouslySetInnerHTML={{ __html: item.content }}
                                             />
 
                                             {isCollapsible && (
-                                                <button
+                                                <Button
+                                                    variant="text"
+                                                    className="mt-1 h-8 font-semibold text-stone-700 hover:text-stone-900"
+                                                    aria-expanded={!!isExpanded}
+                                                    aria-controls={`extra-content-${item.id}`}
                                                     onClick={() => toggleReadMore(item.id)}
-                                                    style={{
-                                                        marginTop: '0.5rem',
-                                                        background: 'none',
-                                                        border: 'none',
-                                                        color: color,
-                                                        fontSize: '0.85rem',
-                                                        fontWeight: 'bold',
-                                                        cursor: 'pointer',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        gap: '0.25rem',
-                                                        padding: 0
-                                                    }}
+                                                    iconRight={<ChevronDown size={14} aria-hidden="true" className={cn('transition-transform', isExpanded && 'rotate-180')} />}
                                                 >
-                                                    {isExpanded ? (
-                                                        <>Show Less <ChevronUp size={14} /></>
-                                                    ) : (
-                                                        <>Read More <ChevronDown size={14} /></>
-                                                    )}
-                                                </button>
+                                                    {isExpanded ? 'Show less' : 'Read more'}
+                                                </Button>
                                             )}
                                         </div>
                                     )}
 
                                     {item.link_url && (
-                                        <a
-                                            href={item.link_url}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            style={{
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: '0.5rem',
-                                                color: color,
-                                                textDecoration: 'none',
-                                                fontWeight: 'bold',
-                                                marginTop: 'auto',
-                                                paddingTop: '1rem',
-                                                borderTop: '1px solid rgba(255,255,255,0.05)'
-                                            }}
-                                        >
-                                            Open Link <ExternalLink size={16} />
-                                        </a>
+                                        <div className="mt-3 border-t border-stone-100 pt-3">
+                                            <a
+                                                href={item.link_url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className={cn('inline-flex items-center gap-1.5 rounded text-sm font-semibold text-red-600 hover:text-red-700 hover:underline', FOCUS_RING)}
+                                            >
+                                                Open link <ExternalLink size={14} aria-hidden="true" />
+                                            </a>
+                                        </div>
                                     )}
                                 </div>
-                            </motion.div>
+                            </Card>
                         )
                     })}
                 </div>
-            )}
-
-            {/* Floating Add Button */}
-            {user && (
-                <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={() => {
-                        setEditingExtra(null) // Reset editing state for new item
-                        setShowAddModal(true)
-                    }}
-                    style={{
-                        position: 'fixed',
-                        bottom: '5rem',
-                        right: '2rem',
-                        width: '3.5rem',
-                        height: '3.5rem',
-                        borderRadius: '50%',
-                        backgroundColor: color,
-                        color: 'white',
-                        border: 'none',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        cursor: 'pointer',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
-                        zIndex: 100
-                    }}
-                >
-                    <Plus size={24} strokeWidth={3} />
-                </motion.button>
             )}
 
             <AnimatePresence>
@@ -477,7 +364,7 @@ function ExtraView({ environment, user, onLogin }) { // Props explicitly destruc
                     />
                 )}
             </AnimatePresence>
-        </motion.div>
+        </div>
     )
 }
 

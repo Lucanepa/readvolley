@@ -1,11 +1,47 @@
-import React, { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import React, { useState, useId } from 'react'
 import ReactQuill from 'react-quill'
 import 'react-quill/dist/quill.snow.css'
-import { theme } from './styles/theme'
 import { api } from './services/api'
 import ErrorBoundary from './components/ErrorBoundary'
-import { ChevronLeft, Save, Upload, Link as LinkIcon, FileText, Tag, CalendarClock } from 'lucide-react'
+import { Save, Upload, X } from 'lucide-react'
+import {
+    Modal, Button, Field, Input, Select, SegmentedControl, FormError, toast, FOCUS_RING, cn,
+} from './ui/volleyui'
+
+const FORM_ID = 'add-extra-form'
+
+// Labels for the stored values; the values themselves are what the API keeps.
+const CATEGORIES = [
+    { value: 'indoor', label: 'Indoor' },
+    { value: 'beach', label: 'Beach' },
+    { value: 'ssk', label: 'SSK' },
+    { value: 'multimedia', label: 'Multimedia' },
+]
+const CONTENT_TYPES = [
+    { value: 'post', label: 'Post' },
+    { value: 'link', label: 'Link' },
+    { value: 'pdf', label: 'PDF' },
+    { value: 'image', label: 'Image' },
+    { value: 'video', label: 'Video' },
+]
+
+// Same tone as Field's "form" label, for controls that are not a single input.
+const GROUP_LABEL = 'mb-1.5 block text-sm font-medium text-stone-700'
+
+// quill.snow.css is unlayered, so it beats Tailwind's utilities layer; the
+// overrides below are marked important (`!`) to win. They put the editor on
+// white with stone hairlines and turn Quill's blue hover/active ink to slate.
+const QUILL_SKIN = [
+    'rounded-lg focus-within:ring-2 focus-within:ring-red-500',
+    '[&_.ql-toolbar]:rounded-t-lg! [&_.ql-toolbar]:border-stone-300! [&_.ql-toolbar]:bg-stone-50! [&_.ql-toolbar]:[font-family:inherit]!',
+    '[&_.ql-container]:rounded-b-lg! [&_.ql-container]:border-stone-300! [&_.ql-container]:bg-white! [&_.ql-container]:[font-family:inherit]! [&_.ql-container]:text-sm!',
+    '[&_.ql-editor]:min-h-[200px] [&_.ql-editor]:max-h-[400px] [&_.ql-editor]:overflow-y-auto [&_.ql-editor]:text-stone-800',
+    '[&_.ql-stroke]:stroke-stone-600! [&_.ql-fill]:fill-stone-600! [&_.ql-picker]:text-stone-600!',
+    '[&_button:hover_.ql-stroke]:stroke-slate-900! [&_button.ql-active_.ql-stroke]:stroke-slate-900!',
+    '[&_button:hover_.ql-fill]:fill-slate-900! [&_button.ql-active_.ql-fill]:fill-slate-900!',
+    '[&_.ql-picker-label:hover]:text-slate-900! [&_.ql-picker-label.ql-active]:text-slate-900! [&_.ql-picker-label:hover_.ql-stroke]:stroke-slate-900! [&_.ql-picker-label.ql-active_.ql-stroke]:stroke-slate-900!',
+    '[&_.ql-picker-item:hover]:text-slate-900! [&_.ql-picker-item.ql-selected]:text-slate-900! [&_.ql-picker-options]:rounded-lg! [&_.ql-picker-options]:border-stone-300!',
+].join(' ')
 
 function AddExtraView({ onClose, initialData = null }) {
     // Initialize with safe defaults.
@@ -23,11 +59,16 @@ function AddExtraView({ onClose, initialData = null }) {
         ssk_name: initialData?.ssk_name || '',
     })
     const [tagInput, setTagInput] = useState('')
-    const [status, setStatus] = useState('idle') // idle, submitting, success, error
+    const [status, setStatus] = useState('idle') // idle, submitting, error
+    const [saveError, setSaveError] = useState('')
+    const tagInputId = useId()
+    const contentLabelId = useId()
+    const isEdit = Boolean(initialData?.id)
 
     const handleSubmit = async (e) => {
         e.preventDefault()
         setStatus('submitting')
+        setSaveError('')
 
         try {
             // Create a payload copy to sanitize
@@ -43,10 +84,12 @@ function AddExtraView({ onClose, initialData = null }) {
                 delete payload.id
                 await api.addExtra(payload)
             }
-            setStatus('success')
-            setTimeout(onClose, 1500)
+            // Toast only once the write resolved; closing refreshes the list behind.
+            toast.success(isEdit ? 'Changes saved.' : 'Resource added.', { lang: 'EN' })
+            onClose()
         } catch (error) {
             console.error('Error saving extra:', error)
+            setSaveError(error?.message || '')
             setStatus('error')
         }
     }
@@ -96,366 +139,156 @@ function AddExtraView({ onClose, initialData = null }) {
     }
 
     const seasons = ['2025/2026', '2026/2027', '2027/2028', '2028/2029', '2029/2030', '2030/2031']
+    const urlRequired = formData.type === 'link' || formData.type === 'pdf'
 
     return (
-        <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            style={{
-                position: 'fixed',
-                inset: 0,
-                zIndex: 2000,
-                backgroundColor: 'rgba(0,0,0,0.85)',
-                backdropFilter: 'blur(8px)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '1rem'
-            }}
+        <Modal
+            open
+            onClose={onClose}
+            title={isEdit ? 'Edit resource' : 'Add resource'}
+            layout="sections"
+            size="xl"
+            decision
+            dismissible={false} // the form holds unsaved input; Escape and × still close
+            closeLabel="Close"
+            footer={(
+                <>
+                    <Button variant="secondary" size="lg" onClick={onClose}>Cancel</Button>
+                    <Button
+                        type="submit"
+                        form={FORM_ID}
+                        size="lg"
+                        icon={Save}
+                        loading={status === 'submitting'}
+                    >
+                        {isEdit ? 'Save changes' : 'Add resource'}
+                    </Button>
+                </>
+            )}
         >
-            <div style={{
-                width: '100%',
-                maxWidth: '800px',
-                backgroundColor: '#1a1a1a',
-                borderRadius: '1.5rem',
-                border: '1px solid rgba(255,255,255,0.1)',
-                padding: '2rem',
-                maxHeight: '90vh',
-                display: 'flex',
-                flexDirection: 'column'
-            }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem' }}>
-                    <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', margin: 0 }}>
-                        {initialData ? 'Edit Resource' : 'Add New Resource'}
-                    </h2>
+            <form id={FORM_ID} onSubmit={handleSubmit} className="space-y-4">
+                {/* Environment Selector */}
+                <div>
+                    <span className={GROUP_LABEL}>Category</span>
+                    <SegmentedControl
+                        ariaLabel="Category"
+                        options={CATEGORIES}
+                        value={formData.rules_type}
+                        onChange={(type) => setFormData(prev => ({ ...prev, rules_type: type }))}
+                    />
                 </div>
 
-                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', flex: 1, overflowY: 'auto', paddingRight: '0.5rem' }}>
-                    {/* Environment Selector */}
-                    <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                        {['indoor', 'beach', 'ssk', 'multimedia'].map(type => (
-                            <button
-                                key={type}
-                                type="button"
-                                onClick={() => setFormData(prev => ({ ...prev, rules_type: type }))}
-                                style={{
-                                    flex: 1,
-                                    padding: '0.75rem',
-                                    borderRadius: '0.5rem',
-                                    border: '1px solid',
-                                    borderColor: formData.rules_type === type ? (theme.colors[type]?.primary || '#3b82f6') : 'rgba(255,255,255,0.1)',
-                                    backgroundColor: formData.rules_type === type ? `${theme.colors[type]?.primary || '#3b82f6'}22` : 'transparent',
-                                    color: formData.rules_type === type ? (theme.colors[type]?.primary || '#3b82f6') : theme.colors.text.secondary,
-                                    textTransform: 'capitalize',
-                                    fontWeight: 'bold',
-                                    cursor: 'pointer',
-                                    minWidth: '100px'
-                                }}
-                            >
-                                {type}
-                            </button>
-                        ))}
-                    </div>
+                {/* Metadata Row: Season & Type */}
+                <div className="grid gap-4 sm:grid-cols-[minmax(0,12rem)_minmax(0,1fr)]">
+                    <Field label="Season">
+                        <Select name="season" value={formData.season} onChange={handleChange} block>
+                            {seasons.map(s => <option key={s} value={s}>{s}</option>)}
+                        </Select>
+                    </Field>
 
-                    {/* Metadata Row: Season & Type */}
-                    <div style={{ display: 'flex', gap: '1rem' }}>
-                        {/* Season Selector */}
-                        <div style={{ flex: 1 }}>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', color: theme.colors.text.secondary, fontSize: '0.9rem' }}>Season</label>
-                            <div style={{ position: 'relative' }}>
-                                <CalendarClock size={16} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.5)' }} />
-                                <select
-                                    name="season"
-                                    value={formData.season}
-                                    onChange={handleChange}
-                                    style={{
-                                        width: '100%',
-                                        padding: '0.75rem 0.75rem 0.75rem 2.5rem',
-                                        backgroundColor: 'rgba(0,0,0,0.3)',
-                                        border: '1px solid rgba(255,255,255,0.1)',
-                                        borderRadius: '0.5rem',
-                                        color: 'white',
-                                        fontSize: '1rem',
-                                        appearance: 'none',
-                                        cursor: 'pointer'
-                                    }}
+                    <div className="min-w-0">
+                        <span className={GROUP_LABEL}>Content type</span>
+                        <SegmentedControl
+                            ariaLabel="Content type"
+                            options={CONTENT_TYPES}
+                            value={formData.type}
+                            onChange={(t) => setFormData(prev => ({ ...prev, type: t }))}
+                        />
+                    </div>
+                </div>
+
+                <Field label="Title">
+                    <Input type="text" name="title" value={formData.title} onChange={handleChange} required />
+                </Field>
+
+                {/* SSK Name - Only relevant if environment is ssk, but safe to show/store generally */}
+                <Field label="SSK name" hint="Optional – a name or author.">
+                    <Input type="text" name="ssk_name" value={formData.ssk_name} onChange={handleChange} />
+                </Field>
+
+                {/* Tags Input */}
+                <div>
+                    <label htmlFor={tagInputId} className={GROUP_LABEL}>Tags</label>
+                    <div className="flex min-h-9 flex-wrap items-center gap-1.5 rounded-lg border border-stone-300 bg-white px-2 py-1 focus-within:ring-2 focus-within:ring-red-500">
+                        {formData.tags?.map(tag => (
+                            <span key={tag} className="inline-flex items-center gap-0.5 rounded border border-stone-200 bg-stone-50 py-0.5 pl-1.5 pr-0.5 text-xs font-medium text-stone-700">
+                                {tag}
+                                <button
+                                    type="button"
+                                    onClick={() => removeTag(tag)}
+                                    aria-label={`Remove tag ${tag}`}
+                                    title={`Remove tag ${tag}`}
+                                    className={cn('inline-flex h-5 w-5 items-center justify-center rounded text-stone-400 hover:bg-stone-200 hover:text-stone-700', FOCUS_RING)}
                                 >
-                                    {seasons.map(s => <option key={s} value={s}>{s}</option>)}
-                                </select>
-                            </div>
-                        </div>
-
-                        {/* Type Selector condensed */}
-                        <div style={{ flex: 1 }}>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', color: theme.colors.text.secondary, fontSize: '0.9rem' }}>Content Type</label>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.5rem', backgroundColor: 'rgba(0,0,0,0.3)', borderRadius: '0.5rem', padding: '0.5rem', border: '1px solid rgba(255,255,255,0.1)' }}>
-                                {['post', 'link', 'pdf', 'image', 'video'].map(t => (
-                                    <button
-                                        key={t}
-                                        type="button"
-                                        onClick={() => setFormData(prev => ({ ...prev, type: t }))}
-                                        style={{
-                                            padding: '0.5rem',
-                                            borderRadius: '0.3rem',
-                                            backgroundColor: formData.type === t ? 'rgba(255,255,255,0.1)' : 'transparent',
-                                            color: formData.type === t ? 'white' : 'rgba(255,255,255,0.5)',
-                                            border: 'none',
-                                            cursor: 'pointer',
-                                            fontSize: '0.8rem',
-                                            textTransform: 'capitalize'
-                                        }}
-                                    >
-                                        {t}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', color: theme.colors.text.secondary }}>Title</label>
+                                    <X size={12} aria-hidden="true" />
+                                </button>
+                            </span>
+                        ))}
                         <input
+                            id={tagInputId}
                             type="text"
-                            name="title"
-                            value={formData.title}
-                            onChange={handleChange}
-                            required
-                            style={{
-                                width: '100%',
-                                padding: '0.75rem',
-                                backgroundColor: 'rgba(0,0,0,0.3)',
-                                border: '1px solid rgba(255,255,255,0.1)',
-                                borderRadius: '0.5rem',
-                                color: 'white',
-                                fontSize: '1rem'
-                            }}
+                            value={tagInput}
+                            onChange={(e) => setTagInput(e.target.value)}
+                            onKeyDown={handleTagKeyDown}
+                            placeholder="Add a tag"
+                            aria-describedby={`${tagInputId}-hint`}
+                            className="h-7 min-w-[9rem] flex-1 bg-transparent px-1 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none"
                         />
                     </div>
+                    <span id={`${tagInputId}-hint`} className="mt-1.5 block text-xs text-stone-500">Press Enter or comma to add a tag.</span>
+                </div>
 
-                    {/* SSK Name - Only relevant if environment is ssk, but safe to show/store generally */}
+                {formData.type === 'post' && (
                     <div>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', color: theme.colors.text.secondary }}>SSK Name</label>
-                        <input
-                            type="text"
-                            name="ssk_name"
-                            value={formData.ssk_name}
+                        <span id={contentLabelId} className={GROUP_LABEL}>Content</span>
+                        <div className={QUILL_SKIN} role="group" aria-labelledby={contentLabelId}>
+                            <ErrorBoundary fallback={
+                                <p className="rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-xs text-red-700">
+                                    The text editor failed to load. Please refresh the page.
+                                </p>
+                            }>
+                                <ReactQuill
+                                    theme="snow"
+                                    value={formData.content}
+                                    onChange={handleContentChange}
+                                    modules={modules}
+                                />
+                            </ErrorBoundary>
+                        </div>
+                    </div>
+                )}
+
+                <Field label="Image filename" hint="Place the file in public/extra_images/.">
+                    <Input
+                        type="text"
+                        name="image_path"
+                        icon={Upload}
+                        value={formData.image_path}
+                        onChange={handleChange}
+                        placeholder="e.g. tournament-2025.jpg"
+                    />
+                </Field>
+
+                {(urlRequired || formData.link_url) && (
+                    <Field label="URL">
+                        <Input
+                            type="url"
+                            name="link_url"
+                            value={formData.link_url}
                             onChange={handleChange}
-                            placeholder="Optional name/author"
-                            style={{
-                                width: '100%',
-                                padding: '0.75rem',
-                                backgroundColor: 'rgba(0,0,0,0.3)',
-                                border: '1px solid rgba(255,255,255,0.1)',
-                                borderRadius: '0.5rem',
-                                color: 'white',
-                                fontSize: '1rem'
-                            }}
+                            placeholder="https://…"
+                            required={urlRequired}
                         />
-                    </div>
+                    </Field>
+                )}
 
-                    {/* Tags Input */}
-                    <div>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', color: theme.colors.text.secondary }}>Tags</label>
-                        <div style={{
-                            backgroundColor: 'rgba(0,0,0,0.3)',
-                            border: '1px solid rgba(255,255,255,0.1)',
-                            borderRadius: '0.5rem',
-                            padding: '0.5rem',
-                            display: 'flex',
-                            flexWrap: 'wrap',
-                            gap: '0.5rem',
-                            alignItems: 'center'
-                        }}>
-                            <Tag size={16} color="rgba(255,255,255,0.5)" style={{ marginLeft: '0.5rem' }} />
-                            {formData.tags?.map(tag => (
-                                <span key={tag} style={{
-                                    backgroundColor: theme.colors[formData.rules_type].primary,
-                                    color: 'white',
-                                    padding: '0.25rem 0.75rem',
-                                    borderRadius: '1rem',
-                                    fontSize: '0.85rem',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '0.5rem'
-                                }}>
-                                    {tag}
-                                    <button
-                                        type="button"
-                                        onClick={() => removeTag(tag)}
-                                        style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', padding: 0, fontSize: '1rem', lineHeight: 1 }}
-                                    >×</button>
-                                </span>
-                            ))}
-                            <input
-                                type="text"
-                                value={tagInput}
-                                onChange={(e) => setTagInput(e.target.value)}
-                                onKeyDown={handleTagKeyDown}
-                                placeholder="Add tag (Press Enter)..."
-                                style={{
-                                    flex: 1,
-                                    background: 'transparent',
-                                    border: 'none',
-                                    color: 'white',
-                                    padding: '0.5rem',
-                                    minWidth: '150px'
-                                }}
-                            />
-                        </div>
-                    </div>
-
-                    {formData.type === 'post' && (
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', color: theme.colors.text.secondary }}>Content</label>
-                            <div className="quill-wrapper" style={{
-                                backgroundColor: 'rgba(255,255,255,0.9)',
-                                borderRadius: '0.5rem',
-                                color: 'black',
-                                overflow: 'hidden' // Ensure rounded corners
-                            }}>
-                                <style>
-                                    {`
-                                        .ql-container {
-                                            font-family: inherit;
-                                            font-size: 1rem;
-                                        }
-                                        .ql-editor {
-                                            min-height: 200px;
-                                            max-height: 400px;
-                                            overflow-y: auto;
-                                        }
-                                        .ql-toolbar {
-                                            border-top: none !important;
-                                            border-left: none !important;
-                                            border-right: none !important;
-                                            border-bottom: 1px solid #ddd !important;
-                                            background-color: #f8f9fa;
-                                        }
-                                        .ql-container.ql-snow {
-                                            border: none !important;
-                                        }
-                                    `}
-                                </style>
-                                <ErrorBoundary fallback={
-                                    <div style={{ padding: '2rem', textAlign: 'center', color: 'black' }}>
-                                        <p>Text editor failed to load. Please try refreshing.</p>
-                                    </div>
-                                }>
-                                    <ReactQuill
-                                        theme="snow"
-                                        value={formData.content}
-                                        onChange={handleContentChange}
-                                        modules={modules}
-                                    />
-                                </ErrorBoundary>
-                            </div>
-                        </div>
-                    )}
-
-                    <div>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', color: theme.colors.text.secondary }}>
-                            Image Filename <span style={{ fontSize: '0.8rem', opacity: 0.6 }}>(Place in public/extra_images/)</span>
-                        </label>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <Upload size={18} color={theme.colors.text.secondary} />
-                            <input
-                                type="text"
-                                name="image_path"
-                                value={formData.image_path}
-                                onChange={handleChange}
-                                placeholder="e.g. tournament-2025.jpg"
-                                style={{
-                                    flex: 1,
-                                    padding: '0.75rem',
-                                    backgroundColor: 'rgba(0,0,0,0.3)',
-                                    border: '1px solid rgba(255,255,255,0.1)',
-                                    borderRadius: '0.5rem',
-                                    color: 'white'
-                                }}
-                            />
-                        </div>
-                    </div>
-
-                    {(formData.type === 'link' || formData.type === 'pdf' || formData.link_url) && (
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', color: theme.colors.text.secondary }}>URL</label>
-                            <input
-                                type="url"
-                                name="link_url"
-                                value={formData.link_url}
-                                onChange={handleChange}
-                                placeholder="https://..."
-                                required={formData.type === 'link' || formData.type === 'pdf'}
-                                style={{
-                                    width: '100%',
-                                    padding: '0.75rem',
-                                    backgroundColor: 'rgba(0,0,0,0.3)',
-                                    border: '1px solid rgba(255,255,255,0.1)',
-                                    borderRadius: '0.5rem',
-                                    color: 'white'
-                                }}
-                            />
-                        </div>
-                    )}
-
-                    <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            style={{
-                                flex: 1,
-                                padding: '1rem',
-                                borderRadius: '0.5rem',
-                                border: '1px solid rgba(255,255,255,0.1)',
-                                backgroundColor: 'transparent',
-                                color: 'white',
-                                fontSize: '1rem',
-                                fontWeight: 'bold',
-                                cursor: 'pointer',
-                                transition: 'all 0.2s'
-                            }}
-                            onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(255,255,255,0.05)'}
-                            onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-                        >
-                            Go Back
-                        </button>
-                        <button
-                            type="submit"
-                            disabled={status === 'submitting'}
-                            style={{
-                                flex: 2,
-                                padding: '1rem',
-                                borderRadius: '0.5rem',
-                                border: 'none',
-                                backgroundColor: theme.colors[formData.rules_type].primary,
-                                color: 'white',
-                                fontSize: '1rem',
-                                fontWeight: 'bold',
-                                cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: '0.5rem',
-                                opacity: status === 'submitting' ? 0.7 : 1
-                            }}
-                        >
-                            {status === 'submitting'
-                                ? 'Saving...'
-                                : <><Save size={20} /> {initialData ? 'Update Resource' : 'Save Resource'}</>
-                            }
-                        </button>
-                    </div>
-
-                    {status === 'success' && (
-                        <p style={{ color: '#4ade80', textAlign: 'center', margin: 0 }}>Successfully saved!</p>
-                    )}
-                    {status === 'error' && (
-                        <p style={{ color: '#ef4444', textAlign: 'center', margin: 0 }}>Error saving. Check console.</p>
-                    )}
-                </form>
-            </div>
-        </motion.div>
+                {status === 'error' && (
+                    <FormError>
+                        {saveError ? `Could not save the resource – ${saveError}` : 'Could not save the resource. Please try again.'}
+                    </FormError>
+                )}
+            </form>
+        </Modal>
     )
 }
 
