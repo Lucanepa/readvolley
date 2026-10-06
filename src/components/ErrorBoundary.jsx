@@ -1,99 +1,46 @@
-import React from 'react';
-import { theme } from '../styles/theme';
-import { AlertTriangle, RefreshCcw } from 'lucide-react';
+import React from 'react'
+import { AlertTriangle, RotateCw } from 'lucide-react'
+import { Button } from '../ui/volleyui'
 
+/**
+ * Catches a crash inside one panel so the rest of the app (navigation, other
+ * tabs) keeps working, and offers to load the panel again.
+ */
 class ErrorBoundary extends React.Component {
     constructor(props) {
-        super(props);
-        this.state = { hasError: false, error: null, errorInfo: null };
+        super(props)
+        this.state = { error: null }
     }
 
     static getDerivedStateFromError(error) {
-        // Update state so the next render will show the fallback UI.
-        return { hasError: true, error };
+        return { error }
     }
 
     componentDidCatch(error, errorInfo) {
-        // You can also log the error to an error reporting service
-        console.error("ErrorBoundary caught an error:", error, errorInfo);
-        this.setState({ errorInfo });
+        console.error('ErrorBoundary caught an error:', error, errorInfo)
     }
 
     resetErrorBoundary = () => {
-        this.setState({ hasError: false, error: null, errorInfo: null });
-        if (this.props.onReset) {
-            this.props.onReset();
-        }
-    };
+        this.setState({ error: null })
+        if (this.props.onReset) this.props.onReset()
+    }
 
     render() {
-        if (this.state.hasError) {
-            // Check if a custom fallback is provided
-            if (this.props.fallback) {
-                return this.props.fallback;
-            }
+        if (!this.state.error) return this.props.children
+        if (this.props.fallback) return this.props.fallback
 
-            // Default fallback UI
-            return (
-                <div style={{
-                    padding: '2rem',
-                    textAlign: 'center',
-                    ...theme.styles.glass,
-                    borderRadius: '1.5rem',
-                    margin: '2rem auto',
-                    maxWidth: '600px',
-                    border: '1px solid rgba(239, 68, 68, 0.3)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: '1rem'
-                }}>
-                    <div style={{
-                        width: '4rem',
-                        height: '4rem',
-                        borderRadius: '50%',
-                        backgroundColor: 'rgba(239, 68, 68, 0.2)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: '#ef4444'
-                    }}>
-                        <AlertTriangle size={32} />
-                    </div>
-                    <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', margin: 0 }}>Something went wrong</h2>
-                    <p style={{ color: theme.colors.text.secondary, margin: 0 }}>
-                        We encountered an unexpected error in this section.
-                    </p>
-
-                    {/* Optional: Show technically error detail in dev mode (or if requested) */}
-                    {/* <details style={{ whiteSpace: 'pre-wrap', textAlign: 'left', color: 'rgba(255,255,255,0.5)', fontSize: '0.8rem' }}>
-                        {this.state.error && this.state.error.toString()}
-                    </details> */}
-
-                    <button
-                        onClick={this.resetErrorBoundary}
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem',
-                            padding: '0.75rem 1.5rem',
-                            borderRadius: '2rem',
-                            backgroundColor: '#ef4444',
-                            color: 'white',
-                            border: 'none',
-                            fontWeight: 'bold',
-                            cursor: 'pointer',
-                            marginTop: '0.5rem'
-                        }}
-                    >
-                        <RefreshCcw size={18} /> Try Again
-                    </button>
-                </div>
-            );
-        }
-
-        return this.props.children;
+        return (
+            <div className="mx-auto max-w-sm rounded-2xl border border-stone-200/70 bg-white p-6 text-center shadow-card">
+                <AlertTriangle className="mx-auto h-8 w-8 text-red-600" aria-hidden="true" />
+                <h2 className="mt-3 text-base font-semibold text-stone-900">This section could not be shown</h2>
+                <p className="mt-2 text-xs text-stone-500">Something went wrong while loading it. The rest of the app still works.</p>
+                {this.state.error.message && (
+                    <p className="mt-1 break-words text-[11px] text-stone-400">{this.state.error.message}</p>
+                )}
+                <Button block icon={RotateCw} className="mt-5" onClick={this.resetErrorBoundary}>Try again</Button>
+            </div>
+        )
     }
 }
 
-export default ErrorBoundary;
+export default ErrorBoundary

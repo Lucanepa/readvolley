@@ -1,117 +1,30 @@
-:root {
-  --font-family-sans: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
-  --font-family-heading: 'Outfit', sans-serif;
-
-  --color-bg-dark: #0a0a0a;
-  --color-text-primary: #ffffff;
-  --color-border-subtle: #333333;
-  --glass-bg: rgba(26, 26, 26, 0.8);
-
-  /* Fluid typography: 14px at 320px, 18px at 1200px */
-  font-size: clamp(0.875rem, 0.5vw + 0.75rem, 1.125rem);
-}
-
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-body {
-  margin: 0;
-  display: flex;
-  min-width: 320px;
-  min-height: 100dvh;
-  background-color: var(--color-bg-dark);
-  color: var(--color-text-primary);
-  font-family: var(--font-family-sans);
-  line-height: 1.5;
-  font-weight: 400;
-  color-scheme: dark;
-  /* Removed font-synthesis: none to allow browser to synthesize italics if missing */
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
+@import "./ui/volleyui/tokens.css";
 
 #root {
   width: 100%;
 }
 
-h1,
-h2,
-h3,
-h4,
-.font-heading {
-  font-family: var(--font-family-heading);
-  font-weight: 700;
-  color: var(--color-text-primary);
+/* Rich text written in the Quill editor (SSK news, extra entries) */
+.rich-text-content,
+.news-content {
+  @apply text-sm leading-relaxed text-stone-700;
 }
 
-button {
-  cursor: pointer;
-  border: none;
-  outline: none;
-  background: none;
-  font-family: inherit;
+.rich-text-content p + p,
+.news-content p + p {
+  @apply mt-2;
 }
 
-/* Fallback for glass effect if needed globally, primarily used via theme.js inline styles now */
-.glass {
-  background: var(--glass-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--color-border-subtle);
-}
-
-.transition-all {
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Animations */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-fade-in {
-  animation: fadeIn 0.4s ease-out forwards;
-}
-
-.home-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 3rem;
-  width: 100%;
-  max-width: 1152px;
-}
-
-@media (max-width: 768px) {
-  .home-grid {
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-  }
-}
-
-/* Rich Text Content Styling (for Quill output) */
 .rich-text-content ul,
 .rich-text-content ol,
 .news-content ul,
 .news-content ol {
-  margin: 1rem 0;
-  padding-left: 1.5rem;
+  @apply my-3 pl-6;
 }
 
 .rich-text-content li,
 .news-content li {
-  margin-bottom: 0.5rem;
+  @apply mb-1.5;
   display: list-item;
 }
 
@@ -125,54 +38,45 @@ button {
   list-style-type: decimal;
 }
 
-/* Force Italic Rendering */
 .rich-text-content em,
 .rich-text-content i,
 .news-content em,
 .news-content i {
-  font-style: italic !important;
-  display: inline;
+  font-style: italic;
 }
 
 .rich-text-content strong,
 .rich-text-content b,
 .news-content strong,
 .news-content b {
-  font-weight: bold;
+  @apply font-semibold text-stone-900;
 }
 
 .rich-text-content blockquote,
 .news-content blockquote {
-  border-left: 4px solid #ef4444;
-  padding-left: 1rem;
-  margin: 1rem 0;
-  font-style: italic;
-  color: rgba(255, 255, 255, 0.7);
+  @apply my-3 border-l-2 border-stone-300 pl-3 italic text-stone-600;
 }
 
 .rich-text-content h1,
 .rich-text-content h2,
 .news-content h1,
 .news-content h2 {
-  margin: 1.5rem 0 1rem 0;
-  color: white;
-  font-family: var(--font-family-heading);
+  @apply mt-5 mb-2 font-bold tracking-tight text-stone-900;
 }
 
 .rich-text-content h1,
 .news-content h1 {
-  font-size: 1.5rem;
+  @apply text-lg;
 }
 
 .rich-text-content h2,
 .news-content h2 {
-  font-size: 1.25rem;
+  @apply text-base;
 }
 
 .rich-text-content a,
 .news-content a {
-  color: #ef4444;
-  text-decoration: underline;
+  @apply font-medium text-red-600 underline underline-offset-2 hover:text-red-700;
 }
 
 /* Rich Text Alignment & Indentation (Quill) */
@@ -188,53 +92,22 @@ button {
   text-align: justify;
 }
 
-.ql-indent-1 {
-  padding-left: 2rem !important;
-}
+.ql-indent-1 { padding-left: 2rem !important; }
+.ql-indent-2 { padding-left: 4rem !important; }
+.ql-indent-3 { padding-left: 6rem !important; }
+.ql-indent-4 { padding-left: 8rem !important; }
+.ql-indent-5 { padding-left: 10rem !important; }
+.ql-indent-6 { padding-left: 12rem !important; }
+.ql-indent-7 { padding-left: 14rem !important; }
+.ql-indent-8 { padding-left: 16rem !important; }
 
-.ql-indent-2 {
-  padding-left: 4rem !important;
-}
-
-.ql-indent-3 {
-  padding-left: 6rem !important;
-}
-
-.ql-indent-4 {
-  padding-left: 8rem !important;
-}
-
-.ql-indent-5 {
-  padding-left: 10rem !important;
-}
-
-.ql-indent-6 {
-  padding-left: 12rem !important;
-}
-
-.ql-indent-7 {
-  padding-left: 14rem !important;
-}
-
-.ql-indent-8 {
-  padding-left: 16rem !important;
-}
-
-/* Sub-tab strip: scrolls sideways on narrow screens without showing a bar */
-.subtab-strip {
+/* A row of chips or filters that scrolls sideways without showing a bar */
+.scroll-strip {
   scrollbar-width: none;
   -ms-overflow-style: none;
   -webkit-overflow-scrolling: touch;
 }
 
-.subtab-strip::-webkit-scrollbar {
+.scroll-strip::-webkit-scrollbar {
   display: none;
-}
-
-/* Used by the inline loading spinners in the rule views. Previously this was
-   declared inside the full-page loader, so every spinner that outlived it sat
-   frozen. */
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
 }

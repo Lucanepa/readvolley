@@ -20,7 +20,8 @@ export default defineConfig({
                 name: 'Volleyball Rules',
                 short_name: 'ReadVolley',
                 description: 'Voleyball rules and casebook for Beach and Indoor',
-                theme_color: '#000000',
+                theme_color: '#e2001a',
+                background_color: '#f5f5f4',
                 icons: [
                     {
                         src: 'pwa-192x192.png',

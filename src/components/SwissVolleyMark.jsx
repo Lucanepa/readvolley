@@ -24,22 +24,15 @@ function SwissFlag({ size }) {
     )
 }
 
-// Text mark used in place of the official Swiss Volley logo.
-export default function SwissVolleyMark({ fontSize = '1.5rem' }) {
+// Text mark used in place of the official Swiss Volley logo. The flag keeps
+// its own red: it is the Swiss flag, not the app's brand colour.
+export default function SwissVolleyMark({ fontSize = '1.5rem', className }) {
     return (
         <span
             role="img"
             aria-label="Swiss Volley"
-            style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.45em',
-                fontSize,
-                fontWeight: '900',
-                fontFamily: 'Outfit, sans-serif',
-                lineHeight: 1,
-                whiteSpace: 'nowrap'
-            }}
+            className={['inline-flex items-center gap-[0.45em] font-bold tracking-tight leading-none whitespace-nowrap text-stone-900', className].filter(Boolean).join(' ')}
+            style={{ fontSize }}
         >
             <VolleyballIcon size="1.1em" />
             <span aria-hidden="true">Swiss Volley</span>
