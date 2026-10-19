@@ -16,6 +16,28 @@ export default defineConfig({
         VitePWA({
             registerType: 'autoUpdate',
             includeAssets: ['favicon.ico'],
+            workbox: {
+                // Precache the app shell and every static asset — diagrams,
+                // hand signals, hub documents — so the PWA works fully
+                // offline after the first visit. The rules data itself is
+                // cached by services/api.js.
+                globPatterns: ['**/*.{js,css,html,ico,png,jpg,jpeg,svg,webp,woff2,pdf,webmanifest}'],
+                maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+                cleanupOutdatedCaches: true,
+                navigateFallback: 'index.html',
+                navigateFallbackDenylist: [/^\/api\//],
+                runtimeCaching: [
+                    {
+                        // Uploaded extra/news images are not in the build.
+                        urlPattern: ({ sameOrigin, url }) => sameOrigin && /^\/(extra_images|multimedia)\//.test(url.pathname),
+                        handler: 'CacheFirst',
+                        options: {
+                            cacheName: 'readvolley-media',
+                            expiration: { maxEntries: 200 },
+                        },
+                    },
+                ],
+            },
             manifest: {
                 name: 'Volleyball Rules',
                 short_name: 'ReadVolley',
