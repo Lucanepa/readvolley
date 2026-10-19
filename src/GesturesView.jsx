@@ -34,6 +34,10 @@ const REFEREE_ROLES = [
     { key: 'second_r_special', role: 2, text: '2nd referee in particular situations', special: true },
 ]
 
+// D1 stores the role flags as the text "0"/"1", and "0" is truthy, so read
+// them explicitly (Supabase used to hand back real booleans).
+const isFlagSet = (value) => value === true || value === 1 || value === '1' || value === 'true'
+
 function GesturesView({ environment }) {
     const [gestures, setGestures] = useState([])
     const [loading, setLoading] = useState(true)
@@ -114,7 +118,7 @@ function GesturesView({ environment }) {
                 />
                 <ul className="grid grid-cols-1 gap-x-3 gap-y-6 sm:grid-cols-2 lg:grid-cols-3">
                     {gestures.map((gesture) => {
-                        const roles = REFEREE_ROLES.filter(r => gesture[r.key])
+                        const roles = REFEREE_ROLES.filter(r => isFlagSet(gesture[r.key]))
                         return (
                             <li key={gesture.id} className="flex min-w-0 flex-col">
                                 <button
@@ -140,11 +144,11 @@ function GesturesView({ environment }) {
                                     <p className="text-[11px] font-semibold uppercase tracking-wide tabular-nums text-stone-400">
                                         Signal {gesture.gesture_n}
                                     </p>
-                                    <h3 className="mt-0.5 break-words text-sm font-semibold leading-snug text-stone-800">
+                                    <h3 className="mt-0.5 break-words text-sm font-semibold leading-snug text-stone-800 text-justify hyphens-auto">
                                         {renderText(gesture.title)}
                                     </h3>
                                     {gesture.text && (
-                                        <p className="mt-1.5 break-words text-sm leading-relaxed text-stone-600">
+                                        <p className="mt-1.5 break-words text-sm leading-relaxed text-stone-600 text-justify hyphens-auto">
                                             {renderText(gesture.text)}
                                         </p>
                                     )}
