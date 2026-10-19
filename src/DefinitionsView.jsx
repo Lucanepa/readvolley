@@ -99,7 +99,7 @@ function DefinitionsView({ environment }) {
                                 {group.items.map((def) => (
                                     <div key={def.id} className="px-4 py-3 sm:px-5">
                                         <dt className="text-sm font-semibold leading-snug text-stone-900">{def.term}</dt>
-                                        <dd className="mt-1 max-w-prose text-sm leading-relaxed text-stone-600">{def.definition}</dd>
+                                        <dd className="mt-1 text-sm leading-relaxed text-stone-600 text-justify hyphens-auto">{def.definition}</dd>
                                     </div>
                                 ))}
                             </dl>

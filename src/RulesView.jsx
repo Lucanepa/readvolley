@@ -373,9 +373,9 @@ function RulesView({ environment }) {
                                                                                                                         {gl.title && (
                                                                                                                             <h5 className="mb-1 text-sm font-semibold text-stone-900">{gl.title}</h5>
                                                                                                                         )}
-                                                                                                                        <p className="max-w-prose text-sm leading-relaxed text-stone-700">{gl.text}</p>
+                                                                                                                        <p className="text-sm leading-relaxed text-justify hyphens-auto text-stone-700">{gl.text}</p>
                                                                                                                         {gl.notes && (
-                                                                                                                            <p className="mt-2 max-w-prose border-l-2 border-stone-300 pl-3 text-xs italic leading-relaxed text-stone-500">
+                                                                                                                            <p className="mt-2 border-l-2 border-stone-300 pl-3 text-xs italic leading-relaxed text-stone-500 text-justify hyphens-auto">
                                                                                                                                 {gl.notes}
                                                                                                                             </p>
                                                                                                                         )}
@@ -434,7 +434,7 @@ function RulesView({ environment }) {
                                                                                                     )}
 
                                                                                                     {!rule.is_placeholder && rule.text !== rule.title && (
-                                                                                                        <p className="max-w-prose text-sm leading-relaxed text-stone-700">{rule.text}</p>
+                                                                                                        <p className="text-sm leading-relaxed text-justify hyphens-auto text-stone-700">{rule.text}</p>
                                                                                                     )}
 
                                                                                                     {/* Inline casebook accordion */}
@@ -448,7 +448,7 @@ function RulesView({ environment }) {
                                                                                                                         <p className="text-sm text-stone-400">No detailed scenarios available for this rule.</p>
                                                                                                                     ) : (
                                                                                                                         fullCases[rule.id].map((entry) => (
-                                                                                                                            <div key={entry.id} className="max-w-prose rounded-lg border border-stone-200 bg-stone-50/60 p-3 sm:p-4">
+                                                                                                                            <div key={entry.id} className="rounded-lg border border-stone-200 bg-stone-50/60 p-3 sm:p-4">
                                                                                                                                 <div className="mb-2 flex items-center justify-between gap-3">
                                                                                                                                     <span className="text-[11px] font-semibold uppercase tracking-wide tabular-nums text-stone-500">
                                                                                                                                         Scenario {entry.case_number}
@@ -465,10 +465,10 @@ function RulesView({ environment }) {
                                                                                                                                         </a>
                                                                                                                                     )}
                                                                                                                                 </div>
-                                                                                                                                <p className="text-sm italic leading-relaxed text-stone-800">
+                                                                                                                                <p className="text-sm italic leading-relaxed text-stone-800 text-justify hyphens-auto">
                                                                                                                                     “{entry.case_text}”
                                                                                                                                 </p>
-                                                                                                                                <p className="mt-3 border-t border-stone-200 pt-3 text-sm leading-relaxed text-stone-700">
+                                                                                                                                <p className="mt-3 border-t border-stone-200 pt-3 text-sm leading-relaxed text-stone-700 text-justify hyphens-auto">
                                                                                                                                     {entry.case_ruling}
                                                                                                                                 </p>
                                                                                                                             </div>

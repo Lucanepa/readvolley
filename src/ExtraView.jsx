@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { accordionMotion } from './styles/motion'
 import { api } from './services/api'
-import { Plus, ExternalLink, Pencil, Trash2, ChevronDown, Filter, FileText, SearchX, CalendarClock } from 'lucide-react'
+import { Plus, ExternalLink, Pencil, Trash2, ChevronDown, Filter, FileText, SearchX, CalendarClock, Scale } from 'lucide-react'
 import {
     Button, IconButton, Card, Chip, EmptyState, FilterPill, SegmentedControl, Skeleton,
     confirmDialog, toast, dayLabel, FOCUS_RING, cn,
 } from './ui/volleyui'
 import AddExtraView from './AddExtraView'
+import { RuleChanges2027Panel } from './RuleChanges2027View'
 
 // 11px micro label over a filter group; the uppercase comes from CSS only.
 const FILTER_LABEL = 'mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-stone-500'
@@ -26,6 +27,7 @@ function ExtraView({ environment, user, onLogin }) { // Props explicitly destruc
     const [selectedSeason, setSelectedSeason] = useState('All')
     const [selectedTags, setSelectedTags] = useState([])
     const [showFilters, setShowFilters] = useState(false)
+    const [showRuleChanges, setShowRuleChanges] = useState(false)
 
     useEffect(() => {
         loadExtras()
@@ -195,6 +197,46 @@ function ExtraView({ environment, user, onLogin }) { // Props explicitly destruc
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            {/* Pinned: the SSK explanations of the 2026/27 indoor rule changes */}
+            {environment === 'indoor' && (
+                <Card as="article" pad="flush" stack={false} className="mb-4 overflow-hidden">
+                    <button
+                        type="button"
+                        onClick={() => setShowRuleChanges(open => !open)}
+                        aria-expanded={showRuleChanges}
+                        aria-controls="extra-rule-changes-2027"
+                        className={cn('group flex w-full items-start gap-3 p-4 text-left transition-colors hover:bg-stone-50 sm:p-5', FOCUS_RING)}
+                    >
+                        <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-stone-100 text-stone-600">
+                            <Scale size={18} aria-hidden="true" />
+                        </span>
+                        <span className="min-w-0 flex-1">
+                            <span className="block text-[11px] font-semibold uppercase tracking-wide text-stone-400">
+                                SSK · Season 2026/27
+                            </span>
+                            <span className="mt-1 block text-base font-semibold leading-snug text-stone-900 sm:text-lg">
+                                Rule changes 2026/27
+                            </span>
+                            <span className="mt-0.5 block text-xs text-stone-500">
+                                Explanations for referees: serving and receiving positions, screening, double contact on the set, and the new rule tests.
+                            </span>
+                        </span>
+                        <ChevronDown
+                            size={16}
+                            aria-hidden="true"
+                            className={cn('mt-2.5 shrink-0 text-stone-400 transition-transform group-hover:text-stone-600', showRuleChanges && 'rotate-180')}
+                        />
+                    </button>
+                    <AnimatePresence initial={false}>
+                        {showRuleChanges && (
+                            <motion.div id="extra-rule-changes-2027" {...accordionMotion} className="overflow-hidden">
+                                <RuleChanges2027Panel />
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </Card>
+            )}
 
             {loadError && (
                 <div role="alert" className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">

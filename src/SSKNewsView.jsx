@@ -268,7 +268,7 @@ function SSKNewsView({ user, onLogin }) {
                                             {(isExpanded || (!isCollapsible && item.content)) && (
                                                 <motion.div {...revealMotion} className="px-1.5 pb-5 pt-2 sm:px-2">
                                                     <div
-                                                        className="news-content max-w-prose"
+                                                        className="news-content"
                                                         dangerouslySetInnerHTML={{ __html: item.content }}
                                                     />
                                                 </motion.div>

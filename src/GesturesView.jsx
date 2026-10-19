@@ -199,12 +199,12 @@ function GesturesView({ environment }) {
                             />
                         </div>
                         {selectedGesture.text && (
-                            <p className="text-sm leading-relaxed text-stone-700">
+                            <p className="text-sm leading-relaxed text-stone-700 text-justify hyphens-auto">
                                 {renderText(selectedGesture.text)}
                             </p>
                         )}
                         {selectedGesture.notes && (
-                            <p className="text-xs italic leading-relaxed text-stone-500">
+                            <p className="text-xs italic leading-relaxed text-stone-500 text-justify hyphens-auto">
                                 {selectedGesture.notes}
                             </p>
                         )}

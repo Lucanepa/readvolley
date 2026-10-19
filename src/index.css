@@ -7,7 +7,7 @@
 /* Rich text written in the Quill editor (SSK news, extra entries) */
 .rich-text-content,
 .news-content {
-  @apply text-sm leading-relaxed text-stone-700;
+  @apply text-sm leading-relaxed text-stone-700 text-justify hyphens-auto;
 }
 
 .rich-text-content p + p,

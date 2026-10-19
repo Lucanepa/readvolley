@@ -185,12 +185,12 @@ const LINK_BUTTON = cn(
 function TextBlock({ block }) {
     if (block.type === 'ul') {
         return (
-            <ul className="mb-3 list-disc space-y-1 pl-5 text-sm leading-relaxed text-stone-700 marker:text-stone-400">
+            <ul className="mb-3 list-disc space-y-1 pl-5 text-sm leading-relaxed text-stone-700 text-justify hyphens-auto marker:text-stone-400">
                 {block.items.map((item, i) => <li key={i}>{item}</li>)}
             </ul>
         )
     }
-    return <p className="mb-3 text-sm leading-relaxed text-stone-700 hyphens-auto">{block.text}</p>
+    return <p className="mb-3 text-sm leading-relaxed text-stone-700 text-justify hyphens-auto">{block.text}</p>
 }
 
 function Chapter({ chapter, isOpen, onToggle }) {
@@ -223,7 +223,7 @@ function Chapter({ chapter, isOpen, onToggle }) {
             <AnimatePresence initial={false}>
                 {isOpen && (
                     <motion.div id={panelId} {...accordionMotion} className="overflow-hidden">
-                        <div className="max-w-3xl space-y-5 px-4 pb-5 pt-1 sm:pl-14 sm:pr-5">
+                        <div className="space-y-5 px-4 pb-5 pt-1 sm:pl-14 sm:pr-5">
                             {chapter.sections.map((section, index) => (
                                 <div key={section.number || `intro-${index}`}>
                                     {section.title && (
@@ -243,39 +243,67 @@ function Chapter({ chapter, isOpen, onToggle }) {
     )
 }
 
-function RuleChanges2027View() {
+function ChapterList() {
     const [openChapter, setOpenChapter] = useState('3')
+    return CHAPTERS.map(chapter => (
+        <Chapter
+            key={chapter.number}
+            chapter={chapter}
+            isOpen={openChapter === chapter.number}
+            onToggle={() => setOpenChapter(prev => prev === chapter.number ? null : chapter.number)}
+        />
+    ))
+}
 
+const SourceLink = ({ className }) => (
+    <a
+        href={SOURCE_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={cn(LINK_BUTTON, 'w-full sm:w-auto', className)}
+    >
+        <ExternalLink size={15} aria-hidden="true" />
+        Original PDF (DE) on volleyball.ch
+    </a>
+)
+
+/**
+ * The same chapters, laid out to sit inside a host card (the indoor Extra
+ * tab) rather than as page-level cards of their own.
+ */
+export function RuleChanges2027Panel() {
+    return (
+        <div className="border-t border-stone-100">
+            <div className="divide-y divide-stone-100">
+                <ChapterList />
+            </div>
+            <div className="border-t border-stone-100 px-4 py-4 sm:px-5">
+                <p className="mb-3 text-xs leading-relaxed text-stone-500 text-justify hyphens-auto">
+                    English translation of chapters 3 to 5 of the SSK document. The German original is the
+                    binding text.
+                </p>
+                <SourceLink />
+            </div>
+        </div>
+    )
+}
+
+function RuleChanges2027View() {
     return (
         <>
             <Card>
                 <p className="text-sm font-semibold text-stone-800">
                     Official Volleyball Rules 2025–2028 · Explanations for referees (SSK, 24.08.2026)
                 </p>
-                <p className="mt-1 text-xs leading-relaxed text-stone-500">
+                <p className="mt-1 text-xs leading-relaxed text-stone-500 text-justify hyphens-auto">
                     English translation of chapters 3 to 5 of the SSK document. The German original is the
                     binding text.
                 </p>
-                <a
-                    href={SOURCE_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={cn(LINK_BUTTON, 'mt-3 w-full sm:w-auto')}
-                >
-                    <ExternalLink size={15} aria-hidden="true" />
-                    Original PDF (DE) on volleyball.ch
-                </a>
+                <SourceLink className="mt-3" />
             </Card>
 
             <Card pad="flush" className="divide-y divide-stone-100 overflow-hidden">
-                {CHAPTERS.map(chapter => (
-                    <Chapter
-                        key={chapter.number}
-                        chapter={chapter}
-                        isOpen={openChapter === chapter.number}
-                        onToggle={() => setOpenChapter(prev => prev === chapter.number ? null : chapter.number)}
-                    />
-                ))}
+                <ChapterList />
             </Card>
         </>
     )

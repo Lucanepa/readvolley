@@ -172,7 +172,7 @@ function ProtocolsView({ environment }) {
                             </h3>
                             <Chip>{protocol.protocol_filter || 'Protocol'}</Chip>
                         </div>
-                        <div className="break-words text-sm leading-relaxed text-stone-700">
+                        <div className="break-words text-sm leading-relaxed text-stone-700 text-justify hyphens-auto">
                             {renderText(protocol.content || protocol.protocolText)}
                         </div>
                     </Card>
