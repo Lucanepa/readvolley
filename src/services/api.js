@@ -118,12 +118,15 @@ const castInt = (value) => {
     return match ? parseInt(match[0], 10) : 0
 }
 
+// "9.2.10" -> keys for 9, 2 and 10, so dotted numbers sort numerically.
+const numberParts = (value) => [0, 1, 2].map(i => (row) => castInt(String(value(row) ?? '').split('.')[i]))
+
 function guidelinesFor(data, articleId, ruleIds) {
     const ruleSet = new Set(ruleIds.map(String))
-    const byArticle = data.guidelines.filter(g => same(g.article_id, articleId))
+    const bySection = numberParts(g => g.section)
+    const byArticle = sortBy(data.guidelines.filter(g => same(g.article_id, articleId)), ...bySection)
     const seen = new Set(byArticle.map(g => g.id))
-    // D1 walks the rule_id index, so rule-linked rows come back by rule_id.
-    const byRule = sortBy(data.guidelines.filter(g => g.rule_id != null && ruleSet.has(String(g.rule_id)) && !seen.has(g.id)), g => g.rule_id)
+    const byRule = sortBy(data.guidelines.filter(g => g.rule_id != null && ruleSet.has(String(g.rule_id)) && !seen.has(g.id)), g => g.rule_id, ...bySection)
     return [...byArticle, ...byRule]
 }
 
@@ -159,8 +162,7 @@ export const api = {
         const data = await loadDataset()
         const ruleSet = new Set(ruleIds.map(String))
         const caseIds = new Set(data.casebookRules.filter(j => ruleSet.has(String(j.rule_id))).map(j => String(j.casebook_id)))
-        // Primary-key order, as the `id IN (…)` lookup returns them.
-        return sortBy(data.cases.filter(c => caseIds.has(String(c.id))), c => c.id)
+        return sortBy(data.cases.filter(c => caseIds.has(String(c.id))), ...numberParts(c => c.case_number))
     },
 
     async getCasebookData(ruleIds) {

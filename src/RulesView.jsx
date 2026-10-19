@@ -378,9 +378,9 @@ function RulesView({ environment }) {
                                                                                                                         {gl.title && (
                                                                                                                             <h5 className="mb-1 text-sm font-semibold text-stone-900">{gl.title}</h5>
                                                                                                                         )}
-                                                                                                                        <p className="text-sm leading-relaxed text-justify hyphens-auto text-stone-700">{gl.text}</p>
+                                                                                                                        <p className="whitespace-pre-line text-sm leading-relaxed text-justify hyphens-auto text-stone-700">{gl.text}</p>
                                                                                                                         {gl.notes && (
-                                                                                                                            <p className="mt-2 border-l-2 border-stone-300 pl-3 text-xs italic leading-relaxed text-stone-500 text-justify hyphens-auto">
+                                                                                                                            <p className="mt-2 whitespace-pre-line border-l-2 border-stone-300 pl-3 text-xs italic leading-relaxed text-stone-500 text-justify hyphens-auto">
                                                                                                                                 {gl.notes}
                                                                                                                             </p>
                                                                                                                         )}
@@ -485,10 +485,10 @@ function RulesView({ environment }) {
                                                                                                                                         </a>
                                                                                                                                     )}
                                                                                                                                 </div>
-                                                                                                                                <p className="text-sm italic leading-relaxed text-stone-800 text-justify hyphens-auto">
+                                                                                                                                <p className="whitespace-pre-line text-sm italic leading-relaxed text-stone-800 text-justify hyphens-auto">
                                                                                                                                     “{entry.case_text}”
                                                                                                                                 </p>
-                                                                                                                                <p className="mt-3 border-t border-stone-200 pt-3 text-sm leading-relaxed text-stone-700 text-justify hyphens-auto">
+                                                                                                                                <p className="mt-3 whitespace-pre-line border-t border-stone-200 pt-3 text-sm leading-relaxed text-stone-700 text-justify hyphens-auto">
                                                                                                                                     {entry.case_ruling}
                                                                                                                                 </p>
                                                                                                                             </div>
