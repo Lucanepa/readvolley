@@ -1,0 +1,72 @@
+apply plugin: 'com.android.application'
+
+// versionName = the version in package.json (MAJOR.MINOR.PATCH).
+// versionCode = (MAJOR * 1000000 + MINOR * 1000 + PATCH) * 10
+//   1.3.0 -> 10030000; 1.3.1 -> 10030010; 1.4.0 -> 10040000
+// The same rule as OpenVolley and OpenBeach: every Android release bumps the
+// version in package.json and gets its own android-v<versionName> tag, which
+// F-Droid builds (a tag it has built must never move). See ANDROID.md.
+//
+// The two values are literals in defaultConfig below because F-Droid's update
+// checker reads them from this file with a regex and cannot evaluate Groovy.
+// The check below fails the build when they no longer match package.json.
+def webVersion = new groovy.json.JsonSlurper().parse(file('../../package.json')).version
+def (vMajor, vMinor, vPatch) = webVersion.tokenize('.-')[0..2].collect { it as int }
+def webVersionCode = (vMajor * 1000000 + vMinor * 1000 + vPatch) * 10
+
+android {
+    namespace = "com.openvolley.readvolley"
+    compileSdk = rootProject.ext.compileSdkVersion
+    defaultConfig {
+        applicationId "com.openvolley.readvolley"
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode 10030000
+        versionName "1.3.0"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        aaptOptions {
+             // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
+             // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
+            ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
+        }
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            // No META-INF/version-control-info.textproto: its content depends
+            // on how the tree was checked out, which would make our build and
+            // F-Droid's differ.
+            vcsInfo.include false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+def declaredCode = android.defaultConfig.versionCode
+def declaredName = android.defaultConfig.versionName
+if (declaredName != webVersion || declaredCode != webVersionCode) {
+    throw new GradleException(
+        "android/app/build.gradle is out of date: defaultConfig has ${declaredName} (${declaredCode}), " +
+        "package.json ${webVersion} needs ${webVersion} (${webVersionCode}). " +
+        "Update the two literals in defaultConfig (ANDROID.md, Version rule).")
+}
+
+repositories {
+    flatDir{
+        dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
+    implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
+    implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
+    implementation project(':capacitor-android')
+    testImplementation "junit:junit:$junitVersion"
+    androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
+    androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
+    implementation project(':capacitor-cordova-android-plugins')
+}
+
+apply from: 'capacitor.build.gradle'

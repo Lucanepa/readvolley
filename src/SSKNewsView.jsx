@@ -8,6 +8,7 @@ import {
     Banner, Button, Card, Chip, CountBadge, EmptyState, Field, FilterPill, Notice, Row, RowList,
     RowTool, SectionHeader, Select, SkeletonRows, confirmDialog, dayLabel, toast, cn,
 } from './ui/volleyui'
+import { isNativeApp } from './services/platform'
 
 const ALL = 'All'
 
@@ -145,7 +146,7 @@ function SSKNewsView({ user, onLogin }) {
                         <Button icon={Plus} onClick={() => { setEditingItem(null); setShowAddModal(true) }}>
                             Add news
                         </Button>
-                    ) : (
+                    ) : !isNativeApp && (
                         <Button variant="text" onClick={onLogin} className="underline decoration-stone-300 underline-offset-2">
                             Log in to manage news
                         </Button>

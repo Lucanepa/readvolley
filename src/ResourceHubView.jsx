@@ -5,6 +5,9 @@ import {
     RowList, Row, DateRail, SegmentedControl, SkeletonRows, EmptyInCard, toast, cn,
     weekdayLabel, dayLabel, timeLabel,
 } from './ui/volleyui'
+import { assetUrl, saveFile } from './services/platform'
+
+const API_BASE = import.meta.env.VITE_API_URL || ''
 
 const LR_FEEDBACK_URL = 'https://de.surveymonkey.com/r/Feedback_LR_25_26'
 
@@ -331,7 +334,7 @@ function ResourceRow({ item, external = false }) {
                 {item.links.map(link => (
                     <a
                         key={link.href + link.label}
-                        href={link.href}
+                        href={link.href.startsWith('/') ? assetUrl(link.href) : link.href}
                         target="_blank"
                         rel="noopener noreferrer"
                         className={cn(LINK_BUTTON, 'flex-1 sm:flex-none')}
@@ -421,7 +424,7 @@ function LeagueSection({ league }) {
         // Volleymanager's iCal endpoint sends no CORS header, so the calendar is
         // fetched through our own function (functions/api/ical.js).
         try {
-            const response = await fetch(`/api/ical?url=${encodeURIComponent(icalUrl.trim())}`)
+            const response = await fetch(`${API_BASE}/api/ical?url=${encodeURIComponent(icalUrl.trim())}`)
             if (!response.ok) {
                 const err = await response.json().catch(() => ({}))
                 throw new Error(err.error || response.statusText)
@@ -459,7 +462,7 @@ function LeagueSection({ league }) {
         setReportError(null)
         try {
             const { PDFDocument, StandardFonts } = await import('pdf-lib')
-            const bytes = await fetch(config.reportPdf).then(r => r.arrayBuffer())
+            const bytes = await fetch(assetUrl(config.reportPdf)).then(r => r.arrayBuffer())
             const pdf = await PDFDocument.load(bytes)
 
             let form
@@ -511,14 +514,7 @@ function LeagueSection({ league }) {
 
             const saved = await pdf.save()
             const blob = new Blob([saved], { type: 'application/pdf' })
-            const url = URL.createObjectURL(blob)
-            const link = document.createElement('a')
-            link.href = url
-            link.download = `Rapport_${event.summary}_${formatDate(event.start)}.pdf`
-            document.body.appendChild(link)
-            link.click()
-            document.body.removeChild(link)
-            URL.revokeObjectURL(url)
+            await saveFile(blob, `Rapport_${event.summary}_${formatDate(event.start)}.pdf`)
         } catch (error) {
             reportFailed(eventKey, 'Could not fill in the report: ' + error)
         } finally {

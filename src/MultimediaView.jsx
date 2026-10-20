@@ -10,6 +10,7 @@ import {
     Banner, Button, Card, CountBadge, EmptyState, Field, Notice, Row, RowList, RowTool, SegmentedControl,
     Select, SkeletonRows, BUTTON_SIZES, BUTTON_VARIANTS, FOCUS_RING, confirmDialog, dayLabel, toast, cn,
 } from './ui/volleyui'
+import { assetUrl } from './services/platform'
 
 const ALL = 'All'
 const TYPE_LABEL = { video: 'Video', image: 'Image', pdf: 'PDF' }
@@ -173,7 +174,7 @@ export function MultimediaView({ user }) {
                         {filteredItems.map(item => {
                             const TypeIcon = getIcon(item.type)
                             const date = dayLabel(item.created_at, { year: true })
-                            const href = item.link_url?.startsWith('http') ? item.link_url : `/multimedia/${item.link_url}`
+                            const href = item.link_url?.startsWith('http') ? item.link_url : assetUrl(`/multimedia/${item.link_url}`)
                             const description = item.content?.replace(/<[^>]*>?/gm, ' ').trim()
                             // Beside the row for readers; for admins it leads the row's tool line instead,
                             // so the link and the edit tools never stack on separate lines.
@@ -196,7 +197,7 @@ export function MultimediaView({ user }) {
                                         // Thumbnail/Preview
                                         <div className="relative flex h-14 w-20 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-stone-100 text-stone-400">
                                             {item.image_path ? (
-                                                <img src={`/multimedia/${item.image_path}`} alt="" className="h-full w-full object-cover" />
+                                                <img src={assetUrl(`/multimedia/${item.image_path}`)} alt="" className="h-full w-full object-cover" />
                                             ) : (
                                                 <TypeIcon size={24} strokeWidth={1.75} aria-hidden="true" />
                                             )}

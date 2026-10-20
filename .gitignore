@@ -32,3 +32,6 @@ firebase-debug.log
 # OS files
 .DS_Store
 Thumbs.db
+
+# Android app bundle (CAPACITOR=true vite build)
+dist-capacitor/

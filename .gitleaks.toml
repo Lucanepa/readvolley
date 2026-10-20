@@ -55,8 +55,18 @@ allowlists = [
   { regexes = ['''(?i)(your[_\- ]|example|placeholder|sample|dummy|xxx+|change[_\- ]?me|replace[_\- ]?me|redacted|_here|test|fake|foo|bar|\.\.\.|<[^>]+>|\$\{?[A-Z_]+\}?|process\.env|import\.meta\.env|secrets\.)'''], regexTarget = "match" },
 ]
 
+# F-Droid recipe: AllowedAPKSigningKeys is the SHA-256 of the app's public
+# signing certificate (printed by apksigner verify --print-certs), not a secret.
+[[allowlists]]
+description = "F-Droid AllowedAPKSigningKeys (public certificate fingerprint)"
+targetRules = ["generic-api-key"]
+regexTarget = "match"
+regexes = ['''^AllowedAPKSigningKeys:\s*[0-9a-f]{64}$''']
+
 # Lockfiles, vendored deps and build output are noise, not history worth purging.
-[allowlist]
+# ([[allowlists]] form: gitleaks refuses the legacy [allowlist] table next to it.)
+[[allowlists]]
+description = "Lockfiles, vendored deps, build output"
 paths = [
   '''(^|/)node_modules/''',
   '''(^|/)vendor/''',

@@ -7,6 +7,7 @@ import { Globe, ChevronRight, FileText, PlaySquare, Scale, LayoutGrid, Home, Loc
 import SectionShell from './components/SectionShell'
 import { OptionsRow, Card, RowList, FOCUS_RING, cn } from './ui/volleyui'
 import { navigate } from './services/router'
+import { isNativeApp } from './services/platform'
 
 const TABS = [
     { id: 'ssk_news', label: 'SSK news', short: 'News', icon: FileText, description: 'Latest updates and PDF documents from the SSK.' },
@@ -52,7 +53,7 @@ function SwissVolleyView({ user, onLogin, onOpenSearch, activeTab }) {
                     <OptionsRow icon={Home} onClick={() => navigate('/')}>Home</OptionsRow>
                     {user
                         ? <OptionsRow icon={LogOut} onClick={handleLogout}>Sign out</OptionsRow>
-                        : <OptionsRow icon={Lock} onClick={onLogin}>Admin sign-in</OptionsRow>}
+                        : !isNativeApp && <OptionsRow icon={Lock} onClick={onLogin}>Admin sign-in</OptionsRow>}
                 </>
             )}
         >

@@ -13,6 +13,7 @@ import SectionShell from './SectionShell'
 import SwissVolleyMark from './SwissVolleyMark'
 import { OptionsRow, SegmentedControl } from '../ui/volleyui'
 import { navigate } from '../services/router'
+import { isNativeApp } from '../services/platform'
 
 const NAV_ITEMS = [
     { id: 'rules', label: 'Rules', icon: Book },
@@ -88,7 +89,7 @@ function MainLayout({ environment, activeTab, onOpenSearch, user, onLogin }) {
                     <OptionsRow icon={Home} onClick={() => navigate('/')}>Home</OptionsRow>
                     {user
                         ? <OptionsRow icon={LogOut} onClick={handleLogout}>Sign out</OptionsRow>
-                        : <OptionsRow icon={Lock} onClick={onLogin}>Admin sign-in</OptionsRow>}
+                        : !isNativeApp && <OptionsRow icon={Lock} onClick={onLogin}>Admin sign-in</OptionsRow>}
                 </>
             )}
         >

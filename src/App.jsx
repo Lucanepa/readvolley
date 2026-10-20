@@ -136,7 +136,7 @@ function HomeScreen({ onOpenSearch }) {
                     </div>
                 </div>
                 <p className="text-center text-[11px] font-medium uppercase tracking-[0.12em] text-stone-400 mt-5">
-                    Powered by OpenVolley · v1.2.6
+                    Powered by OpenVolley · v{__APP_VERSION__}
                 </p>
             </div>
         </div>

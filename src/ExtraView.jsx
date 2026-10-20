@@ -9,6 +9,7 @@ import {
 } from './ui/volleyui'
 import AddExtraView from './AddExtraView'
 import { RuleChanges2027Panel } from './RuleChanges2027View'
+import { assetUrl } from './services/platform'
 
 // 11px micro label over a filter group; the uppercase comes from CSS only.
 const FILTER_LABEL = 'mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-stone-500'
@@ -288,7 +289,7 @@ function ExtraView({ environment, user, onLogin }) { // Props explicitly destruc
                                 {/* Image Header */}
                                 {item.image_path && (
                                     <img
-                                        src={`/extra_images/${item.image_path}`}
+                                        src={assetUrl(`/extra_images/${item.image_path}`)}
                                         alt={item.title}
                                         className="h-48 w-full border-b border-stone-200/70 object-cover sm:h-56"
                                     />

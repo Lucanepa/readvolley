@@ -1,0 +1,4 @@
+ReadVolley 1.3.0, the first Android release.
+- Indoor and beach rules with casebook and referee guidelines, diagrams, definitions, hand signals and protocols.
+- Works offline; the rules data refreshes at most once a week.
+- Opening a section scrolls it to the top of the screen.

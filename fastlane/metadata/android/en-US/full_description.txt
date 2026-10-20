@@ -1,0 +1,18 @@
+ReadVolley puts the official volleyball and beach volleyball rules in your pocket, together with everything a referee looks up around them.
+
+Indoor and beach
+- The rules, chapter by chapter, with the casebook rulings and the referee guidelines and instructions next to each rule
+- Rules under experimentation in the current Swiss season are marked
+- Court and play diagrams, definitions and the referee hand signals
+- Game protocols, plus the beach protest, ball mark, medical assistance and forfeit protocols
+- Search across rules, cases, guidelines, definitions and protocols
+
+Swiss Volley
+- News from the Swiss referee commission (SSK)
+- The 2026/27 rule changes, in English
+- Documents and links for national league referees
+
+Works offline
+The rules data is downloaded once and kept on the phone, then refreshed in the background at most once a week. Images and documents are loaded from readvolley.openvolley.app when you first open them and kept for offline use.
+
+ReadVolley is an independent reference made by referees. It is not an official publication of FIVB or Swiss Volley; for official decisions, the federation documents are binding.

@@ -1,3 +1,4 @@
+import { assetUrl } from './platform'
 const API_BASE = import.meta.env.VITE_API_URL || ''
 
 function getAuthHeaders() {
@@ -208,7 +209,7 @@ export const api = {
         const data = await loadDataset()
         return sortBy(data.diagrams.filter(d => same(d.rules_type, rulesType)), d => d.diagram_order).map(diagram => ({
             ...diagram,
-            url: `/diagrams_images/diagram_${safeToken(diagram.diagram_n)}_${safeToken(diagram.rules_type)}.png`
+            url: assetUrl(`/diagrams_images/diagram_${safeToken(diagram.diagram_n)}_${safeToken(diagram.rules_type)}.png`)
         }))
     },
 
@@ -216,7 +217,7 @@ export const api = {
         const data = await loadDataset()
         return sortBy(data.gestures.filter(g => same(g.rules_type, rulesType)), g => g.gesture_order).map(gesture => ({
             ...gesture,
-            url: `/gestures_images/gesture_${safeToken(gesture.gesture_n)}_${safeToken(gesture.rules_type)}.png`
+            url: assetUrl(`/gestures_images/gesture_${safeToken(gesture.gesture_n)}_${safeToken(gesture.rules_type)}.png`)
         }))
     },
 
