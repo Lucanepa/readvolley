@@ -45,3 +45,21 @@ export const revealMotion = {
     animate: { opacity: 1 },
     transition: { duration: 0.2, ease: 'easeOut', delay: 0.04 },
 }
+
+let pendingScroll = null
+
+/**
+ * Brings the header of a section the user just opened to the top of the
+ * screen. Opening one section closes the previous one, which can sit above it
+ * and shift everything up, so this waits for the accordion to settle first.
+ */
+export function scrollOpenedToTop(el) {
+    if (!el) return
+    clearTimeout(pendingScroll)
+    pendingScroll = setTimeout(() => {
+        const top = el.getBoundingClientRect().top
+        if (top >= 0 && top < 80) return
+        const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+        window.scrollTo({ top: window.scrollY + top - 12, behavior: reduce ? 'auto' : 'smooth' })
+    }, DURATION * 1000 + 40)
+}

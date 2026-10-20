@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronDown, ExternalLink } from 'lucide-react'
-import { accordionMotion } from './styles/motion'
+import { accordionMotion, scrollOpenedToTop } from './styles/motion'
 import { Card, BUTTON_SIZES, BUTTON_VARIANTS, FOCUS_RING, FOCUS_RING_INSET, cn } from './ui/volleyui'
 
 const SOURCE_URL = 'https://www.volleyball.ch/_Resources/Persistent/c/b/3/f/cb3f0be3e71e90986627eb3a02716135646b33e3/26.08.24_%C3%84nderungen-Regeln-2027-d.pdf'
@@ -436,7 +436,10 @@ function ChapterList() {
             key={chapter.number}
             chapter={chapter}
             isOpen={openChapter === chapter.number}
-            onToggle={() => setOpenChapter(prev => prev === chapter.number ? null : chapter.number)}
+            onToggle={(e) => {
+                if (openChapter !== chapter.number) scrollOpenedToTop(e.currentTarget)
+                setOpenChapter(prev => prev === chapter.number ? null : chapter.number)
+            }}
         />
     ))
 }

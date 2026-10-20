@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Plus, Trash2, Pencil, SlidersHorizontal, ChevronDown, Newspaper } from 'lucide-react'
-import { accordionMotion, revealMotion } from './styles/motion'
+import { accordionMotion, revealMotion, scrollOpenedToTop } from './styles/motion'
 import { api } from './services/api'
 import AddSSKNewsModal from './components/AddSSKNewsModal'
 import {
@@ -70,7 +70,8 @@ function SSKNewsView({ user, onLogin }) {
         setFilteredNews(result)
     }
 
-    const toggleReadMore = (id) => {
+    const toggleReadMore = (id, el) => {
+        if (expandedId !== id) scrollOpenedToTop(el)
         setExpandedId(prev => prev === id ? null : id)
     }
 
@@ -233,7 +234,7 @@ function SSKNewsView({ user, onLogin }) {
                                                 title={item.title}
                                                 label={isCollapsible ? `${item.title} – ${isExpanded ? 'hide' : 'read'} article` : undefined}
                                                 selected={isExpanded}
-                                                onOpen={isCollapsible ? () => toggleReadMore(item.id) : undefined}
+                                                onOpen={isCollapsible ? (e) => toggleReadMore(item.id, e?.currentTarget) : undefined}
                                                 meta={(
                                                     <>
                                                         {date && <span className="tabular-nums">{date}</span>}

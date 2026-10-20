@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronDown, ChevronRight, BookOpen, Loader2, FileQuestion, PlayCircle } from 'lucide-react'
 import { api } from './services/api'
-import { accordionMotion } from './styles/motion'
+import { accordionMotion, scrollOpenedToTop } from './styles/motion'
 import { Card, Skeleton, EmptyState, Notice, FOCUS_RING, FOCUS_RING_INSET, cn } from './ui/volleyui'
 import { navigate } from './services/router'
 import { ruleExperiment, articleHasExperiment } from './data/ruleExperiments'
@@ -150,13 +150,14 @@ function RulesView({ environment }) {
     // Sections open only once their content is in hand. Opening first and
     // fetching after animates an empty panel open a few pixels, then jumps
     // again when the data lands — one click, two separate movements.
-    const toggleChapter = async (chapterId) => {
+    const toggleChapter = async (chapterId, el) => {
         if (expandedChapter === chapterId) {
             setExpandedChapter(null)
             return
         }
         if (articles[chapterId]) {
             setExpandedChapter(chapterId)
+            scrollOpenedToTop(el)
             return
         }
 
@@ -171,9 +172,10 @@ function RulesView({ environment }) {
         if (openRequest.current !== chapterId) return
         setPendingId(null)
         setExpandedChapter(chapterId)
+        scrollOpenedToTop(el)
     }
 
-    const toggleArticle = async (articleId) => {
+    const toggleArticle = async (articleId, el) => {
         if (expandedArticle === articleId) {
             setExpandedArticle(null)
             return
@@ -183,6 +185,7 @@ function RulesView({ environment }) {
         const cached = currentRules && articleHasGuidelines[articleId] !== undefined
         if (cached) {
             setExpandedArticle(articleId)
+            scrollOpenedToTop(el)
             return
         }
 
@@ -226,15 +229,17 @@ function RulesView({ environment }) {
 
         setPendingId(null)
         setExpandedArticle(articleId)
+        scrollOpenedToTop(el)
     }
 
-    const toggleCaseAccordion = async (ruleId) => {
+    const toggleCaseAccordion = async (ruleId, el) => {
         if (expandedRuleCases === ruleId) {
             setExpandedRuleCases(null)
             return
         }
         if (fullCases[ruleId]) {
             setExpandedRuleCases(ruleId)
+            scrollOpenedToTop(el)
             return
         }
 
@@ -249,15 +254,17 @@ function RulesView({ environment }) {
         if (openRequest.current !== ruleId) return
         setPendingId(null)
         setExpandedRuleCases(ruleId)
+        scrollOpenedToTop(el)
     }
 
-    const toggleArticleGuidelines = async (articleId) => {
+    const toggleArticleGuidelines = async (articleId, el) => {
         if (expandedArticleGuidelines === articleId) {
             setExpandedArticleGuidelines(null)
             return
         }
         if (articleGuidelines[articleId]) {
             setExpandedArticleGuidelines(articleId)
+            scrollOpenedToTop(el)
             return
         }
 
@@ -274,6 +281,7 @@ function RulesView({ environment }) {
         if (openRequest.current !== key) return
         setPendingId(null)
         setExpandedArticleGuidelines(articleId)
+        scrollOpenedToTop(el)
     }
 
     if (loading) return <ChaptersSkeleton />
@@ -302,7 +310,7 @@ function RulesView({ environment }) {
                         <section key={chapter.id}>
                             <button
                                 type="button"
-                                onClick={() => toggleChapter(chapter.id)}
+                                onClick={(e) => toggleChapter(chapter.id, e.currentTarget)}
                                 aria-expanded={isExp}
                                 aria-busy={pendingId === chapter.id || undefined}
                                 className={cn(
@@ -333,7 +341,7 @@ function RulesView({ environment }) {
                                                         <div key={article.id} className="py-0.5">
                                                             <button
                                                                 type="button"
-                                                                onClick={() => toggleArticle(article.id)}
+                                                                onClick={(e) => toggleArticle(article.id, e.currentTarget)}
                                                                 aria-expanded={articleOpen}
                                                                 aria-busy={pendingId === article.id || undefined}
                                                                 className={cn(
@@ -365,7 +373,7 @@ function RulesView({ environment }) {
                                                                                         <GuidelinesToggle
                                                                                             open={expandedArticleGuidelines === article.id}
                                                                                             pending={pendingId === `guidelines:${article.id}`}
-                                                                                            onClick={() => toggleArticleGuidelines(article.id)}
+                                                                                            onClick={(e) => toggleArticleGuidelines(article.id, e.currentTarget)}
                                                                                         />
 
                                                                                         <AnimatePresence initial={false}>
@@ -429,7 +437,7 @@ function RulesView({ environment }) {
                                                                                                             {casebookData[rule.id] && (
                                                                                                                 <button
                                                                                                                     type="button"
-                                                                                                                    onClick={() => toggleCaseAccordion(rule.id)}
+                                                                                                                    onClick={(e) => toggleCaseAccordion(rule.id, e.currentTarget)}
                                                                                                                     aria-expanded={casesOpen}
                                                                                                                     aria-busy={pendingId === rule.id || undefined}
                                                                                                                     className={cn(

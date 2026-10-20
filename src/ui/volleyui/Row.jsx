@@ -155,7 +155,7 @@ export function Row({
           onClick={onOpen}
           onKeyDown={(e) => {
             if (e.target !== e.currentTarget) return;
-            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(); }
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(e); }
           }}
           className={cn(bodyBase, INTERACTIVE)}
         >
