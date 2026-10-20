@@ -24,9 +24,12 @@ async function fetchJson(url, options = {}) {
 // The whole reference dataset (rules, casebook, guidelines, diagrams, …) is
 // one ~1.2 MB download from /api/search. It is fetched once, kept in the Cache
 // API so the app works offline, and every read below is answered from it. A
-// cached copy is served immediately and refreshed from the network behind it.
+// cached copy is served immediately; once it is a week old it is refreshed
+// from the network behind it, and a failed refresh just keeps the old copy.
 const DATASET_URL = '/api/search'
 const DATASET_CACHE = 'readvolley-data-v1'
+const FETCHED_AT = 'x-readvolley-fetched-at'
+const REFRESH_AFTER_MS = 7 * 24 * 60 * 60 * 1000
 
 let dataset = null
 let datasetPromise = null
@@ -36,7 +39,10 @@ async function readCachedDataset() {
         if (typeof caches === 'undefined') return null
         const cache = await caches.open(DATASET_CACHE)
         const res = await cache.match(DATASET_URL)
-        return res ? await res.json() : null
+        if (!res) return null
+        // Copies saved before the stamp existed count as due for a refresh.
+        const fetchedAt = Number(res.headers.get(FETCHED_AT)) || 0
+        return { data: await res.json(), fetchedAt }
     } catch {
         return null
     }
@@ -48,12 +54,13 @@ async function fetchDataset() {
         const err = await res.json().catch(() => ({ error: res.statusText }))
         throw new Error(err.error || res.statusText)
     }
-    const copy = res.clone()
     const data = await res.json()
     try {
         if (typeof caches !== 'undefined') {
             const cache = await caches.open(DATASET_CACHE)
-            await cache.put(DATASET_URL, copy)
+            await cache.put(DATASET_URL, new Response(JSON.stringify(data), {
+                headers: { 'content-type': 'application/json', [FETCHED_AT]: String(Date.now()) },
+            }))
         }
     } catch {
         // Storage can be unavailable (private mode, quota); stay online-only.
@@ -68,11 +75,12 @@ function loadDataset() {
         datasetPromise = (async () => {
             const cached = await readCachedDataset()
             if (cached) {
-                dataset = cached
-                if (typeof navigator === 'undefined' || navigator.onLine !== false) {
+                dataset = cached.data
+                const due = Date.now() - cached.fetchedAt > REFRESH_AFTER_MS
+                if (due && (typeof navigator === 'undefined' || navigator.onLine !== false)) {
                     fetchDataset().catch(() => {})
                 }
-                return cached
+                return cached.data
             }
             return fetchDataset()
         })().catch(err => {
