@@ -15,7 +15,7 @@ export default defineConfig({
         tailwindcss(),
         VitePWA({
             registerType: 'autoUpdate',
-            includeAssets: ['favicon.ico'],
+            includeAssets: ['favicon.ico', 'apple-touch-icon.png'],
             workbox: {
                 // Precache the app shell and every static asset — diagrams,
                 // hand signals, hub documents — so the PWA works fully
@@ -39,24 +39,20 @@ export default defineConfig({
                 ],
             },
             manifest: {
-                name: 'Volleyball Rules',
+                id: '/',
+                name: 'ReadVolley',
                 short_name: 'ReadVolley',
-                description: 'Voleyball rules and casebook for Beach and Indoor',
+                description: 'Volleyball rules, casebook and referee guidelines for indoor and beach',
+                start_url: '/',
+                scope: '/',
+                display: 'standalone',
                 theme_color: '#e2001a',
                 background_color: '#f5f5f4',
                 icons: [
-                    {
-                        src: 'pwa-192x192.png',
-                        sizes: '192x192',
-                        type: 'image/png',
-                        purpose: 'any maskable'
-                    },
-                    {
-                        src: 'pwa-512x512.png',
-                        sizes: '512x512',
-                        type: 'image/png',
-                        purpose: 'any maskable'
-                    }
+                    { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+                    { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+                    // The logo sits well inside the safe zone on its own dark square.
+                    { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
                 ]
             }
         })
