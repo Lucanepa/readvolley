@@ -28,7 +28,7 @@ const CHAPTERS = [
                 number: '3.2',
                 title: 'Positions of the receiving team (Rule 7.4): adapted implementation',
                 blocks: [
-                    { type: 'p', text: 'Based on a trial (FIVB/CEV), the receiving team is no longer bound to its positions until the ball is hit either. The start of the service execution is now the moment from which the players may take up their positions on court freely (the moment at which a fault can occur).' },
+                    { type: 'p', text: 'Based on a trial (FIVB/CEV), the receiving team, like the serving team, is no longer bound to its positions until the ball is hit. The start of the service execution is now the moment from which the players may take up their positions on court freely (the moment at which a fault can occur).' },
                     { type: 'p', text: 'The start of the service execution is, for example, the first step, the toss of the ball, or a first arm or foot movement initiating the service. Bouncing the ball, moving it from hand to hand, or taking a deep breath do not yet count as the start of the service execution.' },
                     { type: 'p', text: 'The players must still be within their own court until the ball is hit.' },
                     { type: 'p', text: 'If the server commits a fault when hitting the ball, that fault is still considered to have been committed first and is sanctioned ahead of a positional fault of the opponent (Rules 7.5.2 and 12.7.1). The referee must therefore wait with the whistle for a positional fault until the ball has been hit, so that a fault in the execution of the service can also be recognised.' },

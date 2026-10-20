@@ -131,7 +131,7 @@ function ProtocolsView({ environment }) {
                                 <div className="text-sm font-semibold tabular-nums text-stone-900">
                                     {protocol.time_to_start || protocol.time || '–'}
                                 </div>
-                                <div className="text-sm leading-relaxed text-stone-800">
+                                <div className="text-sm leading-relaxed text-stone-800 text-justify hyphens-auto">
                                     {renderText(protocol.description || protocol.title || '–')}
                                 </div>
                                 {(showReferees || showTeams) && (
@@ -139,7 +139,7 @@ function ProtocolsView({ environment }) {
                                         {showReferees && (
                                             <div className="min-w-0">
                                                 <p className={`${MICRO_LABEL} mb-0.5 lg:hidden`}>Referees</p>
-                                                <div className="text-sm leading-relaxed text-stone-600">
+                                                <div className="text-sm leading-relaxed text-stone-600 text-justify hyphens-auto">
                                                     {renderText(protocol.referees || '–')}
                                                 </div>
                                             </div>
@@ -147,7 +147,7 @@ function ProtocolsView({ environment }) {
                                         {showTeams && (
                                             <div className="min-w-0">
                                                 <p className={`${MICRO_LABEL} mb-0.5 lg:hidden`}>Teams</p>
-                                                <div className="text-sm leading-relaxed text-stone-600">
+                                                <div className="text-sm leading-relaxed text-stone-600 text-justify hyphens-auto">
                                                     {renderText(protocol.teams || '–')}
                                                 </div>
                                             </div>
