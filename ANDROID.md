@@ -26,21 +26,37 @@ release script, F-Droid pipeline) with its own id and its own signing key.
 ## Release
 
 ```bash
-scripts/release-android.sh               # build, sign, publish to the private F-Droid repo
+scripts/release-android.sh --bump 1.3.1  # set the version, write a changelog stub
+# edit fastlane/metadata/android/en-US/changelogs/<versionCode>.txt, commit, git push
+scripts/release-android.sh               # tag, build, sign, publish everywhere
 scripts/release-android.sh --no-publish  # build only (unsigned release APK)
 scripts/release-android.sh --debug       # debug APK, for the emulator
 ```
 
-The script builds `dist-capacitor/`, runs `npx cap sync android` and
-`./gradlew assembleRelease`, then `/srv/fdroid/desktop-calendar/add-apk.sh`
-with the ReadVolley signing config (zipalign, sign with
-`--alignment-preserved true`, copy to the private repo, publish). It checks
-that the signature copies onto the unsigned build (F-Droid's reproducible
-build check) and prints the `gh release create android-v<version>` command;
-F-Droid downloads the signed APK from that GitHub release (`Binaries`).
+`--bump X.Y.Z` writes the version into `package.json`, `package-lock.json`,
+`android/app/build.gradle` and the f-droid.org recipe copy, and creates the
+changelog stub.
 
-The public OpenVolley F-Droid repo (get.openvolley.app/fdroid) takes the
-signed APK through the openvolley repo's `escoresheet/deploy/publish-pkgs.sh`.
+The plain run refuses a dirty tree, a commit that is not on `origin/main`, a
+missing or unedited changelog, and a tag `android-v<version>` that already
+points elsewhere. It then:
+
+1. tags `android-v<version>` (if needed) and pushes the tag;
+2. builds `dist-capacitor/`, runs `npx cap sync android` and
+   `./gradlew assembleRelease`;
+3. signs with `/srv/fdroid/desktop-calendar/add-apk.sh` and the ReadVolley
+   key (zipalign, `apksigner --alignment-preserved true`) into the private
+   F-Droid repo;
+4. checks that the signature copies onto the unsigned build (F-Droid's
+   reproducible-build check);
+5. creates the GitHub release `android-v<version>` with the signed APK
+   (f-droid.org downloads it from there, `Binaries` in the recipe);
+6. publishes it to the OpenVolley F-Droid repo (get.openvolley.app/fdroid)
+   with the openvolley repo's `escoresheet/deploy/publish-pkgs.sh`, from a
+   worktree at its `origin/main` (`~/.cache/openvolley/wt-readvolley`), and
+   checks the index. That repo's `lib/publish-lib.sh` knows ReadVolley's
+   certificate; the F-Droid metadata is
+   `~/.config/openvolley-pkgs/fdroid/metadata/com.openvolley.readvolley.yml`.
 
 The store texts, icon, screenshots and changelogs are in
 `fastlane/metadata/android/en-US/`. A reference copy of the f-droid.org
