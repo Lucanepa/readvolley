@@ -4,7 +4,6 @@ import { ChevronDown, ChevronRight, BookOpen, Loader2, FileQuestion, PlayCircle 
 import { api } from './services/api'
 import { accordionMotion } from './styles/motion'
 import { Card, Skeleton, EmptyState, Notice, FOCUS_RING, FOCUS_RING_INSET, cn } from './ui/volleyui'
-import { navigate } from './services/router'
 import { ruleExperiment, articleHasExperiment } from './data/ruleExperiments'
 
 const articleNumber = (n) => {
@@ -342,10 +341,13 @@ function RulesView({ environment }) {
                                                                 )}
                                                             >
                                                                 <span className="w-7 shrink-0 text-right text-xs font-semibold tabular-nums text-stone-400">
-                                                                    {article.article_n}
-                                                                    {articleHasExperiment(environment, article.article_n) && (
-                                                                        <span className="text-red-600" title="Contains a rule under experimentation">*</span>
-                                                                    )}
+                                                                    <span className="relative">
+                                                                        {article.article_n}
+                                                                        {/* Hangs past the number so it stays aligned with the others. */}
+                                                                        {articleHasExperiment(environment, article.article_n) && (
+                                                                            <span className="absolute left-full text-red-600" title="Contains a rule under experimentation">*</span>
+                                                                        )}
+                                                                    </span>
                                                                 </span>
                                                                 <span className="min-w-0 flex-1 text-sm font-medium leading-snug text-stone-800">{article.title}</span>
                                                                 <ToggleIndicator pending={pendingId === article.id} open={articleOpen} sideways />
@@ -404,8 +406,14 @@ function RulesView({ environment }) {
                                                                                             <div key={rule.id} className="flex items-baseline gap-3 sm:gap-4">
                                                                                                 {/* Rule number column */}
                                                                                                 <div className="w-10 shrink-0 text-xs font-semibold tabular-nums text-stone-400 sm:w-12">
-                                                                                                    {rule.rule_n}
-                                                                                                    {experiment && <span className="text-red-600" aria-label="under experimentation">*</span>}
+                                                                                                    <span className="relative">
+                                                                                                        {rule.rule_n}
+                                                                                                        {experiment && (
+                                                                                                            <span className="absolute left-full cursor-help text-red-600" title={experiment.note}>
+                                                                                                                *<span className="sr-only"> {experiment.note}</span>
+                                                                                                            </span>
+                                                                                                        )}
+                                                                                                    </span>
                                                                                                 </div>
 
                                                                                                 {/* Content column */}
@@ -442,19 +450,6 @@ function RulesView({ environment }) {
 
                                                                                                     {!rule.is_placeholder && rule.text !== rule.title && (
                                                                                                         <p className="text-sm leading-relaxed text-justify hyphens-auto text-stone-700">{rule.text}</p>
-                                                                                                    )}
-
-                                                                                                    {experiment && (
-                                                                                                        <p className="mt-1.5 text-xs leading-relaxed text-stone-500 text-justify hyphens-auto">
-                                                                                                            <span className="font-semibold text-red-600">*</span> {experiment.note}{' '}
-                                                                                                            <button
-                                                                                                                type="button"
-                                                                                                                onClick={() => navigate(`/${environment}/extra`)}
-                                                                                                                className={cn('rounded font-semibold text-stone-700 underline decoration-stone-300 underline-offset-2 hover:text-stone-900', FOCUS_RING)}
-                                                                                                            >
-                                                                                                                Rule changes 2026/27, §{experiment.section}
-                                                                                                            </button>
-                                                                                                        </p>
                                                                                                     )}
 
                                                                                                     {/* Inline casebook accordion */}
