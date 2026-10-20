@@ -109,7 +109,8 @@ CREATE TABLE IF NOT EXISTS other_protocols (
     protocol_filter TEXT,
     sort_order INTEGER,
     protocol_type TEXT,
-    content TEXT
+    content TEXT,
+    rules_type TEXT
 );
 
 CREATE TABLE IF NOT EXISTS guidelines (

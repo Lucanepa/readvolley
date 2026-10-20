@@ -216,7 +216,7 @@ export const api = {
         const data = await loadDataset()
         return {
             gameProtocol: sortBy(data.gameProtocols.filter(p => same(p.rules_type, rulesType)), p => p.sort_order),
-            otherProtocols: data.otherProtocols,
+            otherProtocols: data.otherProtocols.filter(p => same(p.rules_type, rulesType)),
         }
     },
 

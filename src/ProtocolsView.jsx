@@ -22,7 +22,7 @@ const MICRO_LABEL = 'text-[11px] font-semibold uppercase tracking-wide text-ston
 function ProtocolsView({ environment }) {
     const [type, setType] = useState('game') // 'game' | 'other'
     const [subFilter, setSubFilter] = useState('All')
-    const [protocols, setProtocols] = useState([])
+    const [data, setData] = useState({ gameProtocol: [], otherProtocols: [] })
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(false)
 
@@ -35,8 +35,7 @@ function ProtocolsView({ environment }) {
         setLoading(true)
         setError(false)
         try {
-            const data = await api.getProtocols(environment)
-            setProtocols(type === 'game' ? data.gameProtocol : data.otherProtocols)
+            setData(await api.getProtocols(environment))
         } catch (e) {
             console.error(e)
             setError(true)
@@ -78,6 +77,10 @@ function ProtocolsView({ environment }) {
         })
     }
 
+    // Indoor has no other protocols, so its Others tab is left out.
+    const types = data.otherProtocols.length ? TYPES : TYPES.filter(t => t.value === 'game')
+    const shownType = types.some(t => t.value === type) ? type : 'game'
+    const protocols = shownType === 'game' ? data.gameProtocol : data.otherProtocols
     const filters = ['All', ...new Set(protocols.map(p => p.protocol_filter).filter(Boolean))]
     const visibleOthers = protocols.filter(p => subFilter === 'All' || p.protocol_filter === subFilter)
 
@@ -105,7 +108,7 @@ function ProtocolsView({ environment }) {
             </Card>
         )
 
-        if (type === 'game') {
+        if (shownType === 'game') {
             const showReferees = protocols.some(p => p.referees)
             const showTeams = protocols.some(p => p.teams)
             const cols = GAME_COLS[2 + Number(showReferees) + Number(showTeams)]
@@ -183,15 +186,17 @@ function ProtocolsView({ environment }) {
 
     return (
         <div className="space-y-4">
-            <SegmentedControl
-                ariaLabel="Protocol type"
-                options={TYPES}
-                value={type}
-                onChange={(next) => { if (next !== type) { setLoading(true); setType(next) } }}
-                className="sm:max-w-xs"
-            />
+            {types.length > 1 && (
+                <SegmentedControl
+                    ariaLabel="Protocol type"
+                    options={types}
+                    value={shownType}
+                    onChange={(next) => { if (next !== type) { setLoading(true); setType(next) } }}
+                    className="sm:max-w-xs"
+                />
+            )}
 
-            {type === 'other' && !loading && !error && protocols.length > 0 && (
+            {shownType === 'other' && !loading && !error && protocols.length > 0 && (
                 <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filter protocols">
                     {filters.map(filter => (
                         <FilterPill

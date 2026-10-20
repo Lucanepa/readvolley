@@ -236,7 +236,6 @@ function SearchView({ onClose, initialEnvironment }) {
                 }
             })
             allData.otherProtocols.forEach(p => {
-                // Not tied to a discipline — protocol_filter holds the protocol's name.
                 const titleMatch = p.title?.toLowerCase().includes(searchLower)
                 const textMatch = p.protocolText?.toLowerCase().includes(searchLower)
 
@@ -247,7 +246,7 @@ function SearchView({ onClose, initialEnvironment }) {
                         title: p.title,
                         content: p.protocolText,
                         raw: p,
-                        env: null
+                        env: p.rules_type
                     })
                 }
             })
