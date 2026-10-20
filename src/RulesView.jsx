@@ -4,6 +4,7 @@ import { ChevronDown, ChevronRight, BookOpen, Loader2, FileQuestion, PlayCircle 
 import { api } from './services/api'
 import { accordionMotion } from './styles/motion'
 import { Card, Skeleton, EmptyState, Notice, FOCUS_RING, FOCUS_RING_INSET, cn } from './ui/volleyui'
+import { navigate } from './services/router'
 import { ruleExperiment, articleHasExperiment } from './data/ruleExperiments'
 
 const articleNumber = (n) => {
@@ -410,7 +411,7 @@ function RulesView({ environment }) {
                                                                                                         {rule.rule_n}
                                                                                                         {experiment && (
                                                                                                             <span className="absolute left-full cursor-help text-red-600" title={experiment.note}>
-                                                                                                                *<span className="sr-only"> {experiment.note}</span>
+                                                                                                                *
                                                                                                             </span>
                                                                                                         )}
                                                                                                     </span>
@@ -450,6 +451,19 @@ function RulesView({ environment }) {
 
                                                                                                     {!rule.is_placeholder && rule.text !== rule.title && (
                                                                                                         <p className="text-sm leading-relaxed text-justify hyphens-auto text-stone-700">{rule.text}</p>
+                                                                                                    )}
+
+                                                                                                    {experiment && (
+                                                                                                        <p className="mt-1.5 text-xs leading-relaxed text-stone-500 text-justify hyphens-auto">
+                                                                                                            <span className="font-semibold text-red-600">*</span> {experiment.note}{' '}
+                                                                                                            <button
+                                                                                                                type="button"
+                                                                                                                onClick={() => navigate(`/${environment}/extra`)}
+                                                                                                                className={cn('rounded font-semibold text-stone-700 underline decoration-stone-300 underline-offset-2 hover:text-stone-900', FOCUS_RING)}
+                                                                                                            >
+                                                                                                                Rule changes 2026/27, §{experiment.section}
+                                                                                                            </button>
+                                                                                                        </p>
                                                                                                     )}
 
                                                                                                     {/* Inline casebook accordion */}

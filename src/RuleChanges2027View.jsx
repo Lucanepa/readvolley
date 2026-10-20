@@ -464,9 +464,6 @@ export function RuleChanges2027Panel() {
                 <ChapterList />
             </div>
             <div className="border-t border-stone-100 px-4 py-4 sm:px-5">
-                <p className="mb-3 text-xs leading-relaxed text-stone-500 text-justify hyphens-auto">
-                    English translation of the SSK document. The German original is the binding text.
-                </p>
                 <SourceLink />
             </div>
         </div>
@@ -479,9 +476,6 @@ function RuleChanges2027View() {
             <Card>
                 <p className="text-sm font-semibold text-stone-800">
                     Official Volleyball Rules 2025–2028 · Explanations for referees (SSK, 24.08.2026)
-                </p>
-                <p className="mt-1 text-xs leading-relaxed text-stone-500 text-justify hyphens-auto">
-                    English translation of the SSK document. The German original is the binding text.
                 </p>
                 <SourceLink className="mt-3" />
             </Card>
