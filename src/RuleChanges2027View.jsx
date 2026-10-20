@@ -7,12 +7,108 @@ import { Card, BUTTON_SIZES, BUTTON_VARIANTS, FOCUS_RING, FOCUS_RING_INSET, cn }
 const SOURCE_URL = 'https://www.volleyball.ch/_Resources/Persistent/c/b/3/f/cb3f0be3e71e90986627eb3a02716135646b33e3/26.08.24_%C3%84nderungen-Regeln-2027-d.pdf'
 
 /**
- * Chapters 3 to 5 of the SSK document "Offizielle Volleyball-Regeln 2025-2028 /
- * Regeländerungen — Erläuterungen für Schiedsrichterinnen und Schiedsrichter"
- * (version 24.08.2026), translated into English. The German original linked at
+ * The SSK document "Offizielle Volleyball-Regeln 2025-2028 / Regeländerungen —
+ * Erläuterungen für Schiedsrichterinnen und Schiedsrichter" (version
+ * 24.08.2026), translated into English. The German original linked at
  * the top of the view remains the binding text.
  */
 const CHAPTERS = [
+    {
+        number: '1',
+        title: 'Objectives',
+        sections: [
+            {
+                number: null,
+                title: null,
+                blocks: [
+                    { type: 'p', text: 'With the following overview of the changes to the volleyball rules, the SSK pursues two objectives: to make the rule changes easier to follow, and to ensure a uniform implementation and interpretation of the new rules.' },
+                    { type: 'p', text: 'The new rules and the rule tests in chapters 2 to 5 apply in all leagues of Swiss Volley and its regional associations.' },
+                    { type: 'p', text: 'Changes or clarifications to the rule interpretation, as well as additional instructions from the SSK, are expressly reserved.' },
+                ],
+            },
+        ],
+    },
+    {
+        number: '2',
+        title: 'Overview of the rule changes',
+        sections: [
+            {
+                number: null,
+                title: null,
+                blocks: [
+                    { type: 'p', text: 'The following rule changes must not be considered in isolation. They must always be understood and applied together with the explanations, the rule interpretation and the rule tests that follow.' },
+                ],
+            },
+            {
+                number: '7.4, 7.4.4',
+                title: 'Rule change',
+                blocks: [
+                    { type: 'p', text: 'Players of the serving team may now position themselves freely on their court, without being bound by the rotational order. Players of the receiving team must in principle still keep their positions.' },
+                    { type: 'quote', label: 'Rule 7.4', text: 'At the moment the server hits the ball, each team must be positioned within its own court, except the server. The players of the receiving team must be positioned in the rotational order at the service (the hit of the ball). The players of the serving team, on the other hand, may take any position at the service (the hit of the ball).' },
+                    { type: 'quote', label: 'Rule 7.4.4', text: 'After the service (the hit of the ball), the players of both teams may leave their positions and occupy any position on their court and in the free zone.' },
+                ],
+            },
+            {
+                number: '9.1.2.3',
+                title: 'Clarification',
+                blocks: [
+                    { type: 'p', text: 'Clarification and specification of the previous rule interpretation.' },
+                    { type: 'quote', label: 'Rule 9.1.2.3', text: 'If simultaneous contacts by two opponents above the net lead to an extended contact with the ball, play continues, even if the contact took place above the opponent’s court.' },
+                ],
+            },
+            {
+                number: '10.1.2 – 10.1.2.3',
+                title: 'Rule change',
+                blocks: [
+                    { type: 'p', text: 'The rule now specifies that a ball sent wholly or partly through the external space into the opponent’s free zone may only be played back if it crossed after the team’s first contact. After the second or third contact, such a ball is immediately counted as "out".' },
+                    { type: 'quote', label: 'Rule 10.1.2', text: 'A ball that has crossed the vertical plane of the net wholly or partly through the external space into the opponent’s free zone after the team’s first contact may be played back within the team hits, provided that:' },
+                    { type: 'quote', label: 'Rule 10.1.2.1', text: 'the opponent’s court is not touched by the player (except in the case of Rule 11.2.2.1);' },
+                    { type: 'quote', label: 'Rule 10.1.2.2', text: 'the ball, when played back, crosses the plane of the net again wholly or partly through the external space on the same side of the court; otherwise the ball is "out". The opponent team may not prevent such action.' },
+                    { type: 'quote', label: 'Rule 10.1.2.3', text: 'A ball that has crossed the vertical plane of the net wholly or partly through the external space into the opponent’s free zone after the team’s second or third contact may not be played back and is "out" at the moment it crosses the plane of the net.' },
+                ],
+            },
+            {
+                number: '11.1.2',
+                title: 'Clarification',
+                blocks: [
+                    { type: 'p', text: 'Clarification and specification of the previous rule interpretation.' },
+                    { type: 'quote', label: 'Rule 11.1.2', text: 'After an attack hit, a player may pass his/her hands beyond the net, provided that the first contact with the ball was made within his/her own playing space and the ball is not held or thrown.' },
+                ],
+            },
+            {
+                number: '12.5.3',
+                title: 'Rule change',
+                blocks: [
+                    { type: 'p', text: 'For reasons of fairness, players may no longer hold their hands, or one hand, above head height during the service. The referee may make the teams aware of this before sanctioning.' },
+                    { type: 'quote', label: 'Rule 12.5.3', text: 'The players of the serving team are not allowed to hold their hands higher than their head during the service until the ball has crossed the plane of the net. The 1st referee may warn the team via the game captain (or point this out) if he/she judges it to be an intentional screen.' },
+                ],
+            },
+            {
+                number: '23.3.2.3 i',
+                title: 'Addition',
+                blocks: [
+                    { type: 'p', text: 'Addition following the change to Rule 10.1.2.' },
+                    { type: 'quote', label: 'Rule 23.3.2.3 i', text: 'During the match, the 1st referee has the authority to decide upon: i) the ball that, after the service and after the team’s second and third hit, passes over or outside the antenna on his/her side of the court.' },
+                ],
+            },
+            {
+                number: '24.3.2.8',
+                title: 'Addition',
+                blocks: [
+                    { type: 'p', text: 'Addition following the change to Rule 10.1.2.' },
+                    { type: 'quote', label: 'Rule 24.3.2.8', text: 'During the match, the 2nd referee decides, whistles and signals: the ball that, after the service and after the team’s second and third hit, passes over or outside the antenna on his/her side of the court.' },
+                ],
+            },
+            {
+                number: '29.2.1.3',
+                title: 'Addition',
+                blocks: [
+                    { type: 'p', text: 'Addition following the change to Rule 10.1.2.' },
+                    { type: 'quote', label: 'Rule 29.2.1.3', text: 'The line judges perform their functions by using flags (40 × 40 cm) to signal: when the ball touches the antenna, when the ball after the service or after the team’s second and third hit crosses the net outside the crossing space, etc.' },
+                ],
+            },
+        ],
+    },
     {
         number: '3',
         title: 'Further explanations',
@@ -171,6 +267,88 @@ const CHAPTERS = [
             },
         ],
     },
+    {
+        number: '6',
+        title: 'Rule tests not implemented for now',
+        sections: [
+            {
+                number: null,
+                title: null,
+                blocks: [
+                    { type: 'p', text: 'The FIVB and the CEV are carrying out further rule tests. Swiss Volley has decided not to introduce some of them in Switzerland, so the existing instructions remain valid unchanged in the coming season.' },
+                    { type: 'p', text: 'The rule tests listed below do not apply in the 2026/2027 season.' },
+                ],
+            },
+            {
+                number: '6.1',
+                title: 'More regular substitutions (Rule 15.1)',
+                blocks: [
+                    { type: 'p', text: 'The number of regular player substitutions is increased from 6 to 8 per set and team, to give the teams more flexibility. All other aspects of player substitutions (e.g. the restrictions on entering, leaving and returning to the court) remain unchanged.' },
+                    { type: 'p', text: 'As a consequence, the 2nd referee no longer indicates the 5th and 6th substitution to the 1st referee and the coach concerned, but only the 7th and 8th.' },
+                ],
+            },
+            {
+                number: '6.2',
+                title: 'Number of Liberos (Rule 19.1.1)',
+                blocks: [
+                    { type: 'p', text: 'Until now, a team with more than 12 players had to record two Liberos on the score sheet. As part of a test, a team with 12 to 14 players may now also play with only one Libero.' },
+                    { type: 'p', text: 'Under the test, the following is therefore permitted:' },
+                    {
+                        type: 'ul', items: [
+                            '11 players or fewer: 0, 1 or 2 Liberos;',
+                            '12 to 14 players: 1 or 2 Liberos.',
+                        ]
+                    },
+                    { type: 'p', text: 'In official matches in Switzerland, the number of Liberos is fixed when the teams sign the score sheet.' },
+                ],
+            },
+            {
+                number: '6.3',
+                title: 'Ball contact with the ceiling (Rule 8.4.2)',
+                blocks: [
+                    { type: 'p', text: 'If, after the first or second contact, the ball touches the ceiling of the hall or objects attached to it (e.g. rings and other gymnastics equipment, video cube, screen, rafters, ceiling beams, roof, suspensions) above the team’s own playing area (i.e. court and free zone, or beyond its own free zone) and is still playable on the same side of the net, the rally may continue, and a second or third contact by the same team is permitted.' },
+                    { type: 'p', text: 'If the ball touches the ceiling or objects attached to it and flies into the opponent’s half of the court, the contact counts as a fault and the rally ends.' },
+                    { type: 'p', text: 'If the ball touches a spider cam or crane camera (or similar) within the playing area, this still counts as external interference and the rally is replayed.' },
+                    { type: 'p', text: 'However, once the ball has completely crossed the vertical plane of the net above the court and then touches the ceiling or objects attached to it (on the opponent’s side), this is a fault, even if the ball then flies back into the team’s own court, because the ball was no longer above the team’s own playing area (or beyond its own free zone) when the contact occurred.' },
+                ],
+            },
+            {
+                number: '6.4',
+                title: 'Use of the whistle by the referees (Rule 22.2.1.2)',
+                blocks: [
+                    { type: 'p', text: 'Until now, the referee had to whistle every fault to indicate that a fault had been committed. Under the current test this is no longer necessary. Rule 8.2 states that the ball is out of play at the moment a fault is committed or, if there is no fault, at the referee’s whistle. This still applies.' },
+                    { type: 'p', text: 'For clear and obvious faults by the teams, the referee should therefore no longer whistle to indicate that a fault has been committed. The primary aim is to whistle only when play would otherwise continue. The referee concerned must therefore still whistle a net touch, a technical fault, etc. as soon as the fault occurs.' },
+                    { type: 'p', text: 'Specifically, there should no longer be a whistle in the following cases:' },
+                    {
+                        type: 'ul', items: [
+                            'ball in/out (the ball lands directly inside or outside the court);',
+                            'the service does not cross the net;',
+                            'a clear and obvious block touch (the ball goes clearly "out").',
+                        ]
+                    },
+                    { type: 'p', text: 'Even under the test, however, the referee must still show the corresponding hand signal after every fault; that does not change.' },
+                ],
+            },
+            {
+                number: '6.5',
+                title: 'Communication between the coach and the 1st referee (Rule 5.1.2)',
+                blocks: [
+                    { type: 'p', text: 'Until now, the coach was not allowed to address the 1st referee directly to obtain an explanation of a decision; this was reserved for the game captain. Under a test by the FIVB and the CEV, this is now to be allowed: the coach may ask the 1st referee directly for an explanation of a decision or of other matters relating to the game or the playing area.' },
+                    { type: 'p', text: 'It is still not permitted, however, for the coach to complain about the decision or question it while behaving incorrectly; this is still to be regarded as unsporting conduct and sanctioned accordingly (unchanged from current practice). Registering and submitting an official protest also remains the task of the team or game captain.' },
+                    { type: 'p', text: 'This rule is not implemented in Switzerland because, owing to the court layout, the team benches in Switzerland are still on the side of the 2nd referee. According to the FIVB Refereeing Guidelines and Instructions, 2025 Edition, Rule 5 no. 5, the coach may already address the 2nd referee respectfully and politely when a decision is unclear, so no change is needed here.' },
+                ],
+            },
+            {
+                number: '6.6',
+                title: 'Official warm-up at the net (Rule 7.2)',
+                blocks: [
+                    { type: 'p', text: 'To better protect the players, under a test the serving during the official warm-up at the net takes place separately for the two teams. Each team has 90 seconds to serve, with the whole court on both sides of the net at its sole disposal.' },
+                    { type: 'p', text: 'The team concerned is itself responsible for providing the balls, with the help of the ball retrievers (if any). The opposing team must leave the court and the service zone and may not use any balls during this time; its players may not obstruct the serving, but may stay in front of their own team bench. Team A starts, followed by team B.' },
+                    { type: 'p', text: 'The referees monitor the correct implementation of and compliance with these provisions. The 1st referee times the serving and informs the teams (with a whistle).' },
+                ],
+            },
+        ],
+    },
 ]
 
 // A link styled as the kit's secondary button: 44px tall on a phone, h-9 from sm.
@@ -183,6 +361,14 @@ const LINK_BUTTON = cn(
 )
 
 function TextBlock({ block }) {
+    if (block.type === 'quote') {
+        return (
+            <blockquote className="mb-3 border-l-2 border-stone-300 pl-3">
+                <p className="mb-0.5 text-[11px] font-semibold uppercase tracking-wide text-stone-500">{block.label}</p>
+                <p className="text-sm leading-relaxed text-stone-700 text-justify hyphens-auto">{block.text}</p>
+            </blockquote>
+        )
+    }
     if (block.type === 'ul') {
         return (
             <ul className="mb-3 list-disc space-y-1 pl-5 text-sm leading-relaxed text-stone-700 text-justify hyphens-auto marker:text-stone-400">
@@ -279,8 +465,7 @@ export function RuleChanges2027Panel() {
             </div>
             <div className="border-t border-stone-100 px-4 py-4 sm:px-5">
                 <p className="mb-3 text-xs leading-relaxed text-stone-500 text-justify hyphens-auto">
-                    English translation of chapters 3 to 5 of the SSK document. The German original is the
-                    binding text.
+                    English translation of the SSK document. The German original is the binding text.
                 </p>
                 <SourceLink />
             </div>
@@ -296,8 +481,7 @@ function RuleChanges2027View() {
                     Official Volleyball Rules 2025–2028 · Explanations for referees (SSK, 24.08.2026)
                 </p>
                 <p className="mt-1 text-xs leading-relaxed text-stone-500 text-justify hyphens-auto">
-                    English translation of chapters 3 to 5 of the SSK document. The German original is the
-                    binding text.
+                    English translation of the SSK document. The German original is the binding text.
                 </p>
                 <SourceLink className="mt-3" />
             </Card>
