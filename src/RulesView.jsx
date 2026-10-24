@@ -34,6 +34,15 @@ const formatArticleRange = (numbers) => {
     return groups.map(([from, to]) => (from === to ? `${from}` : `${from}\u2013${to}`)).join(', ')
 }
 
+// A case can have several clips, stored comma-separated in video_link.
+// http://www.fivbacademy.com breaks in browsers that force HTTPS (the
+// certificate does not cover www), so those links go to the bare host.
+const caseVideos = (link) =>
+    (link || '')
+        .split(/\s*,\s*(?=https?:\/\/)/)
+        .map(url => url.trim().replace(/^https?:\/\/(www\.)?fivbacademy\.com\//, 'https://fivbacademy.com/'))
+        .filter(Boolean)
+
 // Chapter number. Inverted (slate-900) while its chapter is open — selection,
 // not brand red.
 function NumberBadge({ active, children }) {
@@ -490,16 +499,21 @@ function RulesView({ environment }) {
                                                                                                                                     <span className="text-[11px] font-semibold uppercase tracking-wide tabular-nums text-stone-500">
                                                                                                                                         Scenario {entry.case_number}
                                                                                                                                     </span>
-                                                                                                                                    {entry.video_link && (
-                                                                                                                                        <a
-                                                                                                                                            href={entry.video_link}
-                                                                                                                                            target="_blank"
-                                                                                                                                            rel="noopener noreferrer"
-                                                                                                                                            className={cn('inline-flex items-center gap-1 rounded text-xs font-medium text-red-600 transition-colors hover:text-red-700 hover:underline', FOCUS_RING)}
-                                                                                                                                        >
-                                                                                                                                            <PlayCircle size={13} aria-hidden />
-                                                                                                                                            Watch video
-                                                                                                                                        </a>
+                                                                                                                                    {caseVideos(entry.video_link).length > 0 && (
+                                                                                                                                        <span className="flex flex-wrap justify-end gap-x-3 gap-y-1">
+                                                                                                                                            {caseVideos(entry.video_link).map((url, i, all) => (
+                                                                                                                                                <a
+                                                                                                                                                    key={url}
+                                                                                                                                                    href={url}
+                                                                                                                                                    target="_blank"
+                                                                                                                                                    rel="noopener noreferrer"
+                                                                                                                                                    className={cn('inline-flex items-center gap-1 whitespace-nowrap rounded text-xs font-medium text-red-600 transition-colors hover:text-red-700 hover:underline', FOCUS_RING)}
+                                                                                                                                                >
+                                                                                                                                                    <PlayCircle size={13} aria-hidden />
+                                                                                                                                                    {all.length > 1 ? `Video ${i + 1}` : 'Watch video'}
+                                                                                                                                                </a>
+                                                                                                                                            ))}
+                                                                                                                                        </span>
                                                                                                                                     )}
                                                                                                                                 </div>
                                                                                                                                 <p className="whitespace-pre-line text-sm italic leading-relaxed text-stone-800 text-justify hyphens-auto">
