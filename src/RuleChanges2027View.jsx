@@ -4,6 +4,10 @@ import { ChevronDown, ExternalLink } from 'lucide-react'
 import { accordionMotion, scrollOpenedToTop } from './styles/motion'
 import { Card, BUTTON_SIZES, BUTTON_VARIANTS, FOCUS_RING, FOCUS_RING_INSET, cn } from './ui/volleyui'
 
+// Large media (videos) live in the readvolley-media R2 bucket: Pages caps a
+// file at 25 MiB, and public/ is also packed into the APK.
+const MEDIA_BASE = 'https://readvolley-media.openvolley.app'
+
 const SOURCE_URL = 'https://www.volleyball.ch/_Resources/Persistent/c/b/3/f/cb3f0be3e71e90986627eb3a02716135646b33e3/26.08.24_%C3%84nderungen-Regeln-2027-d.pdf'
 
 /**
@@ -209,6 +213,7 @@ const CHAPTERS = [
                     { type: 'p', text: 'According to Rule 9.2.2 the ball may not be held and/or thrown. Until now this rule has been interpreted rather generously. As part of a further test, a strict standard is now to be applied and the existing rule interpreted narrowly, in order to give more effect to the existing text of the rule.' },
                     { type: 'p', text: 'A distinction must first be made between attack balls (towards the opponent) and blocking actions. If it is a blocking action (with one hand or with both hands), the previous standard continues to apply unchanged.' },
                     { type: 'p', text: 'For attack balls, only a very short contact with the ball is permitted; pushed, guided, held or thrown balls are to be prevented and sanctioned as a fault. What is decisive for the assessment is primarily how long the ball is touched, whether the ball is touched with the whole hand or only with the fingers, and in which direction the ball flies after the contact.' },
+                    { type: 'video', label: 'CEV video: Rule 9.2.2 is not a new rule', src: `${MEDIA_BASE}/videos/cev-rule-9-2-2.mp4`, poster: `${MEDIA_BASE}/videos/cev-rule-9-2-2.jpg` },
                 ],
             },
             {
@@ -367,6 +372,21 @@ function TextBlock({ block }) {
                 <p className="mb-0.5 text-[11px] font-semibold uppercase tracking-wide text-stone-500">{block.label}</p>
                 <p className="text-sm leading-relaxed text-stone-700 text-justify hyphens-auto">{block.text}</p>
             </blockquote>
+        )
+    }
+    if (block.type === 'video') {
+        return (
+            <figure className="mb-3">
+                <video
+                    controls
+                    playsInline
+                    preload="none"
+                    poster={block.poster}
+                    src={block.src}
+                    className="aspect-video w-full rounded-lg bg-stone-900"
+                />
+                <figcaption className="mt-1.5 text-[11px] font-semibold uppercase tracking-wide text-stone-500">{block.label}</figcaption>
+            </figure>
         )
     }
     if (block.type === 'ul') {
