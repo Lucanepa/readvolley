@@ -13,6 +13,8 @@ import ErrorBoundary from './ErrorBoundary'
 // reaches the button means it is usually in hand by the time the overlay opens.
 export const warmSearchIndex = () => { api.getAllSearchData().catch(() => {}) }
 
+const FOOTER = 'ReadVolley · Powered by OpenVolley'
+
 /**
  * The App shell shared by the indoor/beach sections and Swiss Volley: a bottom
  * bar on phones that becomes a left rail from lg, a title card in place of a
@@ -79,6 +81,7 @@ function SectionShell({
                 <div className="contents" onClick={() => setOptionsOpen(false)}>
                     {options}
                 </div>
+                <p className="lg:hidden px-4 pt-3 pb-1 text-center text-[10px] text-stone-400">{FOOTER}</p>
             </OptionsSheet>
 
             <TitleCard
@@ -106,7 +109,9 @@ function SectionShell({
                 </ErrorBoundary>
             </motion.div>
 
-            <AppFooter>ReadVolley · Powered by OpenVolley</AppFooter>
+            {/* On a phone the line moves into More, so a short page such as the
+                rules list fits on the screen instead of scrolling a little. */}
+            <AppFooter className="hidden lg:block">{FOOTER}</AppFooter>
         </AppPage>
     )
 }

@@ -40,8 +40,11 @@ export function useBottomNavScrollPadding(active) {
  *
  * @param {object}  props
  * @param {boolean} [props.bottomNav=false] a <BottomNav> is on screen: pads the
- *   foot for the bar (pb-28) on phones/tablets and the left edge for the rail
+ *   foot for the bar (pb-24) on phones/tablets and the left edge for the rail
  *   (lg:pl-[15rem] = 14rem rail + 1rem gutter) on desktop.
+ *   kit: svrz_rc pads pb-28, but the bar is only 4.5rem + 1px tall, so a
+ *   screen that just fits scrolled a few pixels into an empty strip under the
+ *   footer. pb-24 still leaves a 1.5rem gap above the bar.
  * @param {boolean} [props.fab=false] a <Fab> floats over the page: extra foot room
  *   so the last control can scroll clear of it.
  * @param {string}  [props.width] optional cap for the content column, e.g.
@@ -55,7 +58,7 @@ export function AppPage({ bottomNav = false, fab = false, width, className, chil
       className={cn(
         'min-h-screen bg-gradient-to-b from-stone-50 to-stone-100 py-6 sm:py-8 px-4 print:bg-white print:p-0',
         fab && 'pb-24',
-        bottomNav && (fab ? 'pb-44 lg:pb-24' : 'pb-28 lg:pb-8'),
+        bottomNav && (fab ? 'pb-44 lg:pb-24' : 'pb-24 lg:pb-8'),
         bottomNav && 'pt-3 sm:pt-6 lg:pl-[15rem]',
         className,
       )}
