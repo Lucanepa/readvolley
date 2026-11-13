@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 export const ENV_TABS = ['rules', 'diagrams', 'definitions', 'protocols', 'hand_signals', 'extra']
 
 // Tabs of the Swiss Volley section. '/swiss_volley' itself shows the overview.
-export const SV_TABS = ['ssk_news', 'resource_hub', 'rule_changes_2027', 'multimedia']
+export const SV_TABS = ['ssk_news', 'resource_hub', 'rule_changes_2027', 'multimedia', 'zk_prep']
 
 const ROUTE_CHANGE = 'route-change'
 
@@ -68,6 +68,7 @@ const TAB_TITLES = {
     resource_hub: 'Resource Hub',
     rule_changes_2027: 'Rule Changes 2027',
     multimedia: 'Multimedia',
+    zk_prep: 'ZK Prep',
 }
 
 export function routeTitle(route) {
