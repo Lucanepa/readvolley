@@ -3,7 +3,8 @@ import SSKNewsView from './SSKNewsView'
 import { MultimediaView } from './MultimediaView'
 import ResourceHubView from './ResourceHubView'
 import RuleChanges2027View from './RuleChanges2027View'
-import { Globe, ChevronRight, FileText, PlaySquare, Scale, LayoutGrid, Home, Lock, LogOut, Sun } from 'lucide-react'
+import ZkPrepView from './ZkPrepView'
+import { Globe, ChevronRight, FileText, PlaySquare, Scale, GraduationCap, LayoutGrid, Home, Lock, LogOut, Sun } from 'lucide-react'
 import SectionShell from './components/SectionShell'
 import { OptionsRow, Card, RowList, FOCUS_RING, cn } from './ui/volleyui'
 import { navigate } from './services/router'
@@ -14,6 +15,7 @@ const TABS = [
     { id: 'resource_hub', label: 'Resource hub', short: 'Resources', icon: Globe, description: 'Documents, links and the hall report tool for referees in NLA and NLB.' },
     { id: 'rule_changes_2027', label: 'Rule changes 2027', short: '2027', icon: Scale, description: 'SSK explanations of the rule changes and rule tests for the 2026/2027 season.' },
     { id: 'multimedia', label: 'Multimedia', short: 'Media', icon: PlaySquare, description: 'Presentations, videos and other material shared by the SSK.' },
+    { id: 'zk_prep', label: 'ZK prep', short: 'ZK', icon: GraduationCap, railOnly: true, description: 'Practice questions and exam simulation for the referee Zentralkurs.' },
 ]
 
 function SwissVolleyView({ user, onLogin, onOpenSearch, activeTab }) {
@@ -25,6 +27,7 @@ function SwissVolleyView({ user, onLogin, onOpenSearch, activeTab }) {
             case 'ssk_news': return <SSKNewsView user={user} onLogin={onLogin} />
             case 'resource_hub': return <ResourceHubView />
             case 'rule_changes_2027': return <RuleChanges2027View />
+            case 'zk_prep': return <ZkPrepView />
             case 'multimedia': return <MultimediaView user={user} onLogin={onLogin} />
             default: return <OverviewMenu onSelect={goToTab} />
         }
@@ -48,6 +51,7 @@ function SwissVolleyView({ user, onLogin, onOpenSearch, activeTab }) {
             options={(
                 <>
                     <OptionsRow icon={LayoutGrid} onClick={() => navigate('/swiss_volley')}>Swiss Volley overview</OptionsRow>
+                    <OptionsRow icon={GraduationCap} className="lg:hidden" onClick={() => goToTab('zk_prep')}>ZK prep</OptionsRow>
                     <OptionsRow icon={Home} onClick={() => navigate('/indoor/rules')}>Indoor rules</OptionsRow>
                     <OptionsRow icon={Sun} onClick={() => navigate('/beach/rules')}>Beach rules</OptionsRow>
                     <OptionsRow icon={Home} onClick={() => navigate('/')}>Home</OptionsRow>
