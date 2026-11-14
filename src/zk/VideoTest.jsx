@@ -3,8 +3,9 @@ import { CheckCircle2, ArrowRight, RefreshCw } from 'lucide-react'
 import { Card, Button, ProgressBar, Banner, Skeleton, cn, FOCUS_RING } from '../ui/volleyui'
 import { VIDEO_STRINGS } from './strings'
 import { tr } from './quiz'
+import { assetUrl } from '../services/platform'
 
-const DATA_URL = `${import.meta.env.BASE_URL || '/'}zk_prep/video_test_922.json`.replace(/\/{2,}/g, '/')
+const DATA_URL = assetUrl('/zk_prep/video_test_922.json')
 
 /** Rule 9.2.2 video test: 31 clips, Legal Play or Fault. Videos are in the media bucket. */
 export default function VideoTest({ lang }) {
