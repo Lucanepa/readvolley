@@ -3,8 +3,10 @@
 // e-learning platform and is never altered here; only layout is touched
 // (formatQuestionText adds a paragraph break before numbered scenarios).
 import { ZK_LANGS, UI_STRINGS } from './strings'
+import { assetUrl } from '../services/platform'
 
-const BASE = `${import.meta.env.BASE_URL || '/'}zk_prep/`.replace(/\/{2,}/g, '/')
+// In the Android app (code only, origin https://localhost) these files come from the site.
+const BASE = assetUrl('/zk_prep/')
 
 // --- Preferences (best effort: storage may be blocked) ---
 
