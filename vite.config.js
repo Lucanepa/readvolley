@@ -101,8 +101,8 @@ export default defineConfig({
                 icons: [
                     { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
                     { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
-                    // The logo sits well inside the safe zone on its own dark square.
-                    { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+                    // Full-bleed white, the logo inside the 40 % safe circle (scripts/make-brand-assets.py).
+                    { src: 'pwa-maskable-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
                 ]
             }
         })
