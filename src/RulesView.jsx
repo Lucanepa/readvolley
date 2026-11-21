@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { Fragment, useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronDown, ChevronRight, BookOpen, Loader2, FileQuestion, PlayCircle } from 'lucide-react'
 import { api } from './services/api'
@@ -415,15 +415,18 @@ function RulesView({ environment }) {
                                                                                     </div>
                                                                                 )}
 
-                                                                                <div className="space-y-4">
+                                                                                {/* Two columns: the number column is as wide as the
+                                                                                    article's longest rule number ("15.10.3.1"), so
+                                                                                    it never runs into the text. */}
+                                                                                <div className="grid grid-cols-[auto_minmax(0,1fr)] items-baseline gap-x-3 gap-y-4 sm:gap-x-4">
                                                                                     {rules[article.id]?.map((rule, rIndex) => {
                                                                                         const showTitle = rIndex === 0 || rule.title !== rules[article.id][rIndex - 1]?.title
                                                                                         const casesOpen = expandedRuleCases === rule.id
                                                                                         const experiment = ruleExperiment(environment, rule.rule_n)
                                                                                         return (
-                                                                                            <div key={rule.id} className="flex items-baseline gap-3 sm:gap-4">
-                                                                                                {/* Rule number column */}
-                                                                                                <div className="w-10 shrink-0 text-xs font-semibold tabular-nums text-stone-400 sm:w-12">
+                                                                                            <Fragment key={rule.id}>
+                                                                                                {/* Rule number column (the experiment star hangs into the gap) */}
+                                                                                                <div className="min-w-7 whitespace-nowrap text-xs font-semibold tabular-nums text-stone-400">
                                                                                                     <span className="relative">
                                                                                                         {rule.rule_n}
                                                                                                         {experiment && (
@@ -435,7 +438,7 @@ function RulesView({ environment }) {
                                                                                                 </div>
 
                                                                                                 {/* Content column */}
-                                                                                                <div className="min-w-0 flex-1">
+                                                                                                <div className="min-w-0">
                                                                                                     {/* Title row */}
                                                                                                     {(showTitle || casebookData[rule.id]) && (
                                                                                                         <div className="mb-1.5 flex flex-wrap items-center gap-x-2 gap-y-1.5">
@@ -450,17 +453,18 @@ function RulesView({ environment }) {
                                                                                                                     aria-expanded={casesOpen}
                                                                                                                     aria-busy={pendingId === rule.id || undefined}
                                                                                                                     className={cn(
-                                                                                                                        'inline-flex h-7 items-center gap-1 rounded-md border px-2 text-[11px] font-semibold tabular-nums transition-colors',
+                                                                                                                        // min-h, not h: a long list wraps to a second line inside the box.
+                                                                                                                        'inline-flex min-h-8 max-w-full items-center gap-1.5 rounded-md border px-2.5 py-1 text-left text-[11px] font-semibold leading-snug tabular-nums transition-colors',
                                                                                                                         casesOpen
                                                                                                                             ? 'border-slate-900 bg-slate-900 text-white'
                                                                                                                             : 'border-stone-200 bg-stone-50 text-stone-600 hover:bg-stone-100',
                                                                                                                         FOCUS_RING,
                                                                                                                     )}
                                                                                                                 >
-                                                                                                                    {casebookData[rule.id].length > 1 ? 'Cases' : 'Case'} {casebookData[rule.id].join(', ')}
+                                                                                                                    <span className="min-w-0">{casebookData[rule.id].length > 1 ? 'Cases' : 'Case'} {casebookData[rule.id].join(', ')}</span>
                                                                                                                     {pendingId === rule.id
-                                                                                                                        ? <Loader2 size={12} className="animate-spin" aria-label="Loading" />
-                                                                                                                        : <ChevronDown size={12} className={cn('transition-transform', casesOpen && 'rotate-180')} aria-hidden />}
+                                                                                                                        ? <Loader2 size={12} className="shrink-0 animate-spin" aria-label="Loading" />
+                                                                                                                        : <ChevronDown size={12} className={cn('shrink-0 transition-transform', casesOpen && 'rotate-180')} aria-hidden />}
                                                                                                                 </button>
                                                                                                             )}
                                                                                                         </div>
@@ -530,7 +534,7 @@ function RulesView({ environment }) {
                                                                                                         )}
                                                                                                     </AnimatePresence>
                                                                                                 </div>
-                                                                                            </div>
+                                                                                            </Fragment>
                                                                                         )
                                                                                     })}
                                                                                 </div>
